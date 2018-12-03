@@ -1,0 +1,8 @@
+{
+  "@microsoft/generator-sharepoint": {
+    "version": "1.4.1",
+    "libraryName": "o-365-finance-solution",
+    "libraryId": "3ab92973-d77c-4220-b310-aa5ad4ecbc0e",
+    "environment": "spo"
+  }
+}

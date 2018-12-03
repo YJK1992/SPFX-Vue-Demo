@@ -1,0 +1,18 @@
+{
+  "$schema": "https://dev.office.com/json-schemas/spfx-build/config.2.0.schema.json",
+  "version": "2.0",
+  "bundles": {
+    "o-365-finance-web-part-web-part": {
+      "components": [
+        {
+          "entrypoint": "./lib/webparts/o365FinanceWebPart/O365FinanceWebPartWebPart.js",
+          "manifest": "./src/webparts/o365FinanceWebPart/O365FinanceWebPartWebPart.manifest.json"
+        }
+      ]
+    }
+  },
+  "externals": {},
+  "localizedResources": {
+    "O365FinanceWebPartWebPartStrings": "lib/webparts/o365FinanceWebPart/loc/{locale}.js"
+  }
+}
