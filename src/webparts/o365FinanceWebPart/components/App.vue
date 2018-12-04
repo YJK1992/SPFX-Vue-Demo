@@ -1,11 +1,13 @@
 <template>
   <div id="app">
-    <div class="left">
-      <v-nav></v-nav>
-    </div>
-    <div class="right">
-      <router-view></router-view>
-    </div>
+    <el-container>
+      <el-aside width="200px">
+        <v-nav></v-nav>
+      </el-aside>
+      <el-main>
+        <router-view></router-view>
+      </el-main>
+    </el-container>
   </div>
 </template>
 
@@ -19,19 +21,8 @@ export default {
     };
   },
   components: {
-    'v-nav': LeftNav
+    "v-nav": LeftNav
   }
 };
 </script>
-<style>
-.left {
-  width: 20%;
-  float: left;
-  margin-top: -4px;
-}
 
-.right {
-  width: 78%;
-  float: right;
-}
-</style>

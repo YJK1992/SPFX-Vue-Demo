@@ -11,7 +11,9 @@
       ]
     }
   },
-  "externals": {},
+  "externals": {
+    "jquery": "https://code.jquery.com/jquery-3.1.0.min.js"
+  },
   "localizedResources": {
     "O365FinanceWebPartWebPartStrings": "lib/webparts/o365FinanceWebPart/loc/{locale}.js"
   }

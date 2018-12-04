@@ -56,11 +56,11 @@ build.configureWebpack.setConfig({
     return merge(config, vueConfig);
   }
 });
-// let copyOtherFiles = build.subTask('copy-other-files', function (gulp, buildOptions, done) {
-//   return gulp.src(['src/**/*.vue', 'src/**/*.scss'])
-//     .pipe(gulp.dest(buildOptions.libFolder))
-// });
+let copyOtherFiles = build.subTask('copy-other-files', function (gulp, buildOptions, done) {
+  return gulp.src(['src/**/*.vue', 'src/**/*.scss'])
+    .pipe(gulp.dest(buildOptions.libFolder))
+});
 
-// build.task('copy-other-files', copyOtherFiles);
-// build.rig.addPostTypescriptTask(copyOtherFiles);
+build.task('copy-other-files', copyOtherFiles);
+build.rig.addPostTypescriptTask(copyOtherFiles);
 build.initialize(gulp);

@@ -5,10 +5,10 @@ import {
   PropertyPaneTextField
 } from '@microsoft/sp-webpart-base';
 import * as strings from 'O365FinanceWebPartWebPartStrings';
-
+import { SPComponentLoader } from '@microsoft/sp-loader';
 import Vue from "vue";
 import ElementUI from 'element-ui';
-import 'element-ui/lib/theme-chalk/index.css';
+// import 'element-ui/lib/theme-chalk/index.css';
 import VueRouter from 'vue-router';
 Vue.use(VueRouter);
 Vue.use(ElementUI);
@@ -18,6 +18,7 @@ import CreateByMe from "./components/CreateByMe.vue";
 import CreateECCTask from "./components/CreateECCTask.vue";
 import CreateGPTask from "./components/CreateGPTask.vue";
 import CreatePTPTask from "./components/CreatePTPTask.vue";
+import MyAgent from "./components/MyAgent.vue";
 import Home from "./components/Home.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
@@ -25,14 +26,30 @@ export interface IO365FinanceWebPartWebPartProps {
 }
 
 export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO365FinanceWebPartWebPartProps> {
-
+  protected onInit(): Promise<void> {
+    SPComponentLoader.loadCss("https://unpkg.com/element-ui/lib/theme-chalk/index.css");
+    return super.onInit();
+  }
   public render(): void {
+    var a = document.getElementById("s4-titlerow")
+    var b = document.getElementById("sideNavBox")
+    var c = document.getElementById("contentBox")
+    if (a != null) {
+      a.parentNode.removeChild(a)
+    }
+    if (a != null) {
+      b.parentNode.removeChild(b)
+    }
+    if (c != null) {
+      c.setAttribute('style', 'margin-left:0px')
+    }
     const routes = [
       { path: '/home', component: Home },
       { path: '/createbyme', component: CreateByMe },
       { path: '/createecctask', component: CreateECCTask },
       { path: '/creategptask', component: CreateGPTask },
       { path: '/createptptask', component: CreatePTPTask },
+      { path: '/myagent', component: MyAgent },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 
@@ -40,7 +57,7 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       routes // （缩写）相当于 routes: routes
     })
     Vue.prototype.GLOBAL = {
-      "URL": this.context.pageContext.site.absoluteUrl
+      "URL": this.context.pageContext.site.absoluteUrl,
     }
     this.domElement.innerHTML = `
     <div id='app'></div>`;

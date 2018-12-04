@@ -34,6 +34,10 @@ export default {
           Path: "/createptptask"
         },
         {
+          Name: "My Agent",
+          Path: "/myagent"
+        },
+        {
           Name: "Create By Me",
           Path: "/createbyme"
         }

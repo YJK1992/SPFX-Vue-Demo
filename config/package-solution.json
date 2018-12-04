@@ -3,7 +3,7 @@
   "solution": {
     "name": "o-365-finance-solution-client-side-solution",
     "id": "3ab92973-d77c-4220-b310-aa5ad4ecbc0e",
-    "version": "2.0.0.0",
+    "version": "4.0.0.0",
     "includeClientSideAssets": true
   },
   "paths": {
