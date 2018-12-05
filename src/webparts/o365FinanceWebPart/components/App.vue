@@ -4,7 +4,7 @@
       <el-aside width="200px">
         <v-nav></v-nav>
       </el-aside>
-      <el-main>
+      <el-main style="width: 1000px;margin-top: -20px;">
         <router-view></router-view>
       </el-main>
     </el-container>

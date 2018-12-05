@@ -1,122 +1,92 @@
 <template>
-  <div id="CreateECCTask">
-    <!-- <el-form :inline="true" :model="ECCTaskForm" class="demo-form-inline" v-loading="loading">
-      <el-row :gutter="10">
-        <el-col :span="8">
-          <el-form-item label="申请人">
-            <el-input v-model="ECCTaskForm.applicant" placeholder="审批人"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="成本中心">
-            <el-input v-model="ECCTaskForm.costcenter" placeholder="成本中心"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="公司代码">
-            <el-input v-model="ECCTaskForm.companycode" placeholder="公司代码"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row :gutter="10">
-        <el-col :span="8">
-          <el-form-item label="申请单号">
-            <el-input v-model="ECCTaskForm.applicantNumber" placeholder="申请单号"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="申请类别">
-            <el-input v-model="ECCTaskForm.applicantType" placeholder="申请类别"></el-input>
-          </el-form-item>
-        </el-col>
-        <el-col :span="8">
-          <el-form-item label="产品类型">
-            <el-input v-model="ECCTaskForm.productType" placeholder="产品类型"></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>
-      <el-row>
-        <el-col :span="20">
-          <el-form-item label="收件人及其地址">
-            <el-input
-              type="textarea"
-              :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="请输入内容"
-              v-model="ECCTaskForm.consigneeDetail"
-            ></el-input>
-          </el-form-item>
-        </el-col>
-      </el-row>
-    </el-form>
-    <el-button type="primary" @click="onSubmit" round>提交</el-button>-->
-    <div id="head">
-      <!--进度条 -->
-      <div :style="{display:display}">
-        <el-progress :percentage="percentage"></el-progress>
-      </div>
-      <h1>资产领用模板</h1>
-    </div>
-
-    <div id="main">
-      <!--Main List item -->
-      <table class="top">
-        <tr>
-          <td>申请人 ：</td>
-          <td>
-            <el-input v-model="ECCTaskForm.applicant" placeholder="申请人"></el-input>
-          </td>
-          <td>成本中心 ：</td>
-          <td>
-            <el-input v-model="ECCTaskForm.costcenter" placeholder="成本中心"></el-input>
-          </td>
-          <td>公司代码 ：</td>
-          <td>
-            <el-input v-model="ECCTaskForm.companycode" placeholder="公司代码"></el-input>
-          </td>
-        </tr>
-        <tr>
-          <td>申请单号 ：</td>
-          <td>
-            <el-input v-model="ECCTaskForm.applicantNumber" placeholder="申请单号"></el-input>
-          </td>
-          <td>申请类别 ：</td>
-          <td>
-            <el-select v-model="ECCTaskForm.applicantType" placeholder="请选择">
-              <el-option
-                v-for="item in lbOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              ></el-option>
-            </el-select>
-          </td>
-          <td>产品类型 ：</td>
-          <td>
-            <el-select v-model="ECCTaskForm.productType" placeholder="请选择">
-              <el-option
-                v-for="item in lxOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              ></el-option>
-            </el-select>
-          </td>
-        </tr>
-        <tr>
-          <td>收件人及地址 ：</td>
-          <td colspan="5" style="text-align:left;">
-            <el-input v-model="ECCTaskForm.consigneeDetail" placeholder="收件人及其地址"></el-input>
-          </td>
-        </tr>
-        <tr>
-          <td colspan="6" style="text-align:right;">
-            <el-button type="primary" icon="el-icon-plus" @click="dialogFormVisible = true">添加项目行</el-button>
-          </td>
-        </tr>
-      </table>
-      <!-- Sub List Items-->
-      <el-table :data="subListData" stripe style="width: 100%">
-        <el-table-column prop="date" label="物料清单">
+  <div id="CreateECCTask" v-loading="loading">
+    <el-container>
+      <el-header>
+        <!--进度条 -->
+        <div :style="{display:display}">
+          <el-progress :percentage="percentage"></el-progress>
+        </div>
+        <span style="font-size:20px;">资产领用模板</span>
+      </el-header>
+      <el-main>
+        <!--Main List item -->
+        <table class="top" style=" border-collapse: separate;">
+          <tr>
+            <td>申请人 ：</td>
+            <td>
+              <el-input
+                placeholder="请输入内容"
+                v-model="ECCTaskForm.applicant"
+                class="input-with-select"
+              >
+                <el-button @click="search" slot="append" icon="el-icon-search"></el-button>
+              </el-input>
+            </td>
+            <td>成本中心 ：</td>
+            <td>
+              <el-select v-model="ECCTaskForm.costcenter" placeholder="请选择">
+                <el-option
+                  v-for="item in costCenterArr"
+                  :key="item.CostCenter"
+                  :label="item.CostCenter"
+                  :value="item.CostCenter"
+                ></el-option>
+              </el-select>
+            </td>
+            <td>公司代码 ：</td>
+            <td>
+              <el-select v-model="ECCTaskForm.companycode" placeholder="请选择">
+                <el-option
+                  v-for="item in companyCodeArr"
+                  :key="item.CompanyCode"
+                  :label="item.CompanyCode"
+                  :value="item.CompanyCode"
+                ></el-option>
+              </el-select>
+            </td>
+          </tr>
+          <tr>
+            <td>申请单号 ：</td>
+            <td>
+              <el-input v-model="ECCTaskForm.applicantNumber" placeholder="申请单号" :disabled="true"></el-input>
+            </td>
+            <td>申请类别 ：</td>
+            <td>
+              <el-select v-model="ECCTaskForm.applicantType" placeholder="请选择">
+                <el-option
+                  v-for="item in applicantTypeOpts"
+                  :key="item.Title"
+                  :label="item.Title"
+                  :value="item.Title"
+                ></el-option>
+              </el-select>
+            </td>
+            <td>产品类型 ：</td>
+            <td>
+              <el-select v-model="ECCTaskForm.productType" placeholder="请选择">
+                <el-option
+                  v-for="item in productTypeOpts"
+                  :key="item.Title"
+                  :label="item.Title"
+                  :value="item.Title"
+                ></el-option>
+              </el-select>
+            </td>
+          </tr>
+          <tr>
+            <td>收件人及地址 ：</td>
+            <td colspan="5" style="text-align:left;">
+              <el-input v-model="ECCTaskForm.consigneeDetail" placeholder="收件人及其地址"></el-input>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="6" style="text-align:right;">
+              <el-button type="primary" icon="el-icon-plus" @click="dialogFormVisible = true">添加项目行</el-button>
+            </td>
+          </tr>
+        </table>
+        <!-- Sub List Items-->
+        <el-table :data="subListData" stripe>
           <el-table-column prop="wl" label="物料" width="180"></el-table-column>
           <el-table-column prop="ms" label="物料描述" width="300"></el-table-column>
           <el-table-column prop="sl" label="数量" width="180"></el-table-column>
@@ -126,20 +96,19 @@
           <el-table-column prop="sqlx" label="申请类型" width="180"></el-table-column>
           <el-table-column prop="gdzc" label="固定资产编码" width="300"></el-table-column>
           <el-table-column prop="fytm" label="费用条目" width="180"></el-table-column>
-          <el-table-column fixed label="操作" width="100">
+          <el-table-column fixed="right" label="操作" width="200">
             <template slot-scope="scope">
-              <el-button @click="edit(scope.$index)" type="text" size="small">编辑</el-button>
-              <el-button @click="del(scope.$index)" type="text" size="small">删除</el-button>
+              <el-button @click="edit(scope.$index)" size="small">编辑</el-button>
+              <el-button @click="del(scope.$index)" type="danger" size="small">删除</el-button>
             </template>
           </el-table-column>
-        </el-table-column>
-      </el-table>
-
-      <div class="bottom">
-        <el-button type="primary" @click="onSubmit">保存</el-button>
-      </div>
-    </div>
-
+        </el-table>
+        <!-- bottom-->
+        <div class="bottom">
+          <el-button type="primary" @click="onSubmit">保存</el-button>
+        </div>
+      </el-main>
+    </el-container>
     <!-- dialog -->
     <el-dialog title="新增物料" :visible.sync="dialogFormVisible">
       <el-form :model="item" :rules="rules" ref="item">
@@ -189,6 +158,12 @@ export default {
       mainListName: "ECC",
       mainListType: "SP.Data.ECCListItem",
       subListName: "ECCSubInfo",
+      userListName: "EmployeeList",
+      appliantTypeListName: "ApplicantType",
+      productTypeListName: "ProductType",
+      userArr: [],
+      costCenterArr: [],
+      companyCodeArr: [],
       dialogFormVisible: false, //dialog
       requestDigest: "",
       ECCTaskForm: {
@@ -198,7 +173,8 @@ export default {
         applicantNumber: "",
         applicantType: "",
         productType: "",
-        consigneeDetail: ""
+        consigneeDetail: "",
+        userId: ""
       },
       subListData: [
         //物料列表数据
@@ -240,8 +216,10 @@ export default {
         gdzc: "",
         fytm: ""
       },
+      applicantTypeOpts: [],
+      productTypeOpts: [],
       ECCFormData: [],
-      loading: false,
+      loading: true,
       display: "none", //进度条
       percentage: 0, //进度条
       editIndex: -1, //是否编辑
@@ -262,8 +240,9 @@ export default {
         CostCenter: this.ECCTaskForm.costcenter,
         CompanyCode: this.ECCTaskForm.companycode,
         ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
-        ApplicationType: this.ApplicationType,
-        ProductType: this.ECCTaskForm.productType
+        ApplicationType: this.ECCTaskForm.applicantType,
+        ProductType: this.ECCTaskForm.productType,
+        Applicant: this.ECCTaskForm.applicant
       };
       var options = {
         url: queryUrl,
@@ -274,11 +253,15 @@ export default {
         },
         data: JSON.stringify(item)
       };
-      $.when($.ajax(options)).done(function(req) {
-        alert("Success");
-        this.loading = false;
-      });
-    },
+      $.when($.ajax(options))
+        .done(req => {
+          this.loading = false;
+          alert("Save Successfully!");
+        })
+        .catch(function(err) {
+          console.log(err);
+        });
+    }, //保存主表数据
     generateUUID: function() {
       var d = new Date().getTime();
       var uuid = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(
@@ -290,18 +273,67 @@ export default {
         }
       );
       return uuid;
-    },
-    //删除行
+    }, //生产GUID
+    search: function() {
+      this.loading = true;
+      var userName = this.ECCTaskForm.applicant;
+      if (userName != "" || userName != null) {
+        var baseUrl =
+          this.hostUrl +
+          "/_api/web/lists/getbytitle('" +
+          this.userListName +
+          "')/items?";
+        var queryUrl = baseUrl + "$filter=EmployeeName eq '" + userName + "'";
+        var opt = {
+          url: queryUrl,
+          type: "Get",
+          headers: {
+            accept: "application/json;odata=verbose"
+          },
+          contentType: "application/json"
+        };
+        $.when($.ajax(opt))
+          .done(req => {
+            var data = req.d.results;
+            if (data.length > 0) {
+              data.forEach(d => {
+                this.userArr.push({
+                  EmployeeID: d.EmployeeID,
+                  EmployeeName: d.EmployeeName
+                });
+                this.costCenterArr.push({
+                  CostCenter: d.CostCenter,
+                  CostCenterName: d.CostCenterName
+                });
+                this.companyCodeArr.push({
+                  CompanyCode: d.CompanyCode
+                });
+              });
+              this.loading = false;
+              alert("Search Success!");
+            } else {
+              this.loading = false;
+              alert(
+                "This user is not exist in employee list, please contact the administrator."
+              );
+            }
+          })
+          .catch(err => {
+            this.loading = false;
+            alert(
+              "This user is not exist in employee list, please contact the administrator."
+            );
+          });
+      }
+    }, //点击搜索用户按钮
     del(index) {
       this.subListData.splice(index, 1);
-    },
-    //编辑行
+    }, //删除行
     edit(index) {
       this.item = this.subListData[index];
       this.dialogFormVisible = true;
       this.editIndex = index;
-    },
-    //添加或编辑项目行
+    }, //删除行
     onAddItem(item) {
       this.$refs[item].validate(valid => {
         if (valid) {
@@ -321,12 +353,68 @@ export default {
           return false;
         }
       });
-    }
+    }, //添加或编辑项目行
+    getAppTypeAndProType: function() {
+      var that = this;
+      var appUrl =
+        this.hostUrl +
+        "/_api/web/lists/getbytitle('" +
+        this.appliantTypeListName +
+        "')/items";
+      var proUrl =
+        this.hostUrl +
+        "/_api/web/lists/getbytitle('" +
+        this.productTypeListName +
+        "')/items";
+      var option1 = {
+        url: appUrl,
+        type: "Get",
+        headers: {
+          accept: "application/json;odata=verbose"
+        },
+        contentType: "application/json"
+      };
+      var option2 = {
+        url: proUrl,
+        type: "Get",
+        headers: {
+          accept: "application/json;odata=verbose"
+        },
+        contentType: "application/json"
+      };
+      $.when($.ajax(option1), $.ajax(option2))
+        .done(function(req1, req2) {
+          var data1 = req1[0].d.results;
+          var data2 = req2[0].d.results;
+          if (data1.length > 0) {
+            data1.forEach(d1 => {
+              that.applicantTypeOpts.push({
+                Title: d1.Title
+              });
+            });
+          }
+          if (data2.length > 0) {
+            data2.forEach(d2 => {
+              that.productTypeOpts.push({
+                Title: d2.Title
+              });
+            });
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          alert(err);
+        });
+    } //获取申请类型,获取产品类型
   },
   mounted: function() {
+    this.loading = true;
+    if (document.getElementById("__REQUESTDIGEST") != null) {
+      this.requestDigest = document.getElementById("__REQUESTDIGEST").value;
+    }
     this.ECCTaskForm.applicantNumber = this.generateUUID();
-    this.requestDigest = document.getElementById("__REQUESTDIGEST").value;
-    console.log(this.requestDigest);
+    this.getAppTypeAndProType();
+    this.loading = false;
   }
 };
 </script>
@@ -341,7 +429,6 @@ export default {
   width: 100%;
   min-height: 25px;
   line-height: 25px;
-  border-collapse: separate;
   border-spacing: 10px;
   color: #909399;
   margin: 10px 0px;

@@ -5,9 +5,6 @@
         <router-link :to="{path:item.Path}">{{item.Name}}</router-link>
       </li>
     </ul>
-    <!-- <el-menu :default-active="this.$router.path" router mode="horizontal" class="el-menu-vertical-demo">
-      <el-menu-item v-for="(item,i) in list" :key="i" :index="item.Path"><i class="el-icon-location"></i>{{ item.Name }}</el-menu-item>
-    </el-menu>-->
   </div>
 </template>
 
