@@ -14,7 +14,7 @@ export default {
   },
   methods: {
     test: function() {
-      common.test();
+      this.$message(common.message("success", "This is test!"));
     }
   }
 };

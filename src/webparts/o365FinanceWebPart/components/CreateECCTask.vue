@@ -92,12 +92,9 @@
           <td>费用条目</td>
           <td width="200px">操作</td>
         </tr>
-        <tr v-for="(items,index) in subListData">
-          <template v-for="(item,cindex) in items">
-            <td v-if="cindex== 'sfxz'">
-              <el-checkbox disabled v-model="subListData[index].sfxz"></el-checkbox>
-            </td>
-            <td v-else>{{item}}</td>
+        <tr v-for="(subItems,index) in subListData">
+          <template v-for="(subItem,cindex) in subItems">
+            <td>{{subItem}}</td>
           </template>
           <td>
             <el-button @click="onEditItem(index)" size="small">编辑</el-button>
@@ -111,8 +108,8 @@
         </tr>
       </table>
       <!-- dialog -->
-      <el-dialog title="新增物料" :visible.sync="dialogFormVisible" show-close="false">
-        <el-form :model="item" :rules="rules" ref="item">
+      <el-dialog title="新增物料" :visible.sync="dialogFormVisible" show-close="closeFlag">
+        <el-form :model="item">
           <el-form-item label="物料：" :label-width="formLabelWidth" prop="wl">
             <el-input v-model="item.wl" autocomplete="off"></el-input>
           </el-form-item>
@@ -129,7 +126,14 @@
             <el-input v-model="item.zje" autocomplete="off"></el-input>
           </el-form-item>
           <el-form-item label="是否选择：" :label-width="formLabelWidth" prop="sfxz">
-            <el-checkbox v-model="item.sfxz"></el-checkbox>
+            <el-select v-model="item.sfxz" placeholder="请选择">
+              <el-option
+                v-for="item in choiceOptions"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
             <el-input v-model="item.sqlx" autocomplete="off"></el-input>
@@ -142,7 +146,7 @@
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
-          <el-button @click="onCancel">取 消</el-button>
+          <el-button @click="onCancel('item')">取 消</el-button>
           <el-button type="primary" @click="onSubItemSave('item')">确 定</el-button>
         </div>
       </el-dialog>
@@ -181,41 +185,29 @@ export default {
         userId: ""
       }, //ECC主表
       subListData: [], // ECC物料副表
-      rules: {
-        wl: [{ required: true, message: "请输入物料名称", trigger: "blur" }],
-        ms: [{ required: true, message: "请输入物料描述", trigger: "blur" }],
-        sl: [{ required: true, message: "请输入数量", trigger: "blur" }],
-        dj: [{ required: true, message: "请输入单价", trigger: "blur" }],
-        zje: [{ required: true, message: "请输入总金额", trigger: "blur" }],
-        sfxz: [{ required: true, message: "请输入是否选择", trigger: "blur" }],
-        sqlx: [{ required: true, message: "请输入申请类型", trigger: "blur" }],
-        fytm: [{ required: true, message: "请输入费用条目", trigger: "blur" }],
-        gdzc: [
-          { required: true, message: "请输入固定资产编码", trigger: "blur" }
-        ]
-      }, //添加列表时校验
       item: {
         wl: "", //物料
         ms: "", //描述
         sl: "", //数量
         dj: "", //单价
         zje: "", //总金额
-        sfxz: false, //是否选择
+        sfxz: "", //是否选择
         sqlx: "", //申请类型
         gdzc: "", //固定资产编码
         fytm: "" //费用条目
       }, //物料项目行数据
-      itemFlag: {
-        wl: "",
-        ms: "",
-        sl: "",
-        dj: "",
-        zje: "",
-        sfxz: false,
-        sqlx: "",
-        gdzc: "",
-        fytm: ""
-      }, //初始化物料项目行数据
+      closeFlag: false,
+      choiceOptions: [
+        //第一个下拉框
+        {
+          value: "是",
+          label: "是"
+        },
+        {
+          value: "否",
+          label: "否"
+        }
+      ],
       applicantTypeOpts: [], //用来保存"AppliantType"列表的数据
       productTypeOpts: [], //用来保存"ProductType"列表的数据
       loading: true, //控制页面是否加载
@@ -227,60 +219,54 @@ export default {
   },
   methods: {
     onSubmit: function() {
-      this.loading = true;
-      var baseUrl = this.hostUrl + "/_api/web";
-      var queryUrl =
-        baseUrl + "/lists/getbytitle('" + this.mainListName + "')/items";
-      var item = {
-        __metadata: {
-          type: this.mainListType
-        },
-        Title: this.ECCTaskForm.applicantNumber,
-        CostCenter: this.ECCTaskForm.costcenter,
-        CompanyCode: this.ECCTaskForm.companycode,
-        ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
-        ApplicationType: this.ECCTaskForm.applicantType,
-        ProductType: this.ECCTaskForm.productType,
-        Applicant: this.ECCTaskForm.applicant
-      };
-      var options = {
-        url: queryUrl,
-        method: "post",
-        headers: {
-          "Content-Type": "application/json;odata=verbose",
-          "X-RequestDigest": this.requestDigest
-        },
-        data: JSON.stringify(item)
-      };
-      $.when($.ajax(options))
-        .done(req => {
-          this.createEccSubInfoItem(this.subListData);
-          this.loading = false;
-          this.$router.push("/home");
-          alert("Submit Successfully!");
-        })
-        .catch(function(err) {
-          alert(err);
-        });
+      var validate = this.mainFormVerification();
+      if (validate) {
+        this.loading = true;
+        var itemInfo = {
+          __metadata: {
+            type: this.mainListType
+          },
+          Title: this.ECCTaskForm.applicantNumber,
+          CostCenter: this.ECCTaskForm.costcenter,
+          CompanyCode: this.ECCTaskForm.companycode,
+          ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
+          ApplicationType: this.ECCTaskForm.applicantType,
+          ProductType: this.ECCTaskForm.productType,
+          Applicant: this.ECCTaskForm.applicant
+        };
+        var parm = {
+          type: "post",
+          action: "AddInList",
+          baseUrl: this.hostUrl,
+          list: this.mainListName,
+          item: itemInfo,
+          digest: this.requestDigest
+        };
+        var options = common.queryOpt(parm);
+        $.when($.ajax(options))
+          .done(req => {
+            this.createEccSubInfoItem(this.subListData);
+            this.loading = false;
+            this.$router.push("/home");
+            this.$message(common.message("success", "数据提交成功!"));
+          })
+          .catch(err => {
+            this.$message(common.message("error", "提交数据时出现了错误!"));
+          });
+      }
     }, //提交并在对应的列表创建对应的数据
     search: function() {
       this.loading = true;
       var userName = this.ECCTaskForm.applicant;
       if (userName != "" || userName != null) {
-        var baseUrl =
-          this.hostUrl +
-          "/_api/web/lists/getbytitle('" +
-          this.userListName +
-          "')/items?";
-        var queryUrl = baseUrl + "$filter=EmployeeName eq '" + userName + "'";
-        var opt = {
-          url: queryUrl,
-          type: "Get",
-          headers: {
-            accept: "application/json;odata=verbose"
-          },
-          contentType: "application/json"
+        var parm = {
+          type: "get",
+          action: "ListItems",
+          list: this.userListName,
+          condition: "?$filter=EmployeeName eq  '" + userName + "'",
+          baseUrl: this.hostUrl
         };
+        var opt = common.queryOpt(parm);
         $.when($.ajax(opt))
           .done(req => {
             var data = req.d.results;
@@ -305,18 +291,24 @@ export default {
                 this.ECCTaskForm.companycode = this.companyCodeArr[0].CompanyCode;
               }
               this.loading = false;
-              alert("Search Success!");
+              this.$message(common.message("success", "搜索成功!"));
             } else {
               this.loading = false;
-              alert(
-                "This user is not exist in employee list, please contact the administrator."
+              this.$message(
+                common.message(
+                  "error",
+                  "搜索的用户不在员工信息列表中,请及时与管理员联系!"
+                )
               );
             }
           })
           .catch(err => {
             this.loading = false;
-            alert(
-              "This user is not exist in employee list, please contact the administrator."
+            this.$message(
+              common.message(
+                "error",
+                "搜索的用户不在员工信息列表中,请及时与管理员联系!"
+              )
             );
           });
       }
@@ -330,61 +322,77 @@ export default {
       this.dialogFormVisible = true;
     }, //编辑行
     onAddRow: function() {
+      this.item = {
+        wl: "",
+        ms: "",
+        sl: "",
+        dj: "",
+        zje: "",
+        sfxz: "",
+        sqlx: "",
+        gdzc: "",
+        fytm: ""
+      };
       this.dialogFormVisible = true;
-      this.item = this.itemFlag;
     },
-    onSubItemSave(item) {
-      this.$refs[item].validate(valid => {
-        if (valid) {
-          if (this.editIndex != -1) {
-            //Edit item part
-            this.subListData[this.editIndex] = this.item;
-          } else {
-            //Add item part
-            this.subListData.push(this.item);
-          }
-          this.editIndex = -1;
-          this.item = this.itemFlag;
-          this.dialogFormVisible = false;
+    onSubItemSave(formName) {
+      var valid = this.subItemVerification();
+      if (valid) {
+        if (this.editIndex != -1) {
+          //Edit item part
+          this.subListData[this.editIndex] = this.item;
         } else {
-          alert("Please check again you fill in data!");
-          return false;
+          //Add item part
+          this.subListData.push(this.item);
         }
-      });
+        this.editIndex = -1;
+        this.item = {
+          wl: "",
+          ms: "",
+          sl: "",
+          dj: "",
+          zje: "",
+          sfxz: "",
+          sqlx: "",
+          gdzc: "",
+          fytm: ""
+        };
+        this.dialogFormVisible = false;
+      }
     }, //添加或编辑项目行
     onCancel: function() {
       this.editIndex = -1;
-      this.item = this.itemFlag;
+      this.item = {
+        wl: "",
+        ms: "",
+        sl: "",
+        dj: "",
+        zje: "",
+        sfxz: "",
+        sqlx: "",
+        gdzc: "",
+        fytm: ""
+      };
       this.dialogFormVisible = false;
     }, //点击取消按钮
     getAppTypeAndProType: function() {
       var that = this;
-      var appUrl =
-        this.hostUrl +
-        "/_api/web/lists/getbytitle('" +
-        this.appliantTypeListName +
-        "')/items";
-      var proUrl =
-        this.hostUrl +
-        "/_api/web/lists/getbytitle('" +
-        this.productTypeListName +
-        "')/items";
-      var option1 = {
-        url: appUrl,
-        type: "Get",
-        headers: {
-          accept: "application/json;odata=verbose"
-        },
-        contentType: "application/json"
+      var parm1 = {
+        action: "ListItems",
+        type: "get",
+        list: this.appliantTypeListName,
+        baseUrl: this.hostUrl,
+        condition: ""
       };
-      var option2 = {
-        url: proUrl,
-        type: "Get",
-        headers: {
-          accept: "application/json;odata=verbose"
-        },
-        contentType: "application/json"
+      var parm2 = {
+        action: "ListItems",
+        type: "get",
+        list: this.productTypeListName,
+        baseUrl: this.hostUrl,
+        condition: ""
       };
+      var option1 = common.queryOpt(parm1);
+      var option2 = common.queryOpt(parm2);
       $.when($.ajax(option1), $.ajax(option2))
         .done(function(req1, req2) {
           var data1 = req1[0].d.results;
@@ -406,18 +414,13 @@ export default {
         })
         .catch(err => {
           this.loading = false;
-          alert(err);
+          this.$message(common.message("error", "申请类型或产品类别加载出错!"));
         });
     }, //获取申请类型,获取产品类型
     createEccSubInfoItem: function(eccSubInfoArr) {
-      var queryUrl =
-        this.hostUrl +
-        "/_api/web/lists/getbytitle('" +
-        this.subListName +
-        "')/items";
       eccSubInfoArr.forEach(d => {
         console.log(d);
-        var item = {
+        var itemInfo = {
           __metadata: {
             type: this.eccSubInfoListType
           },
@@ -432,24 +435,78 @@ export default {
           FixedAssetsCode: d.gdzc,
           CostItems: d.fytm
         };
-        var options = {
-          url: queryUrl,
-          method: "post",
-          headers: {
-            "Content-Type": "application/json;odata=verbose",
-            "X-RequestDigest": this.requestDigest
-          },
-          data: JSON.stringify(item)
+        var parm = {
+          type: "post",
+          action: "AddInList",
+          baseUrl: this.hostUrl,
+          list: this.subListName,
+          item: itemInfo,
+          digest: this.requestDigest
         };
+        var options = common.queryOpt(parm);
         $.when($.ajax(options))
           .done(req => {
-            console.log("Add Materiel successfully.");
+            this.$message(common.message("success", "物料清单已添加成功!"));
           })
           .catch(err => {
-            alert("Add Materiel Error, Please contact administractor check!");
+            this.$message(common.message("error", "物料清单添加失败!"));
           });
       });
-    } //创建ECC物料数据至ECCSubInfo列表
+    }, //创建ECC物料数据至ECCSubInfo列表
+    mainFormVerification: function() {
+      var isSuccess = false;
+      if (this.ECCTaskForm.applicant == "") {
+        this.$message(common.message("error", "请输入申请人"));
+      } else if (this.ECCTaskForm.costcenter == "") {
+        this.$message(common.message("error", "请输入成本中心"));
+      } else if (this.ECCTaskForm.companycode == "") {
+        this.$message(common.message("error", "请输入公司代码"));
+      } else if (this.ECCTaskForm.applicantType == "") {
+        this.$message(common.message("error", "请选择申请类别"));
+      } else if (this.ECCTaskForm.productType == "") {
+        this.$message(common.message("error", "请选择产品类型"));
+      } else if (this.ECCTaskForm.consigneeDetail == "") {
+        this.$message(common.message("error", "请输入收件人及地址"));
+      } else {
+        isSuccess = true;
+      }
+      return isSuccess;
+    },
+    subItemVerification() {
+      var isSuccess = false;
+      if (this.item.wl == "") {
+        this.$message(common.message("error", "请输入物料"));
+      } else if (this.item.ms == "") {
+        this.$message(common.message("error", "请输入物料描述"));
+      } else if (this.item.sl == "") {
+        this.$message(common.message("error", "请输入数量"));
+      } else if (this.item.dj == "") {
+        this.$message(common.message("error", "请输入单价"));
+      } else if (this.item.sfxz == "") {
+        this.$message(common.message("error", "请选择是否选择"));
+      } else if (this.item.lx == "") {
+        this.$message(common.message("error", "请选择申请类型"));
+      } else if (this.item.gdzc == "") {
+        this.$message(common.message("error", "请输入资产编码"));
+      } else if (this.item.fytm == "") {
+        this.$message(common.message("error", "请输入费用条目"));
+      } else {
+        isSuccess = true;
+      }
+      return isSuccess;
+    },
+    mainCalculationMoney() {
+      // var money = 0.0;
+      // this.ECCTaskForm.forEach(element => {
+      //   money += parseFloat(element.zje);
+      // });
+      // return money;
+    },
+    subCalculationItemMoney() {
+      // if (item.sl != "" && item.dj != "") {
+      //   return parseInt(item.sl) * parseFloat(item.dj);
+      // }
+    }
   },
   mounted: function() {
     this.loading = true;
