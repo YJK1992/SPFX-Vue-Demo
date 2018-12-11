@@ -49,7 +49,7 @@ var common = {
         case 'UserByName':
           // var accountName="i:0#.f|membership|test@test.test.test.cn"
           // var accountName = "i: 0#.w|domain\user" //sharepoint 2013 
-          queryUrl = baseUrl + "/_api/web/siteusers(@v)?@v='" + encodeURIComponent(parm.accountName) + "'"
+          queryUrl = baseUrl + "/siteusers(@v)?@v='" + encodeURIComponent(parm.accountName) + "'"
           break
         case 'UserGroup':
           queryUrl = baseUrl + "/GetUserById(" + parm.userID + ")/currentuser/groups"
@@ -118,5 +118,6 @@ var common = {
     }
     return opt
   }, //Rest API请求option
+  
 }
 export default common

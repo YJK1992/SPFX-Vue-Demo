@@ -108,22 +108,29 @@
         </tr>
       </table>
       <!-- dialog -->
-      <el-dialog title="新增物料" :visible.sync="dialogFormVisible" show-close="closeFlag">
+      <el-dialog title="新增物料" :visible.sync="dialogFormVisible">
         <el-form :model="item">
           <el-form-item label="物料：" :label-width="formLabelWidth" prop="wl">
-            <el-input v-model="item.wl" autocomplete="off"></el-input>
+            <el-select v-model="item.wl" placeholder="请选择" @change="wlChange">
+              <el-option
+                v-for="i in materielOpt"
+                :key="i.Materiel"
+                :label="i.Materiel"
+                :value="i.Materiel"
+              ></el-option>
+            </el-select>
           </el-form-item>
           <el-form-item label="物料描述：" :label-width="formLabelWidth" prop="ms">
-            <el-input v-model="item.ms" autocomplete="off"></el-input>
+            <el-input v-model="item.ms" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="数量：" :label-width="formLabelWidth" prop="sl">
-            <el-input v-model="item.sl" autocomplete="off"></el-input>
+            <el-input-number v-model="item.sl" @change="slChange" size="medium" :min="1" label="数量"></el-input-number>
           </el-form-item>
           <el-form-item label="单价：" :label-width="formLabelWidth" prop="dj">
-            <el-input v-model="item.dj" autocomplete="off"></el-input>
+            <el-input v-model="item.dj" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="总金额：" :label-width="formLabelWidth" prop="zje">
-            <el-input v-model="item.zje" autocomplete="off"></el-input>
+            <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="是否选择：" :label-width="formLabelWidth" prop="sfxz">
             <el-select v-model="item.sfxz" placeholder="请选择">
@@ -135,14 +142,20 @@
               ></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
-            <el-input v-model="item.sqlx" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="固定资产编码：" :label-width="formLabelWidth" prop="gdzc">
-            <el-input v-model="item.gdzc" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="费用条目：" :label-width="formLabelWidth" prop="fytm">
-            <el-input v-model="item.fytm" autocomplete="off"></el-input>
+          <el-form-item
+            label="申请类型："
+            :label-width="formLabelWidth"
+            prop="sqlx"
+            v-if="item.sfxz=='是'"
+          >
+            <el-select v-model="item.sqlx" placeholder="请选择">
+              <el-option
+                v-for="item in subApplicationTypeOpt"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
+            </el-select>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -169,6 +182,7 @@ export default {
       userListName: "EmployeeList", //员工详细信息列表名称
       appliantTypeListName: "ApplicantType", //申请类型列表名称
       productTypeListName: "ProductType", //产品类型列表名
+      fixedAssetsInfoListName: "FixedAssetsInfo", //固定资产物料列表名
       userArr: [], //用户信息数据数组
       costCenterArr: [], //成本中心数组
       companyCodeArr: [], //公司代码数组
@@ -191,14 +205,12 @@ export default {
         sl: "", //数量
         dj: "", //单价
         zje: "", //总金额
-        sfxz: "", //是否选择
+        sfxz: "否", //是否选择
         sqlx: "", //申请类型
-        gdzc: "", //固定资产编码
-        fytm: "" //费用条目
+        gdzc:"",//固定资产
+        fytm:""//费用条目
       }, //物料项目行数据
-      closeFlag: false,
       choiceOptions: [
-        //第一个下拉框
         {
           value: "是",
           label: "是"
@@ -207,9 +219,21 @@ export default {
           value: "否",
           label: "否"
         }
+      ], //ECC物料列表是否选择字段
+      subApplicationTypeFlag: false,
+      subApplicationTypeOpt: [
+        {
+          value: "固定资产",
+          label: "固定资产"
+        },
+        {
+          value: "费用",
+          label: "费用"
+        }
       ],
       applicantTypeOpts: [], //用来保存"AppliantType"列表的数据
       productTypeOpts: [], //用来保存"ProductType"列表的数据
+      materielOpt: [], //用来保存"FixedAssetsInfo"列表materiel字段的数据
       loading: true, //控制页面是否加载
       display: "none", //进度条
       percentage: 0, //进度条
@@ -322,19 +346,65 @@ export default {
       this.dialogFormVisible = true;
     }, //编辑行
     onAddRow: function() {
+      this.loading = true;
       this.item = {
         wl: "",
         ms: "",
         sl: "",
         dj: "",
         zje: "",
-        sfxz: "",
+        sfxz: "否",
         sqlx: "",
-        gdzc: "",
-        fytm: ""
+        gdzc:"",
+        fytm:"",
       };
-      this.dialogFormVisible = true;
-    },
+      this.materielOpt = [];
+      var appType = this.ECCTaskForm.applicantType;
+      var proType = this.ECCTaskForm.productType;
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.fixedAssetsInfoListName,
+        condition:
+          "?$filter=ApplicationType eq  '" +
+          appType +
+          "'" +
+          " and ProductType eq '" +
+          proType +
+          "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.materielOpt.push({
+                Materiel: d.MaterielCode,
+                MaterielDescription: d.MaterielDescription,
+                Price: d.Price
+              });
+            });
+            this.loading = false;
+            this.dialogFormVisible = true;
+          } else {
+            this.$message(
+              common.message(
+                "error",
+                "固定资产列表未找到当前申请产品，请及时与管理员联系!"
+              )
+            );
+            this.loading = false;
+            this.dialogFormVisible = false;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取固定资产列表错误!"));
+          this.loading = false;
+          this.dialogFormVisible = false;
+        });
+    }, //新增项目行
     onSubItemSave(formName) {
       var valid = this.subItemVerification();
       if (valid) {
@@ -352,10 +422,10 @@ export default {
           sl: "",
           dj: "",
           zje: "",
-          sfxz: "",
+          sfxz: "否",
           sqlx: "",
-          gdzc: "",
-          fytm: ""
+          gdzc:"",
+          fytm:"",
         };
         this.dialogFormVisible = false;
       }
@@ -368,10 +438,10 @@ export default {
         sl: "",
         dj: "",
         zje: "",
-        sfxz: "",
+        sfxz: "否",
         sqlx: "",
-        gdzc: "",
-        fytm: ""
+        gdzc:"",
+        fytm:"",
       };
       this.dialogFormVisible = false;
     }, //点击取消按钮
@@ -419,7 +489,6 @@ export default {
     }, //获取申请类型,获取产品类型
     createEccSubInfoItem: function(eccSubInfoArr) {
       eccSubInfoArr.forEach(d => {
-        console.log(d);
         var itemInfo = {
           __metadata: {
             type: this.eccSubInfoListType
@@ -427,13 +496,11 @@ export default {
           Title: this.ECCTaskForm.applicantNumber,
           Materiel: d.wl,
           MaterielDescription: d.ms,
-          Amount: d.sl,
-          Price: d.dj,
-          Total: d.zje,
+          Amount: d.sl.toString(),
+          Price: d.dj.toString(),
+          Total: d.zje.toString(),
           IsSeleted: d.sfxz.toString(),
           RequestType: d.sqlx,
-          FixedAssetsCode: d.gdzc,
-          CostItems: d.fytm
         };
         var parm = {
           type: "post",
@@ -471,7 +538,7 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    }, //ECC验证
     subItemVerification() {
       var isSuccess = false;
       if (this.item.wl == "") {
@@ -482,19 +549,27 @@ export default {
         this.$message(common.message("error", "请输入数量"));
       } else if (this.item.dj == "") {
         this.$message(common.message("error", "请输入单价"));
-      } else if (this.item.sfxz == "") {
-        this.$message(common.message("error", "请选择是否选择"));
-      } else if (this.item.lx == "") {
+      } else if (this.item.sfxz == "是" && this.item.sqlx == "") {
         this.$message(common.message("error", "请选择申请类型"));
-      } else if (this.item.gdzc == "") {
-        this.$message(common.message("error", "请输入资产编码"));
-      } else if (this.item.fytm == "") {
-        this.$message(common.message("error", "请输入费用条目"));
       } else {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    }, //ECC物料验证
+    wlChange: function() {
+      this.materielOpt.forEach(d => {
+        if (d.Materiel == this.item.wl) {
+          this.item.ms = d.MaterielDescription;
+          this.item.dj = d.Price;
+        }
+      });
+      var sl = this.item.sl;
+      this.item.zje = Number(sl) * Number(this.item.dj);
+    }, //物料编码change事件
+    slChange: function() {
+      var sl = this.item.sl;
+      this.item.zje = Number(sl) * Number(this.item.dj);
+    }, //物料数量change事件
     mainCalculationMoney() {
       // var money = 0.0;
       // this.ECCTaskForm.forEach(element => {

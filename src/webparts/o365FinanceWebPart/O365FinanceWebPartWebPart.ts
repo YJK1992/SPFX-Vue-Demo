@@ -16,7 +16,8 @@ Vue.use(ElementUI);
 import App from "./components/App.vue";
 import CreateByMe from "./components/CreateByMe.vue";
 import CreateECCTask from "./components/CreateECCTask.vue";
-import CreateGPTask from "./components/CreateGPTask.vue";
+import CreateGPPayTask from "./components/CreateGPPayTask.vue";
+import CreateGPPurchaseTask from "./components/CreateGPPurchaseTask.vue";
 import CreatePTPTask from "./components/CreatePTPTask.vue";
 import MyAgent from "./components/MyAgent.vue";
 import Home from "./components/Home.vue";
@@ -47,7 +48,8 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/home', component: Home },
       { path: '/createbyme', component: CreateByMe },
       { path: '/createecctask', component: CreateECCTask },
-      { path: '/creategptask', component: CreateGPTask },
+      { path: '/creategppaytask', component: CreateGPPayTask },
+      { path: '/creategppurchasetask', component: CreateGPPurchaseTask },
       { path: '/createptptask', component: CreatePTPTask },
       { path: '/myagent', component: MyAgent },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/

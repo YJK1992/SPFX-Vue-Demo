@@ -23,8 +23,12 @@ export default {
           Path: "/createecctask"
         },
         {
-          Name: "Create GP Task",
-          Path: "/creategptask"
+          Name: "Create GP Purchase Task",
+          Path: "/creategppurchasetask"
+        },
+        {
+          Name: "Create GP Pay Task",
+          Path: "/creategppaytask"
         },
         {
           Name: "Create PTP Task",
