@@ -17,7 +17,37 @@ export default {
   name: "app",
   data() {
     return {
-      msg: "Welcome to SPFX-Vue"
+      msg: "Welcome to SPFX-Vue",
+      list: [
+        {
+          Name: "Home",
+          Path: "/home"
+        },
+        {
+          Name: "Create ECC Task",
+          Path: "/createecctask"
+        },
+        {
+          Name: "Create GP Purchase Task",
+          Path: "/creategppurchasetask"
+        },
+        {
+          Name: "Create GP Pay Task",
+          Path: "/creategppaytask"
+        },
+        {
+          Name: "Create PTP Task",
+          Path: "/createptptask"
+        },
+        {
+          Name: "My Agent",
+          Path: "/myagent"
+        },
+        {
+          Name: "Create By Me",
+          Path: "/createbyme"
+        }
+      ],
     };
   },
   components: {
@@ -25,4 +55,5 @@ export default {
   }
 };
 </script>
+
 

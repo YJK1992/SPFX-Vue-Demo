@@ -50,7 +50,7 @@ build.configureWebpack.setConfig({
         ]
       },
       plugins: [
-        new VueLoaderPlugin()
+        new VueLoaderPlugin(),
       ]
     };
     return merge(config, vueConfig);

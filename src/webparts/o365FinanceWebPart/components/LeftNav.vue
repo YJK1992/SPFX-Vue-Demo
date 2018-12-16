@@ -9,6 +9,7 @@
 </template>
 
 <script>
+import common from "../js/common.js";
 export default {
   data() {
     return {
@@ -42,9 +43,9 @@ export default {
           Name: "Create By Me",
           Path: "/createbyme"
         }
-      ]
+      ],
     };
-  }
+  },
 };
 </script>
 

@@ -13,10 +13,8 @@
         </tr>
         <tr>
           <td>申请人 ：</td>
-          <td colspan="2">
-            <el-input placeholder="请输入内容" v-model="ECCTaskForm.applicant" class="input-with-select">
-              <el-button @click="search" slot="append" icon="el-icon-search"></el-button>
-            </el-input>
+          <td colspan="3">
+            <el-input v-model="ECCTaskForm.applicant" placeholder="申请单号" :disabled="true"></el-input>
           </td>
           <td>成本中心 ：</td>
           <td colspan="2">
@@ -30,7 +28,7 @@
             </el-select>
           </td>
           <td>公司代码 ：</td>
-          <td colspan="3" align="left">
+          <td colspan="2">
             <el-select v-model="ECCTaskForm.companycode" placeholder="请选择" size="medium">
               <el-option
                 v-for="item in companyCodeArr"
@@ -43,7 +41,7 @@
         </tr>
         <tr>
           <td>申请单号 ：</td>
-          <td colspan="2">
+          <td colspan="3">
             <el-input v-model="ECCTaskForm.applicantNumber" placeholder="申请单号" :disabled="true"></el-input>
           </td>
           <td>申请类别 ：</td>
@@ -58,7 +56,7 @@
             </el-select>
           </td>
           <td>产品类型 ：</td>
-          <td colspan="3" align="left">
+          <td colspan="2">
             <el-select v-model="ECCTaskForm.productType" placeholder="请选择" size="medium">
               <el-option
                 v-for="item in productTypeOpts"
@@ -71,8 +69,44 @@
         </tr>
         <tr>
           <td>收件人及地址 ：</td>
-          <td colspan="9" style="text-align:left;">
+          <td colspan="6" style="text-align:left;">
             <el-input v-model="ECCTaskForm.consigneeDetail" placeholder="收件人及其地址"></el-input>
+          </td>
+          <td>特殊审批人 ：</td>
+          <td colspan="3">
+            <el-input
+              v-model="ECCTaskForm.specialApprover"
+              placeholder="请输入内容"
+              @change="speApprChange"
+            ></el-input>
+          </td>
+        </tr>
+        <tr>
+          <td colspan="10" align="left">
+            <el-upload
+              class="upload-demo"
+              :action="actionUrl"
+              :on-success="uploadSuccess"
+              :on-error="uploadErr"
+              :beforeUpload="beforeUploadValidate"
+              :on-remove="removeFile"
+              :limit="3"
+              :on-exceed="fileLimit"
+              :file-list="fileList"
+            >
+              <el-button size="medium" type="primary">上传附件</el-button>
+            </el-upload>
+          </td>
+        </tr>
+        <tr>
+          <td>附件描述 ：</td>
+          <td colspan="9" style="text-align:left;">
+            <el-input
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4}"
+              placeholder="请输入内容"
+              v-model="ECCTaskForm.AttDescription"
+            ></el-input>
           </td>
         </tr>
         <tr>
@@ -80,7 +114,7 @@
             <el-button type="primary" icon="el-icon-plus" @click="onAddRow">添加项目行</el-button>
           </td>
         </tr>
-        <tr>
+        <tr id="table_heard">
           <td>物料</td>
           <td width="200x">物料描述</td>
           <td>数量</td>
@@ -96,7 +130,7 @@
           <template v-for="(subItem,cindex) in subItems">
             <td>{{subItem}}</td>
           </template>
-          <td>
+          <td style="width: 220px;">
             <el-button @click="onEditItem(index)" size="small">编辑</el-button>
             <el-button @click="del(index)" type="danger" size="small">删除</el-button>
           </td>
@@ -168,7 +202,7 @@
 </template>
 
 <script>
-import * as $ from "jquery";
+import $ from "jquery";
 import common from "../js/common.js";
 export default {
   data() {
@@ -183,7 +217,7 @@ export default {
       appliantTypeListName: "ApplicantType", //申请类型列表名称
       productTypeListName: "ProductType", //产品类型列表名
       fixedAssetsInfoListName: "FixedAssetsInfo", //固定资产物料列表名
-      userArr: [], //用户信息数据数组
+      approverList: "ApproveNode", //审批节点列表名
       costCenterArr: [], //成本中心数组
       companyCodeArr: [], //公司代码数组
       dialogFormVisible: false, //控制是否出现dialog
@@ -196,9 +230,15 @@ export default {
         applicantType: "",
         productType: "",
         consigneeDetail: "",
-        userId: ""
+        specialApprover: "",
+        total: 0,
+        userId: "",
+        AttDescription: ""
       }, //ECC主表
       subListData: [], // ECC物料副表
+      fileList: [], //附件列表数据
+      fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
+      actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       item: {
         wl: "", //物料
         ms: "", //描述
@@ -207,8 +247,8 @@ export default {
         zje: "", //总金额
         sfxz: "否", //是否选择
         sqlx: "", //申请类型
-        gdzc:"",//固定资产
-        fytm:""//费用条目
+        gdzc: "", //固定资产
+        fytm: "" //费用条目
       }, //物料项目行数据
       choiceOptions: [
         {
@@ -220,7 +260,6 @@ export default {
           label: "否"
         }
       ], //ECC物料列表是否选择字段
-      subApplicationTypeFlag: false,
       subApplicationTypeOpt: [
         {
           value: "固定资产",
@@ -230,7 +269,7 @@ export default {
           value: "费用",
           label: "费用"
         }
-      ],
+      ], //申请类型选项
       applicantTypeOpts: [], //用来保存"AppliantType"列表的数据
       productTypeOpts: [], //用来保存"ProductType"列表的数据
       materielOpt: [], //用来保存"FixedAssetsInfo"列表materiel字段的数据
@@ -238,7 +277,9 @@ export default {
       display: "none", //进度条
       percentage: 0, //进度条
       editIndex: -1, //是否编辑
-      formLabelWidth: "150px" //dialog lable
+      checkIsSpecAppro: false, //判断是否是特殊审批人
+      SpecApproId: 0, //特殊审批人ID
+      formLabelWidth: "150px", //dialog lable
     };
   },
   methods: {
@@ -246,105 +287,137 @@ export default {
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
-        var itemInfo = {
-          __metadata: {
-            type: this.mainListType
-          },
-          Title: this.ECCTaskForm.applicantNumber,
-          CostCenter: this.ECCTaskForm.costcenter,
-          CompanyCode: this.ECCTaskForm.companycode,
-          ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
-          ApplicationType: this.ECCTaskForm.applicantType,
-          ProductType: this.ECCTaskForm.productType,
-          Applicant: this.ECCTaskForm.applicant
-        };
+        this.subListData.forEach(e => {
+          this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
+        }); //循环子表数据获取总金额
+        var total = this.ECCTaskForm.total;
+        var costcenter = this.ECCTaskForm.costcenter;
         var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.mainListName,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.createEccSubInfoItem(this.subListData);
-            this.loading = false;
-            this.$router.push("/home");
-            this.$message(common.message("success", "数据提交成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "提交数据时出现了错误!"));
-          });
-      }
-    }, //提交并在对应的列表创建对应的数据
-    search: function() {
-      this.loading = true;
-      var userName = this.ECCTaskForm.applicant;
-      if (userName != "" || userName != null) {
-        var parm = {
-          type: "get",
           action: "ListItems",
-          list: this.userListName,
-          condition: "?$filter=EmployeeName eq  '" + userName + "'",
-          baseUrl: this.hostUrl
+          type: "get",
+          list: this.approverList,
+          baseUrl: this.hostUrl,
+          condition: "?$filter=CostCenter eq  '" + costcenter + "'"
         };
-        var opt = common.queryOpt(parm);
-        $.when($.ajax(opt))
-          .done(req => {
-            var data = req.d.results;
-            if (data.length > 0) {
-              data.forEach(d => {
-                this.userArr.push({
-                  EmployeeID: d.EmployeeID,
-                  EmployeeName: d.EmployeeName
-                });
-                this.costCenterArr.push({
-                  CostCenter: d.CostCenter,
-                  CostCenterName: d.CostCenterName
-                });
-                this.companyCodeArr.push({
-                  CompanyCode: d.CompanyCode
-                });
-              });
-              if (this.costCenterArr.length > 0) {
-                this.ECCTaskForm.costcenter = this.costCenterArr[0].CostCenter;
+        var option = common.queryOpt(parm); //获取审批节点请求
+        $.when($.ajax(option))
+          .done(r => {
+            if (r.d.results.length > 0) {
+              var data1 = r.d.results[0];
+              var itemInfo = {
+                __metadata: {
+                  type: this.mainListType
+                },
+                Title: this.ECCTaskForm.applicantNumber,
+                CostCenter: this.ECCTaskForm.costcenter,
+                CompanyCode: this.ECCTaskForm.companycode,
+                ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
+                ApplicationType: this.ECCTaskForm.applicantType,
+                ProductType: this.ECCTaskForm.productType,
+                Applicant: this.ECCTaskForm.applicant,
+                Total: this.ECCTaskForm.total,
+                AttDescription: this.ECCTaskForm.AttDescription
+              };
+              if (total > 0 && total < 1000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+              } else if (total >= 1000 && total < 20000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+              } else if (total >= 20000 && total < 50000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+                itemInfo.Approver3Id = data1.Approver3Id;
+              } else {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+                itemInfo.Approver3Id = data1.Approver3Id;
+                itemInfo.Approver4Id = data1.Approver4Id;
               }
-              if (this.companyCodeArr.length > 0) {
-                this.ECCTaskForm.companycode = this.companyCodeArr[0].CompanyCode;
+              if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+                itemInfo.SpecialApproverId = this.SpecApproId;
               }
-              this.loading = false;
-              this.$message(common.message("success", "搜索成功!"));
-            } else {
-              this.loading = false;
-              this.$message(
-                common.message(
-                  "error",
-                  "搜索的用户不在员工信息列表中,请及时与管理员联系!"
-                )
-              );
+              var parm = {
+                type: "post",
+                action: "AddInList",
+                baseUrl: this.hostUrl,
+                list: this.mainListName,
+                item: itemInfo,
+                digest: this.requestDigest
+              };
+              var options = common.queryOpt(parm); //在ECC列表中创建item
+              $.when($.ajax(options))
+                .done(req => {
+                  var attUrl = req.d.AttachmentFiles.__deferred.uri;
+                  this.uploadAttFileToItem(attUrl);
+                  this.$message(common.message("success", "ECC数据提交成功!"));
+                  this.createEccSubInfoItem(this.subListData); //创建子表数据
+                  this.loading = false;
+                  this.$router.push("/home");
+                })
+                .catch(err => {
+                  this.loading = false;
+                  this.$message(
+                    common.message("error", "提交ECC主表数据时出现了错误!")
+                  );
+                });
             }
           })
           .catch(err => {
             this.loading = false;
+            this.$message(common.message("error", "获取审批人出错!"));
+          });
+      }
+    }, //提交并在对应的列表创建对应的数据
+    search: function(userLoginName) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition: "?$filter=EmployeeID eq  '" + userLoginName + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.costCenterArr.push({
+                CostCenter: d.CostCenter,
+                CostCenterName: d.CostCenterName
+              });
+              this.companyCodeArr.push({
+                CompanyCode: d.CompanyCode
+              });
+            });
+            // if (this.costCenterArr.length > 0) {
+            //   this.ECCTaskForm.costcenter = this.costCenterArr[0].CostCenter;
+            // }
+            // if (this.companyCodeArr.length > 0) {
+            //   this.ECCTaskForm.companycode = this.companyCodeArr[0].CompanyCode;
+            // }
+          } else {
             this.$message(
               common.message(
                 "error",
-                "搜索的用户不在员工信息列表中,请及时与管理员联系!"
+                "当前用户不在员工信息列表中,请及时与管理员联系!"
               )
             );
-          });
-      }
-    }, //点击搜索用户按钮
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "检查当前用户出现错误!"));
+        });
+    }, //验证用户是否存在于员工表中
     del(index) {
       this.subListData.splice(index, 1);
-    }, //删除行
+    }, //删除项目行
     onEditItem(index) {
       this.item = this.subListData[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
-    }, //编辑行
+    }, //编辑项目行
     onAddRow: function() {
       this.loading = true;
       this.item = {
@@ -355,8 +428,8 @@ export default {
         zje: "",
         sfxz: "否",
         sqlx: "",
-        gdzc:"",
-        fytm:"",
+        gdzc: "",
+        fytm: ""
       };
       this.materielOpt = [];
       var appType = this.ECCTaskForm.applicantType;
@@ -424,12 +497,12 @@ export default {
           zje: "",
           sfxz: "否",
           sqlx: "",
-          gdzc:"",
-          fytm:"",
+          gdzc: "",
+          fytm: ""
         };
         this.dialogFormVisible = false;
       }
-    }, //添加或编辑项目行
+    }, //添加或编辑项目行数据
     onCancel: function() {
       this.editIndex = -1;
       this.item = {
@@ -440,8 +513,8 @@ export default {
         zje: "",
         sfxz: "否",
         sqlx: "",
-        gdzc:"",
-        fytm:"",
+        gdzc: "",
+        fytm: ""
       };
       this.dialogFormVisible = false;
     }, //点击取消按钮
@@ -500,7 +573,7 @@ export default {
           Price: d.dj.toString(),
           Total: d.zje.toString(),
           IsSeleted: d.sfxz.toString(),
-          RequestType: d.sqlx,
+          RequestType: d.sqlx
         };
         var parm = {
           type: "post",
@@ -570,23 +643,207 @@ export default {
       var sl = this.item.sl;
       this.item.zje = Number(sl) * Number(this.item.dj);
     }, //物料数量change事件
-    mainCalculationMoney() {
-      // var money = 0.0;
-      // this.ECCTaskForm.forEach(element => {
-      //   money += parseFloat(element.zje);
-      // });
-      // return money;
-    },
-    subCalculationItemMoney() {
-      // if (item.sl != "" && item.dj != "") {
-      //   return parseInt(item.sl) * parseFloat(item.dj);
-      // }
-    }
+    uploadAttFileToItem: function(attUrl) {
+      var parms = [];
+      this.fileToArr.forEach(f => {
+        parms.push({
+          type: "post",
+          action: "Attachements",
+          baseUrl: this.hostUrl,
+          fileName: f.fileName,
+          attUrl: attUrl,
+          fileArr: f.arrayBuffer,
+          digest: this.requestDigest
+        });
+      });
+      console.log("1111");
+      console.log(parms);
+      this.uploadingAttachement(parms, 0, parms.length);
+    }, //上传文件入口函数
+    uploadingAttachement: function(parms, current, total) {
+      if (current < total) {
+        var opt = common.queryOpt(parms[current]);
+        console.log(current);
+        console.log(opt);
+        $.when($.ajax(opt))
+          .done(r => {
+            current++;
+            this.uploadingAttachement(parms, current, parms.length);
+          })
+          .catch(err => {
+            this.$message(common.message("error", "上传附件失败!"));
+          });
+      }
+    }, //上传文件主要函数，递归回调是为了防止资源冲突导致文件上传失败
+    AttToArrInfo: function(f) {
+      var file = f.raw;
+      var fileName = f.name;
+      var getFile = common.getFileBuffer(file);
+      getFile
+        .done(arrayBuffer => {
+          this.fileToArr.push({
+            fileName: fileName,
+            arrayBuffer: arrayBuffer
+          });
+        })
+        .catch(onError => {
+          this.$message(common.message("error", "获取附件失败!"));
+        });
+    }, //将文件转化为文件流
+    removeFile: function(file, fileList, index) {
+      console.log(file, fileList, index);
+      this.fileList = fileList;
+      var i;
+      this.fileToArr.forEach(function(d, index) {
+        if (d.fileName === file.name) {
+          i = index;
+          console.log(i);
+        }
+      });
+      this.fileToArr.splice(i, 1);
+      console.log(this.fileList);
+    }, //移除上传文件列表文件钩子函数
+    uploadSuccess: function(response, file, fileList) {
+      console.log(file, fileList);
+      this.fileList = fileList;
+      this.AttToArrInfo(file);
+      console.log(this.fileList);
+    }, //附件上传成功后回调函数
+    uploadErr: function(err, file, fileList) {
+      this.$message(common.message("error", "上传附件出错!"));
+    }, //附件上传失败后回调函数
+    beforeUploadValidate: function(file) {
+      const extension = file.name.split(".")[1] === "xls";
+      const extension2 = file.name.split(".")[1] === "xlsx";
+      const extension3 = file.name.split(".")[1] === "doc";
+      const extension4 = file.name.split(".")[1] === "docx";
+      const extension5 = file.name.split(".")[1] === "txt";
+      const size = file.size / 1024 / 1024 < 10;
+      if (
+        !extension &&
+        !extension2 &&
+        !extension3 &&
+        !extension4 &&
+        !extension5
+      ) {
+        this.$message(
+          common.message(
+            "error",
+            "上传的文件只能是 xls、xlsx、doc、docx、txt 格式!"
+          )
+        );
+      }
+      if (!size) {
+        this.$message(common.message("error", "上传模板大小不能超过 10MB!"));
+      }
+      return (
+        extension ||
+        extension2 ||
+        extension3 ||
+        extension4 ||
+        (extension5 && size)
+      );
+    }, //附件上传前对文件格式和大小进行验证
+    fileLimit: function(files, fileList) {
+      this.$message(common.message("error", "最多只能上传三个文件!"));
+    }, //超出文件数量回调函数
+    getCurrentUser: function() {
+      var parm = {
+        action: "CurrentUser",
+        type: "get",
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(c => {
+          var loginName = c.d.LoginName.split("|membership|")[1];
+          this.ECCTaskForm.applicant = c.d.Title;
+          this.search(loginName);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载当前用户出错!"));
+        });
+    }, //获取当前用户并验证员工表是否存在当前用户
+    speApprChange: function() {
+      this.loading = true;
+      this.SpecApproId = 0;
+      this.checkIsSpecAppro = false;
+      var speApproverName = this.ECCTaskForm.specialApprover;
+      var loginName;
+      if (speApproverName != "") {
+        var parm = {
+          type: "get",
+          action: "ListItems",
+          list: this.userListName,
+          condition:
+            "?$filter=EmployeeName eq  '" +
+            speApproverName +
+            "' and IsSpecial eq '1'",
+          baseUrl: this.hostUrl
+        };
+        var opt = common.queryOpt(parm);
+        $.when($.ajax(opt))
+          .done(req => {
+            var data = req.d.results;
+            console.log(data);
+            if (data.length > 0) {
+              data.forEach(d => {
+                loginName = d.EmployeeID;
+              });
+              loginName = "i:0#.f|membership|" + loginName;
+              var parm2 = {
+                type: "get",
+                action: "UserByName",
+                accountName: loginName,
+                baseUrl: this.hostUrl
+              };
+              console.log(parm2);
+              var opt2 = common.queryOpt(parm2);
+              $.when($.ajax(opt2))
+                .done(re => {
+                  console.log(re);
+                  this.SpecApproId = re.d.Id;
+                  alert(this.SpecApproId);
+                  this.checkIsSpecAppro = true;
+                  alert(this.checkIsSpecAppro);
+                  this.loading = false;
+                })
+                .catch(err => {
+                  this.loading = false;
+                  this.ECCTaskForm.specialApprover = "";
+                  this.$message(
+                    common.message(
+                      "error",
+                      "通过员工列表EmployeeID加载特殊审批用户出错!"
+                    )
+                  );
+                });
+            } else {
+              this.loading = false;
+              this.ECCTaskForm.specialApprover = "";
+              this.$message(
+                common.message(
+                  "error",
+                  "特殊审批人不在员工表中，请及时与管理员联系!"
+                )
+              );
+            }
+          })
+          .catch(err => {
+            this.loading = false;
+            this.ECCTaskForm.specialApprover = "";
+            this.$message(common.message("error", "加载特殊审批用户出错!"));
+          });
+      } else {
+        this.loading = false;
+      }
+    } //绑定特殊审批人输入框change事件
   },
   mounted: function() {
     this.loading = true;
     this.requestDigest = common.getRequestDigest();
     this.ECCTaskForm.applicantNumber = common.generateUUID();
+    this.getCurrentUser();
     this.getAppTypeAndProType();
     this.loading = false;
   }
@@ -605,9 +862,16 @@ export default {
 .top tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
+  width: 140px;
 }
 
-.top tr:nth-child(6) {
+/* .top tr:nth-child(6) {
+  background-color: #409eff;
+  font-weight: bold;
+  color: white;
+  border: 0px;
+} */
+#table_heard td {
   background-color: #409eff;
   font-weight: bold;
   color: white;

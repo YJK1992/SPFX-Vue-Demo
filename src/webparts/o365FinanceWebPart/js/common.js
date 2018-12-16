@@ -1,3 +1,5 @@
+import $ from "jquery";
+
 var common = {
   generateUUID: function () {
     var d = new Date().getTime();
@@ -72,6 +74,7 @@ var common = {
         case 'AddInList':
           queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items";
           headers = {
+            "Accept": "application/json;odata=verbose",
             "Content-Type": "application/json;odata=verbose",
             "X-RequestDigest": parm.digest
           }
@@ -86,12 +89,30 @@ var common = {
             "X-HTTP-Method": "MERGE"
           }
           break
+        case 'Attachements':
+          queryUrl = parm.attUrl + "/add(FileName='" + parm.fileName + "')";
+          headers = {
+            "Accept": "application/json;odata=verbose",
+            "Content-Type": "application/json;odata=verbose",
+            "X-RequestDigest": parm.digest
+          }
+          break
       }
-      opt = {
-        url: queryUrl,
-        method: "post",
-        headers: headers,
-        data: JSON.stringify(parm.item)
+      if (parm.action == 'Attachements') {
+        opt = {
+          url: queryUrl,
+          method: "post",
+          headers: headers,
+          data: parm.fileArr,
+          processData: false
+        }
+      } else {
+        opt = {
+          url: queryUrl,
+          method: "post",
+          headers: headers,
+          data: JSON.stringify(parm.item)
+        }
       }
       /* var item = {
          '__metadata': {
@@ -118,6 +139,26 @@ var common = {
     }
     return opt
   }, //Rest API请求option
-  
+  getFileBuffer: function (file) {
+    var deferred = $.Deferred();
+    var reader = new FileReader();
+    reader.onloadend = function (e) {
+      deferred.resolve(e.target.result);
+    };
+    reader.onerror = function (e) {
+      deferred.reject(e.target.error);
+    };
+    reader.readAsArrayBuffer(file);
+    return deferred.promise();
+  }, //将文件转成文件流
+  storage: function (parm) {
+    if (parm.type == "get") {
+      return JSON.parse(localStorage.getItem(parm.key))
+    } else if (parm.type == "set") {
+      localStorage.setItem(parm.key, JSON.stringify(parm.value))
+    } else if (parm.type == "remove") {
+      localStorage.removeItem(parm.key)
+    }
+  }
 }
 export default common

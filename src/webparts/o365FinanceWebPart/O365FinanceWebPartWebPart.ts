@@ -21,6 +21,8 @@ import CreateGPPurchaseTask from "./components/CreateGPPurchaseTask.vue";
 import CreatePTPTask from "./components/CreatePTPTask.vue";
 import MyAgent from "./components/MyAgent.vue";
 import Home from "./components/Home.vue";
+import EditECCDTask from "./components/EditECCTask.vue";
+import ViewECCTask from "./components/ViewECCTask.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -52,6 +54,8 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/creategppurchasetask', component: CreateGPPurchaseTask },
       { path: '/createptptask', component: CreatePTPTask },
       { path: '/myagent', component: MyAgent },
+      { path: '/editecctask', component: EditECCDTask },
+      { path: '/viewecctask', component: ViewECCTask },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 
@@ -67,7 +71,7 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       el: '#app',
       router,
       render: h => h(App)
-    }).$mount('#app');
+    });
   }
 
   protected get dataVersion(): Version {
