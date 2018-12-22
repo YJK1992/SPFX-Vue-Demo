@@ -31,6 +31,8 @@ import ViewGPPay from "./components/ViewGPPay.vue";
 import EditGPPay from "./components/EditGPPay.vue";
 import MyGPPayDraft from "./components/MyGPPayDraft.vue";
 import ECCReport from "./components/ECCReport.vue";
+import GPPayReport from "./components/GPPayReport.vue";
+import GPPurchaseReport from "./components/GPPurchaseReport.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -72,6 +74,8 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/editgppay', component: EditGPPay },
       { path: '/mygppaydraft', component: MyGPPayDraft },
       { path: '/eccreport', component: ECCReport },
+      { path: '/gppayreport', component: GPPayReport },
+      { path: '/gppurchasereport', component: GPPurchaseReport },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 

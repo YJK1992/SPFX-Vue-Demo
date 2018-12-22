@@ -3,7 +3,7 @@
     <table class="duigongEdit" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">对公付款模板</span>
+          <span style="font-size:30px;color:#409eff;">对公付款</span>
           <div style="float:right">
             <el-button type="primary" @click="print">打印</el-button>
           </div>
@@ -878,7 +878,7 @@ export default {
     };
   },
   methods: {
-     getCostCenter() {
+    getCostCenter() {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -896,21 +896,21 @@ export default {
             costCenter.push(d.CostCenter);
           });
           console.log("未去重");
-            console.log(costCenter);
-            var costCenterUnique = costCenter.filter(function(
-              element,
-              index,
-              array
-            ) {
-              return array.indexOf(element) === index;
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.costCenterArr.push({
+              CostCenter: element
             });
-            costCenterUnique.forEach(element => {
-              this.costCenterArr.push({
-                CostCenter: element
-              });
-            });
-            console.log("去重后");
-            console.log(this.costCenterArr);
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
         }
       });
     },
@@ -934,7 +934,7 @@ export default {
             parseFloat(this.PublicPayment.InvoiceValue) *
             parseFloat(this.PublicPayment.ExchangeRate);
         }
-        this.convertMoney()
+        this.convertMoney();
       }
     },
     print() {
@@ -1039,7 +1039,6 @@ export default {
             var data = req.d.results;
             if (data.length > 0) {
               data.forEach(d => {
-      
                 this.companyCodeArr.push({
                   CompanyCode: d.CompanyCode
                 });
@@ -1470,30 +1469,40 @@ export default {
     },
     createTaxReceipt() {
       if (this.IsChangeTaxReceipt) {
-        // var itemInfo = {
-        //   __metadata: {
-        //     type: this.SubInfoListType
-        //   }
-        // };
-        //清空操作
-        var parm = {
-          type: "delete",
-          action: "DeleteListItem",
-          baseUrl: this.hostUrl,
-          list: this.subListName,
-          digest: this.requestDigest,
-          condition:
-            "?$filter=PublicPaymentGUID  eq '" +
-            this.PublicPayment.ApplicationNumber +
-            "'"
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "税票更新中!"));
+        var getDeleteItems = this.loadTaxReceiptData(
+          this.PublicPayment.ApplicationNumber
+        );
+        getDeleteItems
+          .done(req2 => {
+            console.log(req2);
+            var data = req2.d.results;
+            if (data.length > 0) {
+              data.forEach(d => {
+                var parm = {
+                  type: "delete",
+                  action: "DeleteListItem",
+                  baseUrl: this.hostUrl,
+                  list: this.subListName,
+                  digest: this.requestDigest,
+                  itemID: d.Id
+                };
+                var options = common.queryOpt(parm);
+                $.when($.ajax(options))
+                  .done(req => {
+                    // this.$message(common.message("success", "税票更新中!"));
+                  })
+                  .catch(err => {
+                    this.$message(common.message("error", "税票清空时失败!"));
+                  });
+              });
+            } else {
+              // this.$message(
+              //   common.message("error", "税票清单列表中不存在该申请单号")
+              // );
+            }
           })
-          .catch(err => {
-            this.$message(common.message("error", "税票清空时失败!"));
+          .catch(error => {
+            this.$message(common.message("error", "加载税票清单失败"));
           });
       }
       //添加附表数据
@@ -1534,34 +1543,44 @@ export default {
     },
     createExpenseAllocation() {
       if (this.IsChangeExpenseAllocation) {
-        // var itemInfo = {
-        //   __metadata: {
-        //     type: this.SubInfoListType
-        //   }
-        // };
-        //清空操作
-        var parm = {
-          type: "delete",
-          action: "DeleteListItem",
-          baseUrl: this.hostUrl,
-          list: this.subListName2,
-          digest: this.requestDigest,
-          condition:
-            "?$filter=PublicPaymentGUID  eq '" +
-            this.PublicPayment.ApplicationNumber +
-            "'"
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "费用分摊更新中!"));
+        var getDeleteItems = this.loadExpenseAllocationData(
+          this.PublicPayment.ApplicationNumber
+        );
+        getDeleteItems
+          .done(req2 => {
+            console.log(req2);
+            var data = req2.d.results;
+            if (data.length > 0) {
+              data.forEach(d => {
+                var parm = {
+                  type: "delete",
+                  action: "DeleteListItem",
+                  baseUrl: this.hostUrl,
+                  list: this.subListName2,
+                  digest: this.requestDigest,
+                  itemID: d.Id
+                };
+                var options = common.queryOpt(parm);
+                $.when($.ajax(options))
+                  .done(req => {
+                    // this.$message(common.message("success", "税票更新中!"));
+                  })
+                  .catch(err => {
+                    this.$message(common.message("error", "费用清单清空时失败!"));
+                  });
+              });
+            } else {
+              // this.$message(
+              //   common.message("error", "税票清单列表中不存在该申请单号")
+              // );
+            }
           })
-          .catch(err => {
-            this.$message(common.message("error", "费用分摊更新失败!"));
+          .catch(error => {
+            this.$message(common.message("error", "加载费用清单失败"));
           });
       }
       //添加附表数
-      console.log(ExpenseAllocationList);
+      console.log(this.ExpenseAllocationList);
       this.ExpenseAllocationList.forEach(item => {
         console.log(item);
         var itemInfo = {
@@ -1957,8 +1976,8 @@ export default {
       getMainListData
         .done(req => {
           var data = req.d.results;
-          console.log("!1111111111")
-          console.log(data)
+          console.log("!1111111111");
+          console.log(data);
           if (data.length > 0) {
             //获取主表
             (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
@@ -1972,31 +1991,51 @@ export default {
                 data[0].AmountInlowercase), //金额小写
               (this.PublicPayment.CapitalizationAmount =
                 data[0].CapitalizationAmount), //金额大写
-              (this.PublicPayment.LoanNumber = data[0].LoanNumber==null?"":data[0].LoanNumber), //借款单号
-              (this.PublicPayment.CollectionUnit = data[0].CollectionUnit==null?"":data[0].CollectionUnit), //收款单位名称
-              (this.PublicPayment.OpeningBank = data[0].OpeningBank==null?"":data[0].OpeningBank), //开户行
-              (this.PublicPayment.Account = data[0].Account==null?"":data[0].Account), //账号
-              (this.PublicPayment.City = data[0].City==null?"":data[0].City), //省市
-              (this.PublicPayment.County = data[0].County==null?"":data[0].County), //市县
-              (this.PublicPayment.DetailsOfPayment = data[0].DetailsOfPayment==null?"":data[0].DetailsOfPayment), //汇款附言
-              (this.PublicPayment.IsContract = data[0].IsContract=="true"?true:false), //是否有合同
-              (this.PublicPayment.ContractNumber = data[0].ContractNumber==null?"":data[0].ContractNumber), //合同号
-              (this.PublicPayment.Money = data[0].Money==null?"":data[0].Money), //金额
-              (this.PublicPayment.ProjectName = data[0].ProjectName==null?"":data[0].ProjectName), //项目名称
-              (this.PublicPayment.ProjectNumber = data[0].ProjectNumber==null?"":data[0].ProjectNumber), //项目编号
-              (this.PublicPayment.IsFreightInvoice = data[0].IsFreightInvoice=="true"?true:false), //运费发票
-              (this.PublicPayment.Remark = data[0].Remark==null?"":data[0].Remark), //备注
-              (this.PublicPayment.ExpenseCategory = data[0].ExpenseCategory==null?"":data[0].ExpenseCategory), //费用类别
-              (this.PublicPayment.CostAccount = data[0].CostAccount==null?"":data[0].CostAccount), //费用科目
+              (this.PublicPayment.LoanNumber =
+                data[0].LoanNumber == null ? "" : data[0].LoanNumber), //借款单号
+              (this.PublicPayment.CollectionUnit =
+                data[0].CollectionUnit == null ? "" : data[0].CollectionUnit), //收款单位名称
+              (this.PublicPayment.OpeningBank =
+                data[0].OpeningBank == null ? "" : data[0].OpeningBank), //开户行
+              (this.PublicPayment.Account =
+                data[0].Account == null ? "" : data[0].Account), //账号
+              (this.PublicPayment.City =
+                data[0].City == null ? "" : data[0].City), //省市
+              (this.PublicPayment.County =
+                data[0].County == null ? "" : data[0].County), //市县
+              (this.PublicPayment.DetailsOfPayment =
+                data[0].DetailsOfPayment == null
+                  ? ""
+                  : data[0].DetailsOfPayment), //汇款附言
+              (this.PublicPayment.IsContract =
+                data[0].IsContract == "true" ? true : false), //是否有合同
+              (this.PublicPayment.ContractNumber =
+                data[0].ContractNumber == null ? "" : data[0].ContractNumber), //合同号
+              (this.PublicPayment.Money =
+                data[0].Money == null ? "" : data[0].Money), //金额
+              (this.PublicPayment.ProjectName =
+                data[0].ProjectName == null ? "" : data[0].ProjectName), //项目名称
+              (this.PublicPayment.ProjectNumber =
+                data[0].ProjectNumber == null ? "" : data[0].ProjectNumber), //项目编号
+              (this.PublicPayment.IsFreightInvoice =
+                data[0].IsFreightInvoice == "true" ? true : false), //运费发票
+              (this.PublicPayment.Remark =
+                data[0].Remark == null ? "" : data[0].Remark), //备注
+              (this.PublicPayment.ExpenseCategory =
+                data[0].ExpenseCategory == null ? "" : data[0].ExpenseCategory), //费用类别
+              (this.PublicPayment.CostAccount =
+                data[0].CostAccount == null ? "" : data[0].CostAccount), //费用科目
               (this.PublicPayment.CodeOfFixedAssets =
                 data[0].CodeOfFixedAssets), //固定资产编码
               (this.PublicPayment.ApplicationNumber =
                 data[0].ApplicationNumber), //申请单号
               (this.PublicPayment.ReceiptNumber = data[0].ReceiptNumber), //单据编号
-              (this.PublicPayment.IsSettlement = data[0].IsSettlement=="true"?true:false), //结算
+              (this.PublicPayment.IsSettlement =
+                data[0].IsSettlement == "true" ? true : false), //结算
               (this.PublicPayment.SpecialApprover = data[0].SpecialApprover); //特殊审批人
-              console.log("!22222222222222")
-            console.log(this.PublicPayment)
+            this.currentItemId = data[0].Id;
+            console.log("!22222222222222");
+            console.log(this.PublicPayment);
           } else {
             this.$message(
               common.message("error", "对公付款列表中不存在该申请单号")
@@ -2062,7 +2101,7 @@ export default {
         });
 
       this.loading = false;
-      this.convertMoney()
+      this.convertMoney();
     } else {
       this.loading = false;
       common.message(common.message("error", "当前链接错误"));

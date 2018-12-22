@@ -3,7 +3,7 @@
     <table class="caigou" style="table-layout：fixed">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">采购申请模板</span>
+          <span style="font-size:30px;color:#409eff;">采购申请</span>
         </td>
       </tr>
       <tr>
@@ -15,7 +15,7 @@
       <tr>
         <td align="right">标题：</td>
         <td colspan="7">
-          <el-input  v-model="purchaseRequestData.Title" placeholder="标题"></el-input>
+          <el-input v-model="purchaseRequestData.Title" placeholder="标题"></el-input>
         </td>
       </tr>
       <tr>
@@ -94,13 +94,18 @@
       <tr>
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
-          <el-checkbox v-model="purchaseRequestData.IsContract"></el-checkbox>
+          <el-checkbox @change="disabledMoney()" v-model="purchaseRequestData.IsContract"></el-checkbox>
         </td>
       </tr>
       <tr>
         <td align="right">合同号：</td>
         <td align="left">
-          <el-select @change="changeMoney()" v-model="purchaseRequestData.ContractNumber" filterable placeholder="请选择">
+          <el-select
+            @change="changeMoney()"
+            v-model="purchaseRequestData.ContractNumber"
+            filterable
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in ContractNumbers"
               :key="item.value"
@@ -111,7 +116,11 @@
         </td>
         <td align="right">金额：</td>
         <td colspan="5">
-          <el-input v-model="purchaseRequestData.Money" placeholder="金额"></el-input>
+          <el-input
+            :disabled="isDisabledMoney==true"
+            v-model="purchaseRequestData.Money"
+            placeholder="金额"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -209,8 +218,8 @@
 </template>
 
 <script>
- import $ from "jquery";
- import common from "../js/common.js";
+import $ from "jquery";
+import common from "../js/common.js";
 export default {
   data() {
     return {
@@ -258,9 +267,7 @@ export default {
         Taxation: "",
         Amount: ""
       },
-      ContractNumbers: [
-
-      ], //合同号
+      ContractNumbers: [], //合同号
       applicationTypeOptions: [
         {
           value: "费用",
@@ -278,11 +285,23 @@ export default {
       editIndex: -1, //是否编辑
       formLabelWidth: "150px", //dialog lable
       message: "",
-      loading: true
+      loading: true,
+      isDisabledMoney: false
     };
   },
   methods: {
-     getCostCenter() {
+    disabledMoney() {
+      if (this.purchaseRequestData.IsContract) {
+        this.isDisabledMoney = true;
+        this.purchaseRequestData.ContractNumber = "";
+        this.purchaseRequestData.Money = "";
+      } else {
+        this.isDisabledMoney = false;
+        this.purchaseRequestData.ContractNumber = "";
+        this.purchaseRequestData.Money = "";
+      }
+    },
+    getCostCenter() {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -300,30 +319,30 @@ export default {
             costCenter.push(d.CostCenter);
           });
           console.log("未去重");
-            console.log(costCenter);
-            var costCenterUnique = costCenter.filter(function(
-              element,
-              index,
-              array
-            ) {
-              return array.indexOf(element) === index;
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.costCenterArr.push({
+              CostCenter: element
             });
-            costCenterUnique.forEach(element => {
-              this.costCenterArr.push({
-                CostCenter: element
-              });
-            });
-            console.log("去重后");
-            console.log(this.costCenterArr);
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
         }
       });
     },
     changeMoney() {
-        this.ContractNumbers.forEach(item => {
-          if(this.purchaseRequestData.ContractNumber==item.value){
-            this.purchaseRequestData.Money=item.money
-          }
-        });
+      this.ContractNumbers.forEach(item => {
+        if (this.purchaseRequestData.ContractNumber == item.value) {
+          this.purchaseRequestData.Money = item.money;
+        }
+      });
     },
     getExpenseCategory() {
       //获取费用类别
@@ -456,7 +475,8 @@ export default {
       };
       var option = common.queryOpt(parm); //获取审批节点请求
       $.when($.ajax(option)).done(r => {
-        console.log(r)
+        console.log("Get Approve node success");
+        console.log(r);
         if (r.d.results.length > 0) {
           var data1 = r.d.results[0];
           var itemInfo = {
@@ -464,12 +484,14 @@ export default {
               type: this.mainListType
             },
             Title: this.purchaseRequestData.Title,
-            Consignor:this.purchaseRequestData.Consignor,
+            Consignor: this.purchaseRequestData.Consignor,
             CostCenter: this.purchaseRequestData.CostCenter,
             CompanyCode: this.purchaseRequestData.CompanyCode,
             DeliveryAddress: this.purchaseRequestData.DeliveryAddress,
             IsContract: this.purchaseRequestData.IsContract.toString(),
-            ContractNumber: this.purchaseRequestData.IsContract?this.purchaseRequestData.ContractNumber:"",
+            ContractNumber: this.purchaseRequestData.IsContract
+              ? this.purchaseRequestData.ContractNumber
+              : "",
             Money: this.purchaseRequestData.Money,
             ApplicationType: this.purchaseRequestData.ApplicationType,
             ExpenseCategory: this.purchaseRequestData.ExpenseCategory,
@@ -478,9 +500,10 @@ export default {
             ApplicationNumber: this.purchaseRequestData.ApplicationNumber,
             SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
           };
-          console.log(itemInfo)
+          console.log("kkkkkk");
+          console.log(itemInfo);
           if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id==null
+            itemInfo.Approver1Id = data1.Approver1Id == null;
           } else if (total >= 1000 && total < 20000) {
             itemInfo.Approver1Id = data1.Approver1Id;
             itemInfo.Approver2Id = data1.Approver2Id;
@@ -508,9 +531,9 @@ export default {
             item: itemInfo,
             digest: this.requestDigest
           };
-          console.log(parm)
+          console.log(parm);
           var options = common.queryOpt(parm);
-          console.log(options)
+          console.log(options);
           $.when($.ajax(options))
             .done(req => {
               this.$message(common.message("success", "采购申请添加成功!"));
@@ -521,6 +544,8 @@ export default {
             .catch(err => {
               this.$message(common.message("error", "提交数据时出现了错误!"));
             });
+        }else {
+          this.$message(common.message("warning","未找到审批用户!"))
         }
       });
     },
@@ -532,7 +557,7 @@ export default {
           __metadata: {
             type: this.SubInfoListType
           },
-          Title:this.purchaseRequestData.ApplicationNumber,
+          Title: this.purchaseRequestData.ApplicationNumber,
           PurchaseRequestGUID: this.purchaseRequestData.ApplicationNumber,
           Supplier: item.Supplier,
           SupplierParts: item.SupplierParts,
@@ -573,18 +598,18 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var selectedCostCenter='';
+            var selectedCostCenter = "";
             data.forEach(d => {
               // this.costCenterArr.push({
               //   CostCenter: d.CostCenter,
               //   CostCenterName: d.CostCenterName
               // });
-               selectedCostCenter=d.CostCenter;
+              selectedCostCenter = d.CostCenter;
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
               });
             });
-            this.purchaseRequestData.CostCenter=selectedCostCenter;
+            this.purchaseRequestData.CostCenter = selectedCostCenter;
           } else {
             this.$message(
               common.message(
@@ -627,6 +652,8 @@ export default {
       } else {
         isSuccess = true;
       }
+      console.log("format!!!!")
+      console.log(isSuccess)
       return isSuccess;
     },
     itemVerification() {

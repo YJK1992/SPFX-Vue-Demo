@@ -1,16 +1,10 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="成本中心：">
-        <el-select v-model="Condition.CostCenter" placeholder="请选择">
-          <el-option
-            v-for="item in CostCenterArr"
-            :key="item.CostCenter"
-            :label="item.CostCenter"
-            :value="item.CostCenter"
-          ></el-option>
-        </el-select>
+      <el-form-item label="申请单号：">
+        <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
       </el-form-item>
+
       <el-form-item label="日期时间段：">
         <el-date-picker
           v-model="Condition.applicationDate"
@@ -20,34 +14,8 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-      <el-form-item label="申请类别：">
-        <el-select allow-create="true" v-model="Condition.ApplicationType" placeholder="请选择">
-          <el-option
-            v-for="item in ApplicationTypeArr"
-            :key="item.Title"
-            :label="item.Title"
-            :value="item.Title"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="状态：">
-        <el-select v-model="Condition.Status" placeholder="请选择">
-          <el-option
-            v-for="item in Status"
-            :key="item.value"
-            :label="item.value"
-            :value="item.value"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="物控人员：">
-        <el-input v-model="Condition.MaterialControl" placeholder="审批人"></el-input>
-      </el-form-item>
-
-      <el-form-item label="申请单号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="审批人"></el-input>
+      <el-form-item label="经办人：">
+        <el-input v-model="Condition.Consignor" placeholder="经办人"></el-input>
       </el-form-item>
 
       <el-form-item label="公司代码：">
@@ -61,20 +29,27 @@
         </el-select>
       </el-form-item>
 
+      <el-form-item label="结算方式：">
+        <el-select v-model="Condition.SettlementType" placeholder="请选择">
+          <el-option
+            v-for="item in SettlementType"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" @click="onSubmit">查询</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="ECCReport">
-      <tr id="report_ECCReport">
-        <td>公司代码</td>
+    <table class="gpPurchaseReport">
+      <tr id="report_gpPurchaseReport">
         <td style="width: 300px;">申请单号</td>
-        <td>申请人</td>
-        <td>成本中心</td>
-        <td>申请类别</td>
-        <td>产品类别</td>
-        <td>收件人</td>
+        <td>标题</td>
+        <td>经办人</td>
         <td>操作</td>
       </tr>
       <tr v-for="(subItems,index) in TableData">
@@ -86,20 +61,18 @@
         </td>
       </tr>
     </table>
-    <el-dialog title="物料信息" :visible.sync="dialogTableVisible">
+
+    <el-dialog title="供应商信息" :visible.sync="dialogTableVisible">
       <el-table :data="gridData">
-        <el-table-column property="Materiel" label="物料" width="150"></el-table-column>
-        <el-table-column property="Amount" label="数量" width="150"></el-table-column>
-        <el-table-column property="Price" label="单价" width="150"></el-table-column>
-        <el-table-column property="Total" label="总金额" width="150"></el-table-column>
-        <el-table-column property="FixedAssetsCode" label="固定资产编码" width="150"></el-table-column>
-        <el-table-column property="RequestType" label="费用类别" width="150"></el-table-column>
+        <el-table-column property="Supplier" label="供应商" width="150"></el-table-column>
+        <el-table-column property="SupplierParts" label="供应商部件" width="150"></el-table-column>
+        <el-table-column property="Amount" label="总金额" width="150"></el-table-column>
+        <el-table-column property="Taxation" label="税金" width="150"></el-table-column>
       </el-table>
     </el-dialog>
   </div>
 </template>
 
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -109,40 +82,44 @@ export default {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       //列表名称
-      mainListName: "ECC", //ECC列表名
-      subListName: "ECCSubInfo", //ECC物料信息列表名称
+      mainListName: "PurchaseRequest", //ECC列表名
+      subListName: "PurchaseRequestSubInfo", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工详细信息列表名称
-      appliantTypeListName: "ApplicantType", //申请类型列表名称
+      //   appliantTypeListName: "ApplicantType", //申请类型列表名称
       //初始化筛选数据
       CostCenterArr: [], //成本中心
       ApplicationTypeArr: [], //申请类别
       CompanyCodeArr: [], //公司代码
-      Status: [
+      SettlementType: [
+        //结算方式
         {
-          value: "Draft"
+          value: "清帐",
+          label: "清帐"
         },
         {
-          value: "Submitted"
+          value: "支票",
+          label: "支票"
         },
         {
-          value: "Changed"
+          value: "汇款",
+          label: "汇款"
         },
         {
-          value: "Dumped"
+          value: "信用证",
+          label: "信用证"
         },
         {
-          value: "Approved"
+          value: "汇票",
+          label: "汇票"
         }
       ],
       //筛选条件
       Condition: {
-        CostCenter: "", //成本中心
         ApplicationDate: "", //申请日期
-        ApplicationType: "", //申请类型
-        Status: "", //状态
-        MaterialControl: "", //物控人员
         ApplicationNumber: "", //申请单号
-        CompanyCode: ""
+        CompanyCode: "", //公司代码
+        SettlementType: "", //结算类型
+        Consignor: "" //经办人
       },
       //主表数据
       TableData: [],
@@ -207,19 +184,16 @@ export default {
       };
 
       var option = common.queryOpt(parm);
+      console.log("ppp111");
+      console.log(option);
       $.when($.ajax(option)).done(req => {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
             this.TableData.push({
-              companyCode: d.CompanyCode,
+              ApplicationNumber: d.ApplicationNumber,
               Title: d.Title,
-              Applicant: d.Applicant,
-              CostCenter: d.CostCenter,
-              Applicant: d.Applicant,
-              ApplicationType: d.ApplicationType,
-              MailTo: "",
-              ProductType: d.ProductType
+              Consignor: d.Consignor
             });
           });
         }
@@ -228,58 +202,34 @@ export default {
     getSubList(index) {
       this.dialogTableVisible = true;
       this.SubTableData = [];
-      var applicationNumber = this.TableData[index].Title;
+      var applicationNumber = this.TableData[index].PurchaseRequestGUID;
       var parm = {
         type: "get",
         action: "ListItems",
         list: this.subListName,
         baseUrl: this.hostUrl,
-        condition: "?$filter=Title eq '" + applicationNumber + "'"
+        condition: "?$filter=PurchaseRequestGUID eq '" + applicationNumber + "'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
-          var data = req.d.results;
+          var data=req.d.results
           if (data.length > 0) {
             data.forEach(d => {
               this.SubTableData.push({
-                Materiel: d.Materiel,
+                Supplier: d.Supplier,
+                SupplierParts: d.SupplierParts,
                 Amount: d.Amount,
-                Price: d.Price,
-                Total: d.Total,
-                FixedAssetsCode: d.FixedAssetsCode,
-                RequestType: d.FixedAssetsCode
+                Taxation: d.Taxation
               });
             });
           } else {
-            this.$message(common.message("waring", "没有无聊数据!"));
+            this.$message(common.message("waring", "没有供应商数据信息!"));
           }
         })
         .catch(err => {
           this.$message(common.message("error", "获取物料数据失败!"));
         });
-    },
-    getApplicationType() {
-      //获取申请类别
-      var parm = {
-        action: "ListItems",
-        type: "get",
-        list: this.appliantTypeListName,
-        baseUrl: this.hostUrl,
-        condition: ""
-      };
-
-      var option = common.queryOpt(parm);
-      $.when($.ajax(option)).done(req => {
-        var data = req.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.ApplicationTypeArr.push({
-              Title: d.Title
-            });
-          });
-        }
-      });
     },
     getCompanyCodeAndCostCenter() {
       //获取公司代码和成本中心
@@ -294,22 +244,11 @@ export default {
       $.when($.ajax(opt)).done(req => {
         var data = req.d.results;
         if (data.length > 0) {
-          var costcenter = []; //未去重成本中心
           var companycode = []; //未去重公司代码
           //填充原始数据
           data.forEach(d => {
-            costcenter.push(d.CostCenter);
             companycode.push(d.CompanyCode);
           });
-          //去重操作
-          var costCenterUnique = costcenter.filter(function(
-            element,
-            index,
-            array
-          ) {
-            return array.indexOf(element) === index;
-          });
-
           var comopanyCodeUnique = companycode.filter(function(
             element,
             index,
@@ -317,13 +256,6 @@ export default {
           ) {
             return array.indexOf(element) === index;
           });
-
-          costCenterUnique.forEach(element => {
-            this.CostCenterArr.push({
-              CostCenter: element
-            });
-          });
-
           comopanyCodeUnique.forEach(element => {
             this.CompanyCodeArr.push({
               CompanyCode: element
@@ -335,19 +267,18 @@ export default {
   },
   mounted() {
     this.getCompanyCodeAndCostCenter();
-    this.getApplicationType();
   }
 };
 </script>
 
 <style>
-.ECCReport tr td {
+.gpPurchaseReport tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
   width: 140px;
 }
 
-.ECCReport {
+.gpPurchaseReport {
   min-height: 25px;
   line-height: 25px;
   text-align: center;
@@ -356,7 +287,7 @@ export default {
   padding: 2px;
 }
 
-.ECCReport tr:nth-child(1) {
+.gpPurchaseReport tr:nth-child(1) {
   background-color: #409eff;
   font-weight: bold;
   color: white;

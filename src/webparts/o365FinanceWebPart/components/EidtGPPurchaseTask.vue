@@ -118,7 +118,11 @@
       <tr>
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
-          <el-checkbox v-model="purchaseRequestData.IsContract" :disabled="showApprover==true"></el-checkbox>
+          <el-checkbox
+            @change="disabledMoney()"
+            v-model="purchaseRequestData.IsContract"
+            :disabled="showApprover==true"
+          ></el-checkbox>
         </td>
       </tr>
       <tr>
@@ -145,7 +149,7 @@
           <el-input
             v-model="purchaseRequestData.Money"
             placeholder="金额"
-            :disabled="showApprover==true"
+            :disabled="isDisabledMoney==true"
           ></el-input>
         </td>
       </tr>
@@ -347,11 +351,24 @@ export default {
       requestIsReject: false,
       currentStep: "",
       currentItemId: 0,
-      taskId: 0
+      taskId: 0,
+      isChangeSubList: false,
+      isDisabledMoney: false
     };
   },
   methods: {
-     getCostCenter() {
+    disabledMoney() {
+      if (this.purchaseRequestData.IsContract) {
+        this.isDisabledMoney = true;
+        this.purchaseRequestData.ContractNumber = "";
+        this.purchaseRequestData.Money = "";
+      } else {
+        this.isDisabledMoney = false;
+        this.purchaseRequestData.ContractNumber = "";
+        this.purchaseRequestData.Money = "";
+      }
+    },
+    getCostCenter() {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -369,21 +386,21 @@ export default {
             costCenter.push(d.CostCenter);
           });
           console.log("未去重");
-            console.log(costCenter);
-            var costCenterUnique = costCenter.filter(function(
-              element,
-              index,
-              array
-            ) {
-              return array.indexOf(element) === index;
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.costCenterArr.push({
+              CostCenter: element
             });
-            costCenterUnique.forEach(element => {
-              this.costCenterArr.push({
-                CostCenter: element
-              });
-            });
-            console.log("去重后");
-            console.log(this.costCenterArr);
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
         }
       });
     },
@@ -480,6 +497,7 @@ export default {
           type: "error"
         });
       } else {
+        this.isChangeSubList = true;
         if (this.editIndex != -1) {
           //编辑
           this.subListData[this.editIndex] = this.item;
@@ -501,6 +519,7 @@ export default {
     },
     del(index) {
       this.subListData.splice(index, 1);
+      this.isChangeSubList = true;
     },
     onEditItem(index) {
       this.item = this.subListData[index];
@@ -631,6 +650,45 @@ export default {
       });
     },
     createSubInfoItem() {
+      if (this.isChangeSubList) {
+        var getDeleteItems = this.loadSubListData(
+          this.purchaseRequestData.ApplicationNumber
+        );
+
+        getDeleteItems
+          .done(req2 => {
+            console.log(req2);
+            var data = req2.d.results;
+            if (data.length > 0) {
+              data.forEach(d => {
+                var parm = {
+                  type: "delete",
+                  action: "DeleteListItem",
+                  baseUrl: this.hostUrl,
+                  list: this.subListName,
+                  digest: this.requestDigest,
+                  itemID: d.Id
+                };
+                var options = common.queryOpt(parm);
+                $.when($.ajax(options))
+                  .done(req => {
+                    this.$message(common.message("success", "税票更新中!"));
+                  })
+                  .catch(err => {
+                    this.$message(common.message("error", "税票清空时失败!"));
+                  });
+              });
+            } else {
+              // this.$message(
+              //   common.message("error", "税票清单列表中不存在该申请单号")
+              // );
+            }
+          })
+          .catch(error => {
+            this.$message(common.message("error", "加载税票清单失败"));
+          });
+      }
+
       //添加附表数据
       this.subListData.forEach(item => {
         console.log(item);
@@ -1011,7 +1069,7 @@ export default {
             this.purchaseRequestData.CostCenter = data[0].CostCenter;
             this.purchaseRequestData.CompanyCode = data[0].CompanyCode;
             this.purchaseRequestData.DeliveryAddress = data[0].DeliveryAddress;
-            this.purchaseRequestData.IsContract = data[0].IsContract;
+            this.purchaseRequestData.IsContract = data[0].IsContract=="true"?true:false;
             this.purchaseRequestData.ApplicationNumber =
               data[0].ApplicationNumber;
             this.purchaseRequestData.ContractNumber = data[0].ContractNumber;
@@ -1025,6 +1083,8 @@ export default {
             this.purchaseRequestData.SpecialApproverTitle =
               data[0].SpecialApproverTitle;
             this.currentItemId = data[0].Id;
+
+          this.isDisabledMoney =  this.purchaseRequestData.IsContract ;
           } else {
             this.$message(
               common.message("error", "采购申请列表中不存在该申请单号")

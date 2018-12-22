@@ -5,7 +5,7 @@
       <table class="editECCTop" style="border-collapse: collapse;">
         <tr>
           <td colspan="10">
-            <span style="font-size:30px;color:#409eff;">资产领用模板</span>
+            <span style="font-size:30px;color:#409eff;">资产领用</span>
           </td>
         </tr>
         <tr>
@@ -163,7 +163,7 @@
               @click="del(index)"
               type="danger"
               size="small"
-              :disabled="showFAOrApp==true"
+              :disabled="showEditor==false"
             >删除</el-button>
           </td>
         </tr>
@@ -229,6 +229,12 @@
                 :value="item.value"
               ></el-option>
             </el-select>
+          </el-form-item>
+          <el-form-item label="固定资产：" :label-width="formLabelWidth" prop="gdzc" v-show="currentStep=='Approver5'&&item.sqlx=='固定资产'">
+            <el-input v-model="item.gdzc" placeholder="请输入固定资产"></el-input>
+          </el-form-item>
+          <el-form-item label="费用条目：" :label-width="formLabelWidth" prop="fytm" v-show="currentStep=='Approver5'&&item.sqlx=='费用'">
+            <el-input v-model="item.fytm" placeholder="请输入费用条目"></el-input>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -433,6 +439,9 @@ export default {
         .done(req => {
           this.loading = false;
           this.$message(common.message("success", "审批成功!"));
+          if(this.currentStep=="Approver5"){
+            this.deleteSubListItems();
+          }
           this.$router.push("/home");
         })
         .catch(err => {
@@ -518,7 +527,7 @@ export default {
             $.when($.ajax(options))
               .done(req => {
                 if (type == "submit") {
-                  console.log("Is submit")
+                  console.log("Is submit");
                   if (this.currentStep == "Application" && this.taskId != 0) {
                     this.onApproval("approve");
                   }
@@ -546,7 +555,7 @@ export default {
                       digest: this.requestDigest,
                       list: this.mainListName,
                       itemID: this.currentItemId,
-                      fileName: deleteAttName
+                      fileName: this.deleteAttName
                     };
                     var opt = common.queryOpt(parm);
                     var deleteFile = common.service(opt);
@@ -569,17 +578,10 @@ export default {
                   }
                 }
                 this.$message(common.message("success", "ECC数据保存成功!"));
-                console.log(this.isChangeSubListData)
+                console.log(this.isChangeSubListData);
                 if (this.isChangeSubListData) {
-                  console.log("change sub data")
-                  var deleteSubListItem = this.deleteSubListItem();
-                  deleteSubListItem
-                    .done(dt => {
-                      this.createEccSubInfoItem(this.subListData); //创建子表数据
-                    })
-                    .catch(errdt => {
-                      console.log("删除子表数据错误");
-                    });
+                  console.log("change sub data");
+                  this.deleteSubListItems();
                 }
 
                 this.loading = false;
@@ -781,8 +783,8 @@ export default {
           this.$message(common.message("error", "申请类型或产品类别加载出错!"));
         });
     }, //获取申请类型,获取产品类型
-    createEccSubInfoItem: function(eccSubInfoArr) {
-      eccSubInfoArr.forEach(d => {
+    createEccSubInfoItem: function() {
+      this.subListData.forEach(d => {
         var itemInfo = {
           __metadata: {
             type: this.eccSubInfoListType
@@ -793,7 +795,9 @@ export default {
           Amount: d.sl.toString(),
           Price: d.dj.toString(),
           Total: d.zje.toString(),
-          RequestType: d.sqlx
+          RequestType: d.sqlx,
+          CostItems:d.fytm,
+          FixedAssetsCode:d.gdzc
         };
         var parm = {
           type: "post",
@@ -1087,17 +1091,42 @@ export default {
       var opt = common.queryOpt(parm);
       return common.service(opt);
     },
-    deleteSubListItem: function() {
-      var parm = {
-        type: "delete",
-        action: "DeleteListItem",
-        list: this.subListName,
-        baseUrl: this.hostUrl,
-        condition:
-          "?$filter=Title eq '" + this.ECCTaskForm.applicantNumber + "'"
-      };
-      var opt = common.queryOpt(pram);
-      return common.service(opt);
+    deleteSubListItems: function() {
+      var getSubDate = this.loadSubListData(this.ECCTaskForm.applicantNumber);
+      getSubDate
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(e => {
+              var subItemId = e.Id;
+              var parm2 = {
+                type: "delete",
+                action: "DeleteListItem",
+                list: this.subListName,
+                baseUrl: this.hostUrl,
+                itemID: subItemId,
+                digest: this.requestDigest
+              };
+              var opt = common.queryOpt(parm2);
+              var deleteSubItem = common.service(opt);
+              deleteSubItem
+                .done(dt => {
+                  console.log("delete success");
+                  this.createEccSubInfoItem(); //创建子表数据
+                })
+                .catch(errdt => {
+                  console.log("delete err");
+                });
+            });
+          } else {
+            if (this.subListData.length > 0) {
+              this.createEccSubInfoItem(); //创建子表数据
+            }
+          }
+        })
+        .catch(err => {
+          console.log("get data err");
+        });
     }
   },
   mounted: function() {
@@ -1164,8 +1193,6 @@ export default {
                   console.log("获取附件失败");
                 });
             }
-          } else {
-            //this.$message(common.message("error", "ECC列表中不存在该申请单号"));
           }
         })
         .catch(err => {
@@ -1188,11 +1215,6 @@ export default {
                 fytm: d.CostItems
               });
             });
-          } else {
-            this
-              .$message
-              // common.message("error", "ECC物料列表中不存在该申请单号")
-              ();
           }
         })
         .catch(error => {

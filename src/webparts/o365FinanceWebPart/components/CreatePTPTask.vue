@@ -3,7 +3,7 @@
     <table class="yuangong" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">员工报销模板</span>
+          <span style="font-size:30px;color:#409eff;">员工报销</span>
         </td>
       </tr>
       <tr>

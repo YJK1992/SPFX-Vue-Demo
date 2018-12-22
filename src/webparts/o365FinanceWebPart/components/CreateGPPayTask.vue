@@ -3,7 +3,7 @@
     <table class="duigong" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">对公付款模板</span>
+          <span style="font-size:30px;color:#409eff;">对公付款</span>
         </td>
       </tr>
       <tr>

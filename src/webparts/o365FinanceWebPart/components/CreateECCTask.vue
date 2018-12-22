@@ -8,7 +8,7 @@
       <table class="top" style="  border-collapse: collapse;">
         <tr>
           <td colspan="10">
-            <span style="font-size:30px;color:#409eff;">资产领用模板</span>
+            <span style="font-size:30px;color:#409eff;">资产领用</span>
           </td>
         </tr>
         <tr>

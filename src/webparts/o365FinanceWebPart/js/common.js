@@ -127,11 +127,7 @@ var common = {
     } else if (parm.type == "delete") {
       switch (parm.action) {
         case 'DeleteListItem':
-          if (parm.condition != "") {
-            queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items" + parm.condition;
-          } else {
             queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")";
-          }
           break
         case 'DeleteAttachment':
           queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")/AttachmentFiles/getByFileName('" + parm.fileName + "')"

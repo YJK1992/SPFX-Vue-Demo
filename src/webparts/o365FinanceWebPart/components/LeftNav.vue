@@ -1,7 +1,6 @@
 <template>
   <div id="LeftNav">
     <el-menu
-      :default-active="$router.path"
       class="el-menu-vertical-demo"
       @open="handleOpen"
       @close="handleClose"
@@ -25,10 +24,10 @@
           <span>GP申请</span>
         </template>
         <el-menu-item-group>
-          <el-menu-item index="/viewgppurtasks">我的GP待办</el-menu-item>
-          <el-menu-item index="/viewgppurdraft">我的GP申请草稿</el-menu-item>
-          <el-menu-item index="creategppurchasetask">创建GP申请</el-menu-item>
-          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+          <el-menu-item index="/viewgppurtasks">我的待办</el-menu-item>
+          <el-menu-item index="/viewgppurdraft">我的草稿</el-menu-item>
+          <el-menu-item index="/creategppurchasetask">采购申请</el-menu-item>
+          <el-menu-item index="/gppurchasereport">采购申请报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
       <el-submenu index="3">
@@ -37,10 +36,10 @@
           <span>GP付款</span>
         </template>
         <el-menu-item-group>
-          <el-menu-item index="/viewgppay">我的GP付款待办</el-menu-item>
-          <el-menu-item index="/mygppaydraft">我的GP付款草稿</el-menu-item>
-          <el-menu-item index="/creategppaytask">创建GP付款</el-menu-item>
-          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+          <el-menu-item index="/viewgppay">我的待办</el-menu-item>
+          <el-menu-item index="/mygppaydraft">我的草稿</el-menu-item>
+          <el-menu-item index="/creategppaytask">对公付款</el-menu-item>
+          <el-menu-item index="/gppayreport">对公付款报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
       <el-submenu index="4" disabled>
@@ -80,7 +79,8 @@ export default {
     }
   },
   mounted: function() {
-    this.$router.push("/createecctask");
+    //this.$router.push("/createecctask");
+    //:default-active="$router.path"
   }
 };
 </script>
