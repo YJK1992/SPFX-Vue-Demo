@@ -1,9 +1,9 @@
 <template>
   <div>
-    <table class="caigou" style="table-layout：fixed">
+    <table class="caigouEdit" style="table-layout：fixed">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">采购申请模板</span>
+          <span style="font-size:30px;color:#409eff;">采购审批</span>
         </td>
       </tr>
       <tr>
@@ -15,7 +15,11 @@
       <tr>
         <td align="right">标题：</td>
         <td colspan="7">
-          <el-input  v-model="purchaseRequestData.Title" placeholder="标题"></el-input>
+          <el-input
+            v-model="purchaseRequestData.Title"
+            placeholder="标题"
+            :disabled="showApprover==true"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -25,7 +29,12 @@
         </td>
         <td align="right">成本中心：</td>
         <td>
-          <el-select v-model="purchaseRequestData.CostCenter" placeholder="请选择" size="medium">
+          <el-select
+            v-model="purchaseRequestData.CostCenter"
+            placeholder="请选择"
+            size="medium"
+            :disabled="showApprover==true"
+          >
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -36,7 +45,12 @@
         </td>
         <td align="right">公司代码：</td>
         <td colspan="2">
-          <el-select v-model="purchaseRequestData.CompanyCode" placeholder="请选择" size="medium">
+          <el-select
+            v-model="purchaseRequestData.CompanyCode"
+            placeholder="请选择"
+            size="medium"
+            :disabled="showApprover==true"
+          >
             <el-option
               v-for="item in companyCodeArr"
               :key="item.CompanyCode"
@@ -53,18 +67,28 @@
             v-model="purchaseRequestData.SpecialApprover"
             placeholder="特殊审批人"
             @change="speApprChange"
+            :disabled="showApprover==true"
           ></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">交货地址：</td>
         <td colspan="7">
-          <el-input v-model="purchaseRequestData.DeliveryAddress" placeholder="交货地址"></el-input>
+          <el-input
+            v-model="purchaseRequestData.DeliveryAddress"
+            placeholder="交货地址"
+            :disabled="showApprover==true"
+          ></el-input>
         </td>
       </tr>
       <tr>
         <td colspan="10" style="text-align:right;">
-          <el-button type="primary" icon="el-icon-plus" @click="dialogFormVisible = true">添加项目行</el-button>
+          <el-button
+            type="primary"
+            icon="el-icon-plus"
+            @click="dialogFormVisible = true"
+            :disabled="showApprover==true"
+          >添加项目行</el-button>
         </td>
       </tr>
       <tr>
@@ -94,13 +118,20 @@
       <tr>
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
-          <el-checkbox v-model="purchaseRequestData.IsContract"></el-checkbox>
+          <el-checkbox v-model="purchaseRequestData.IsContract" :disabled="showApprover==true"></el-checkbox>
         </td>
       </tr>
       <tr>
         <td align="right">合同号：</td>
-        <td align="left">
-          <el-select @change="changeMoney()" v-model="purchaseRequestData.ContractNumber" filterable placeholder="请选择">
+        <td>
+          <!-- <el-input v-model="purchaseRequestData.ContractNumber" placeholder="合同号"></el-input> -->
+          <el-select
+            @change="changeMoney()"
+            v-model="purchaseRequestData.ContractNumber"
+            filterable
+            placeholder="请选择"
+            :disabled="showApprover==true"
+          >
             <el-option
               v-for="item in ContractNumbers"
               :key="item.value"
@@ -111,13 +142,21 @@
         </td>
         <td align="right">金额：</td>
         <td colspan="5">
-          <el-input v-model="purchaseRequestData.Money" placeholder="金额"></el-input>
+          <el-input
+            v-model="purchaseRequestData.Money"
+            placeholder="金额"
+            :disabled="showApprover==true"
+          ></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">申请类型：</td>
         <td align="left">
-          <el-select v-model="purchaseRequestData.ApplicationType" placeholder="请选择">
+          <el-select
+            v-model="purchaseRequestData.ApplicationType"
+            placeholder="请选择"
+            :disabled="showApprover==true"
+          >
             <el-option
               v-for="item in applicationTypeOptions"
               :key="item.value"
@@ -132,6 +171,7 @@
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
+            :disabled="showApprover==true"
           >
             <el-option
               v-for="item in expenseCategoryOptions"
@@ -143,7 +183,11 @@
         </td>
         <td align="right">费用科目：</td>
         <td colspan="3" align="left">
-          <el-select v-model="purchaseRequestData.CostAccount" placeholder="请选择">
+          <el-select
+            v-model="purchaseRequestData.CostAccount"
+            placeholder="请选择"
+            :disabled="showApprover==true"
+          >
             <template v-for="item in costAccountOptions">
               <el-option
                 v-if="purchaseRequestData.ExpenseCategory==item.Type"
@@ -164,8 +208,25 @@
 
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
-          <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>
+          <el-button
+            type="primary"
+            @click="onSaveOrSubmmit(buttonType.Submit)"
+            v-show="showEditor"
+          >提交</el-button>
+          <el-button
+            @click="onSaveOrSubmmit(buttonType.Save)"
+            v-show="showEditor"
+            type="primary"
+            plain
+          >保存</el-button>
+          <el-button type="primary" @click="onApproval(buttonType.Approve)" v-show="showApprover">批准</el-button>
+          <el-button
+            @click="onApproval(buttonType.Reject)"
+            v-show="showApprover"
+            type="danger"
+            plain
+          >拒绝</el-button>
+          <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
         </td>
       </tr>
     </table>
@@ -209,8 +270,8 @@
 </template>
 
 <script>
- import $ from "jquery";
- import common from "../js/common.js";
+import $ from "jquery";
+import common from "../js/common.js";
 export default {
   data() {
     return {
@@ -219,6 +280,8 @@ export default {
       subListName: "PurchaseRequestSubInfo", //采购申请供应商列表
       mainListType: "SP.Data.PurchaseRequestListItem", //采购申请列表类型，用于post请求
       SubInfoListType: "SP.Data.PurchaseRequestSubInfoListItem", //采购申请供应商列表类型，用于post请求
+      GPPRTaskListType: "SP.Data.PurchaseApproval_x0020_任务ListItem", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
+      GpPRTaskListName: "PurchaseApproval 任务",
       userListName: "EmployeeList", //员工详细信息列表名称
       contractListName: "ContractList", //合同列表
       userArr: [], //用户信息数据数组
@@ -231,7 +294,9 @@ export default {
       SpecApproId: 0, //特殊审批人ID
       buttonType: {
         Submit: "submit",
-        Save: "save"
+        Save: "save",
+        Approve: "approve",
+        Reject: "reject"
       },
       purchaseRequestData: {
         Title: "", //标题
@@ -258,9 +323,7 @@ export default {
         Taxation: "",
         Amount: ""
       },
-      ContractNumbers: [
-
-      ], //合同号
+      ContractNumbers: [], //合同号
       applicationTypeOptions: [
         {
           value: "费用",
@@ -278,7 +341,13 @@ export default {
       editIndex: -1, //是否编辑
       formLabelWidth: "150px", //dialog lable
       message: "",
-      loading: true
+      loading: true,
+      showEditor: true,
+      showApprover: false,
+      requestIsReject: false,
+      currentStep: "",
+      currentItemId: 0,
+      taskId: 0
     };
   },
   methods: {
@@ -318,11 +387,31 @@ export default {
         }
       });
     },
-    changeMoney() {
-        this.ContractNumbers.forEach(item => {
-          if(this.purchaseRequestData.ContractNumber==item.value){
-            this.purchaseRequestData.Money=item.money
-          }
+    onEnd: function() {
+      var itemInfo = {
+        __metadata: {
+          type: this.mainListType
+        },
+        Status: "Dumped"
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.$message(common.message("success", "终止流程成功!"));
+          this.$router.push("/home");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "终止流程失败!"));
+          this.$router.push("/home");
         });
     },
     getExpenseCategory() {
@@ -353,6 +442,7 @@ export default {
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
     },
+
     getCostAccount() {
       //获取费用科目
       var that = this;
@@ -452,11 +542,12 @@ export default {
         type: "get",
         list: this.approverList,
         baseUrl: this.hostUrl,
-        condition: "?$filter=CostCenter eq  '" + costcenter + "'"
+        condition:
+          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
       };
       var option = common.queryOpt(parm); //获取审批节点请求
       $.when($.ajax(option)).done(r => {
-        console.log(r)
+        console.log(r);
         if (r.d.results.length > 0) {
           var data1 = r.d.results[0];
           var itemInfo = {
@@ -464,13 +555,16 @@ export default {
               type: this.mainListType
             },
             Title: this.purchaseRequestData.Title,
-            Consignor:this.purchaseRequestData.Consignor,
             CostCenter: this.purchaseRequestData.CostCenter,
             CompanyCode: this.purchaseRequestData.CompanyCode,
             DeliveryAddress: this.purchaseRequestData.DeliveryAddress,
             IsContract: this.purchaseRequestData.IsContract.toString(),
-            ContractNumber: this.purchaseRequestData.IsContract?this.purchaseRequestData.ContractNumber:"",
-            Money: this.purchaseRequestData.Money,
+            ContractNumber: this.purchaseRequestData.IsContract
+              ? this.purchaseRequestData.ContractNumber
+              : "",
+            Money: this.purchaseRequestData.IsContract
+              ? this.purchaseRequestData.Money
+              : "",
             ApplicationType: this.purchaseRequestData.ApplicationType,
             ExpenseCategory: this.purchaseRequestData.ExpenseCategory,
             CostAccount: this.purchaseRequestData.CostAccount,
@@ -478,9 +572,9 @@ export default {
             ApplicationNumber: this.purchaseRequestData.ApplicationNumber,
             SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
           };
-          console.log(itemInfo)
+          console.log(itemInfo);
           if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id==null
+            itemInfo.Approver1Id = data1.Approver1Id;
           } else if (total >= 1000 && total < 20000) {
             itemInfo.Approver1Id = data1.Approver1Id;
             itemInfo.Approver2Id = data1.Approver2Id;
@@ -498,21 +592,33 @@ export default {
             itemInfo.SpecialApproverId = this.SpecApproId;
           }
           if (type == "submit") {
-            itemInfo.Status = "Submitted";
+            if (this.currentStep == "Application" && this.taskId != 0) {
+              itemInfo.Status = "Changed";
+            } else {
+              itemInfo.Status = "Submitted";
+            }
+          } else {
+            itemInfo.Status = "Draft";
           }
           var parm = {
             type: "post",
-            action: "AddInList",
+            action: "EditListItem",
             baseUrl: this.hostUrl,
             list: this.mainListName,
+            itemID: this.currentItemId,
             item: itemInfo,
             digest: this.requestDigest
           };
-          console.log(parm)
+          console.log(parm);
           var options = common.queryOpt(parm);
-          console.log(options)
+          console.log(options);
           $.when($.ajax(options))
             .done(req => {
+              if (type == "submit") {
+                if (this.currentStep == "Application" && this.taskId != 0) {
+                  this.onApproval("approve");
+                }
+              }
               this.$message(common.message("success", "采购申请添加成功!"));
               this.createSubInfoItem();
               this.loading = false;
@@ -532,7 +638,6 @@ export default {
           __metadata: {
             type: this.SubInfoListType
           },
-          Title:this.purchaseRequestData.ApplicationNumber,
           PurchaseRequestGUID: this.purchaseRequestData.ApplicationNumber,
           Supplier: item.Supplier,
           SupplierParts: item.SupplierParts,
@@ -573,18 +678,11 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var selectedCostCenter='';
             data.forEach(d => {
-              // this.costCenterArr.push({
-              //   CostCenter: d.CostCenter,
-              //   CostCenterName: d.CostCenterName
-              // });
-               selectedCostCenter=d.CostCenter;
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
               });
             });
-            this.purchaseRequestData.CostCenter=selectedCostCenter;
           } else {
             this.$message(
               common.message(
@@ -804,25 +902,175 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载合同列表时出错!"));
         });
+    },
+    changeMoney() {
+      this.ContractNumbers.forEach(item => {
+        if (this.purchaseRequestData.ContractNumber == item.value) {
+          this.purchaseRequestData.Money = item.money;
+        }
+      });
+    },
+    onApproval: function(type) {
+      this.loading = true;
+      var taskOutcome;
+      if (type == "approve") {
+        taskOutcome = "已批准"; //Approved 已批准
+      } else {
+        taskOutcome = "已拒绝"; //已拒绝 Rejected
+      }
+      var taskItemInfo = {
+        __metadata: {
+          type: this.GPPRTaskListType
+        },
+        TaskOutcome: taskOutcome,
+        PercentComplete: 1,
+        Status: "已完成" //Completed 已完成
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.GpPRTaskListName,
+        itemID: this.taskId,
+        item: taskItemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      console.log(opt);
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log(req);
+          this.loading = false;
+          this.$message(common.message("success", "审批成功!"));
+          this.$router.push("/home");
+        })
+        .catch(err => {
+          console.log(err);
+          this.loading = false;
+          this.$message(common.message("error", "审批失败!"));
+          this.$router.push("/home");
+        });
+    },
+    loadMainListData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=ApplicationNumber eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
+    loadSubListData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.subListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=PurchaseRequestGUID eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
     }
   },
   mounted: function() {
     //onload
     this.loading = true;
-    this.purchaseRequestData.ApplicationNumber = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();
     this.getCostAccount();
     this.getCurrentUser();
     this.getContractNumber();
+
+    var applicantNumber = common.GetParameterValues("ApplicantNumber");
+    var step = common.GetParameterValues("Step");
+    this.currentStep = step;
+    var tId = common.GetParameterValues("TaskId");
+    if (typeof Number(tId) == "number") {
+      this.taskId = tId;
+      if (tId > 0 && step != "Application") {
+        this.showEditor = false;
+        this.showApprover = true;
+      } else if (tId == 0) {
+        console.log("用户点击的是保存");
+      } else if (tId > 0 && step == "Application") {
+        console.log("该请求已被拒绝");
+        this.requestIsReject = true;
+        this.showEditor = true;
+        this.showApprover = false;
+      }
+      var getMainListData = this.loadMainListData(applicantNumber);
+      var getSubListData = this.loadSubListData(applicantNumber);
+      getMainListData
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            this.purchaseRequestData.Title = data[0].Title;
+            this.purchaseRequestData.CostCenter = data[0].CostCenter;
+            this.purchaseRequestData.CompanyCode = data[0].CompanyCode;
+            this.purchaseRequestData.DeliveryAddress = data[0].DeliveryAddress;
+            this.purchaseRequestData.IsContract = data[0].IsContract;
+            this.purchaseRequestData.ApplicationNumber =
+              data[0].ApplicationNumber;
+            this.purchaseRequestData.ContractNumber = data[0].ContractNumber;
+            this.purchaseRequestData.Money = data[0].Money;
+            this.purchaseRequestData.ApplicationType = data[0].ApplicationType;
+            this.purchaseRequestData.ExpenseCategory = data[0].ExpenseCategory;
+            this.purchaseRequestData.CostAccount = data[0].CostAccount;
+            this.purchaseRequestData.CodeOfFixedAssets =
+              data[0].CodeOfFixedAssets;
+            this.purchaseRequestData.Consignor = data[0].Consignor;
+            this.purchaseRequestData.SpecialApproverTitle =
+              data[0].SpecialApproverTitle;
+            this.currentItemId = data[0].Id;
+          } else {
+            this.$message(
+              common.message("error", "采购申请列表中不存在该申请单号")
+            );
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载采购申请列表数据失败"));
+        });
+      getSubListData
+        .done(req2 => {
+          console.log(req2);
+          var data = req2.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.subListData.push({
+                Supplier: d.Supplier, //供应商
+                SupplierParts: d.SupplierParts, //供应商部件
+                Number: d.Number, //数量
+                Price: d.Price, //单价
+                Money: d.Money, //净额
+                Taxation: d.Taxation, //税款
+                Amount: d.Amount //总金额
+              });
+            });
+          } else {
+            // this.$message(
+            //   common.message("warning", "采购申请供应商列表中不存在该申请单号")
+            // );
+          }
+        })
+        .catch(error => {
+          this.$message(common.message("error", "加载采购申请供应商失败"));
+        });
+      this.loading = false;
+    } else {
+      this.loading = false;
+      common.message(common.message("error", "当前链接错误"));
+    }
     this.loading = false;
   }
 };
 </script>
 
 <style>
-.caigou {
+.caigouEdit {
   min-height: 25px;
   line-height: 25px;
   text-align: center;
@@ -830,15 +1078,15 @@ export default {
   color: gray;
   padding: 2px;
 }
-.caigou tr td {
+.caigouEdit tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.caigou td:nth-child(1) {
+.caigouEdit td:nth-child(1) {
   word-wrap: break-word;
   word-break: break-all;
 }
-.caigou tr:nth-child(8) {
+.caigouEdit tr:nth-child(8) {
   background-color: #409eff;
   font-weight: bold;
   color: white;

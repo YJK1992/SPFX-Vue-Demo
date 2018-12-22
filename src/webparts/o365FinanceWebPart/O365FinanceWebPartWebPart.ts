@@ -23,6 +23,14 @@ import MyAgent from "./components/MyAgent.vue";
 import Home from "./components/Home.vue";
 import EditECCDTask from "./components/EditECCTask.vue";
 import ViewECCTask from "./components/ViewECCTask.vue";
+import MyECCDraft from "./components/MyECCDraft.vue";
+import MyGPPurchaseDraft from "./components/MyGPPurchaseDraft.vue";
+import ViewGPPurchaseTasks from "./components/ViewGPPurchaseTasks.vue";
+import EidtGPPurchaseTask from "./components/EidtGPPurchaseTask.vue";
+import ViewGPPay from "./components/ViewGPPay.vue";
+import EditGPPay from "./components/EditGPPay.vue";
+import MyGPPayDraft from "./components/MyGPPayDraft.vue";
+import ECCReport from "./components/ECCReport.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -56,6 +64,14 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/myagent', component: MyAgent },
       { path: '/editecctask', component: EditECCDTask },
       { path: '/viewecctask', component: ViewECCTask },
+      { path: '/myeccdraft', component: MyECCDraft },
+      { path: '/viewgppurdraft', component: MyGPPurchaseDraft },
+      { path: '/viewgppurtasks', component: ViewGPPurchaseTasks },
+      { path: '/editgppurchase', component: EidtGPPurchaseTask },
+      { path: '/viewgppay', component: ViewGPPay },
+      { path: '/editgppay', component: EditGPPay },
+      { path: '/mygppaydraft', component: MyGPPayDraft },
+      { path: '/eccreport', component: ECCReport },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 

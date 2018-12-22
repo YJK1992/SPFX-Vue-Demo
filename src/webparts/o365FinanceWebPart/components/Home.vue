@@ -1,20 +1,6 @@
 <template>
   <div id="home">
-    <input type="file" value="Submit" id="fileInput">
-    <el-upload
-      class="upload-demo"
-      :action="actionUrl"
-      :on-success="uploadSuccess"
-      :on-error="uploadErr"
-      :beforeUpload="beforeUploadValidate"
-      :limit="3"
-      :on-exceed="fileLimit"
-      :file-list="fileList"
-    >
-      <el-button size="small" type="primary">点击上传</el-button>
-    </el-upload>
-    <el-button size="small" type="primary" @click="submit">提交</el-button>
-    <el-button size="small" type="primary" @click="submit2">提交2</el-button>
+    {{msg}}
   </div>
 </template>
 <script>
@@ -23,11 +9,7 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
-      msg: "home",
-      hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      actionUrl:
-        "https://m365x275952.sharepoint.com/sites/JackDemo/Shared%20Documents/",
-      fileList: [],
+      msg: "This is home page"
     };
   },
   methods: {

@@ -1,23 +1,24 @@
 <template>
-  <div id="ViewECCTask">
-    <table class="viewEccTop">
-      <tr id="View_ECCTable">
-        <td>申请人</td>
+  <div id="ViewGpPurchase">
+    <table class="ViewGpPurchase">
+      <tr id="View_GpPurchase">
+        <td>经办人</td>
         <td style="width: 300px;">申请单号</td>
+        <td>报销类型</td>
+        <td>结算方式</td>
         <td>成本中心</td>
-        <td>公司代码</td>
-        <td>申请类别</td>
-        <td>产品类型</td>
+        <td>发票金额</td>
+        <td>币种</td>
         <td>流程节点</td>
         <td>任务ID</td>
         <td>操作</td>
       </tr>
-      <tr v-for="(subItems,index) in eccItems">
+      <tr v-for="(subItems,index) in gpItems">
         <template v-for="(subItem,cindex) in subItems">
           <td>{{subItem}}</td>
         </template>
         <td>
-          <el-button @click="onEditItem(index)" size="small">审批</el-button>
+          <el-button @click="onViewItem(index)" size="small">查看</el-button>
         </td>
       </tr>
     </table>
@@ -29,27 +30,27 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
-      msg: "My ECC Tasks",
+      msg: "My Gp PP",
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      eccTaskListName: "ECCApproval 任务", //Workflow Tasks  ECCApproval 任务
-      eccMainListName: "ECC", //ECC列表名
+      GpTaskListName: "PaymentApproval 任务",
+      GpMainListName: "PublicPayment",
       userListName: "EmployeeList", //员工详细信息列表名称
       MyTask: [],
-      eccItems: [],
+      gpItems: [],
       userId: 0,
       loading: true
     };
   },
   methods: {
-    onEditItem(index) {
+    onViewItem(index) {
       console.log(index);
-      var item = this.eccItems[index];
-      var ApplicantNumber = item.Title;
+      var item = this.gpItems[index];
+      var ApplicantNumber = item.ApplicationNumber;
       var TaskId = item.TaskId;
       console.log(ApplicantNumber);
       console.log(item.Step);
       this.$router.push({
-        path: "/editecctask",
+        path: "/editgppay",
         query: {
           ApplicantNumber: ApplicantNumber,
           Step: item.Step,
@@ -64,11 +65,11 @@ export default {
         baseUrl: this.hostUrl
       };
       var option = common.queryOpt(parm);
-      var getCurrentUserDetail = common.service(option);
-      getCurrentUserDetail
+      $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.userId = c.d.Id;
+          console.log(this.userId);
           this.search(loginName, this.userId);
         })
         .catch(err => {
@@ -79,7 +80,7 @@ export default {
       var parm = {
         action: "ListItems",
         type: "get",
-        list: this.eccTaskListName,
+        list: this.GpTaskListName,
         baseUrl: this.hostUrl,
         condition:
           "?$filter=PercentComplete eq 0 and AssignedToId eq " +
@@ -93,10 +94,10 @@ export default {
           if (data.length > 0) {
             data.forEach(d => {
               var mainInfo = JSON.parse(d.RelatedItems);
-              var itemId = mainInfo[0].ItemId;
               var step = d.Title;
               var taskId = d.Id;
-              this.getECCListData(itemId, step, taskId);
+              var itemId = mainInfo[0].ItemId;
+              this.getGpPRListData(itemId, step, taskId);
             });
           } else {
             this.$message(common.message("error", "当前用户无代办任务!"));
@@ -135,31 +136,33 @@ export default {
           this.$message(common.message("error", "检查当前用户出现错误!"));
         });
     }, //验证用户是否存在于员工表中
-    getECCListData: function(itemId, step, taskId) {
+    getGpPRListData: function(itemId, step, taskId) {
       var parm = {
         action: "ListItem",
         type: "get",
-        list: this.eccMainListName,
+        list: this.GpMainListName,
         baseUrl: this.hostUrl,
         itemID: itemId
       };
+      
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
           var data = req.d;
-          this.eccItems.push({
-            Applicant: data.Applicant,
-            Title: data.Title,
-            CostCenter: data.CostCenter,
-            CompanyCode: data.CompanyCode,
-            ApplicationType: data.ApplicationType,
-            ProductType: data.ProductType,
+          this.gpItems.push({
+            Trustees : data.Trustees ,
+            ApplicationNumber: data.ApplicationNumber,
+            ReimbursementType:data.ReimbursementType,
+            SettlementType:data.SettlementType,
+            CostCenter:data.CostCenter,
+            InvoiceValue:data.InvoiceValue,
+            Currency:data.Currency,
             Step: step,
             TaskId: taskId
           });
         })
         .catch(err => {
-          this.$message(common.message("error", "获取ECC数据失败!"));
+          this.$message(common.message("error", "获取GpPP数据失败!"));
         });
     }
   },
@@ -167,35 +170,23 @@ export default {
     this.loading = true;
     this.getCurrentUser();
     this.loading = false;
-  },
-  computed: {
-    sortEccItems: function() {
-      return sortByKey(this.eccItems, "TaskId");
-    }
   }
 };
-function sortByKey(array, key) {
-  return array.sort(function(a, b) {
-    var x = a[key];
-    var y = b[key];
-    return x < y ? -1 : x > y ? 1 : 0;
-  });
-}
 </script>
 
 <style>
-.viewEccTop tr td {
+.ViewGpPurchase tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
   width: 140px;
 }
-#View_ECCTable td {
+#View_GpPurchase td {
   background-color: #409eff;
   font-weight: bold;
   color: white;
   border: 0px;
 }
-.viewEccTop {
+.ViewGpPurchase {
   min-height: 25px;
   line-height: 25px;
   text-align: center;

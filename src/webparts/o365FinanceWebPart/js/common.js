@@ -59,6 +59,9 @@ var common = {
         case 'ListFields':
           queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/fields";
           break
+        case 'Attachments':
+          queryUrl = parm.attUrl
+          break
       }
       opt = {
         url: queryUrl,
@@ -124,7 +127,14 @@ var common = {
     } else if (parm.type == "delete") {
       switch (parm.action) {
         case 'DeleteListItem':
-          queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")";
+          if (parm.condition != "") {
+            queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items" + parm.condition;
+          } else {
+            queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")";
+          }
+          break
+        case 'DeleteAttachment':
+          queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")/AttachmentFiles/getByFileName('" + parm.fileName + "')"
           break
       }
       opt = {
@@ -159,6 +169,59 @@ var common = {
     } else if (parm.type == "remove") {
       localStorage.removeItem(parm.key)
     }
+  },
+  GetParameterValues: function (param) {
+    var url = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
+    for (var i = 0; i < url.length; i++) {
+      var urlparam = url[i].split('=');
+      if (urlparam[0] == param) {
+        return urlparam[1];
+      }
+    }
+  },
+  service: function (opt) {
+    var deferred = $.Deferred();
+    $.ajax(opt)
+      .done(result => {
+        deferred.resolve(result);
+      })
+      .catch(result => {
+        deferred.reject(result);
+      });
+    return deferred.promise();
+  },
+  print: function (id) {
+    var printAreaCount = 0
+    var ele = $(id);
+    var idPrefix = "printArea_";
+    common.removePrintArea(idPrefix + printAreaCount);
+    printAreaCount++;
+    var iframeId = idPrefix + printAreaCount;
+    var iframeStyle = 'position:absolute;width:0px;height:0px;left:-500px;top:-500px;';
+    var iframe = document.createElement('IFRAME');
+    $(iframe).attr({
+      style: iframeStyle,
+      id: iframeId
+    });
+    document.body.appendChild(iframe);
+    var doc = iframe.contentWindow.document;
+    $(document).find("link").filter(function () {
+      return $(this).attr("rel").toLowerCase() == "stylesheet";
+    }).each(
+      function () {
+        doc.write('<link type="text/css" rel="stylesheet" href="' +
+          $(this).attr("href") + '" >');
+      });
+    doc.write('<div class="' + $(ele).attr("class") + '">' + $(ele).html() +
+      '</div>');
+    doc.close();
+    var frameWindow = iframe.contentWindow;
+    frameWindow.close();
+    frameWindow.focus();
+    frameWindow.print();
+  },
+  removePrintArea: function (id) {
+    $("iframe#" + id).remove();
   }
 }
 export default common

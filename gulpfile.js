@@ -37,15 +37,13 @@ build.configureWebpack.setConfig({
           },
           {
             test: /\.js$/,
-            use:[
-                {
-                    loader: 'babel-loader',
-                    options:{
-                        presets:['es2015']
-                    }
-                }
-            ],
-            exclude:/node_modules/
+            use: [{
+              loader: 'babel-loader',
+              options: {
+                presets: ['es2015']
+              }
+            }],
+            exclude: /node_modules/
           },
         ]
       },
@@ -56,6 +54,9 @@ build.configureWebpack.setConfig({
     return merge(config, vueConfig);
   }
 });
+build.copyAssets.taskConfig = {
+  excludeHashFromFileNames: true
+};
 let copyOtherFiles = build.subTask('copy-other-files', function (gulp, buildOptions, done) {
   return gulp.src(['src/**/*.vue', 'src/**/*.scss'])
     .pipe(gulp.dest(buildOptions.libFolder))

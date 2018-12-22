@@ -14,7 +14,7 @@
         <tr>
           <td>申请人 ：</td>
           <td colspan="3">
-            <el-input v-model="ECCTaskForm.applicant" placeholder="申请单号" :disabled="true"></el-input>
+            <el-input v-model="ECCTaskForm.applicant" placeholder="申请人" :disabled="true"></el-input>
           </td>
           <td>成本中心 ：</td>
           <td colspan="2">
@@ -90,7 +90,7 @@
               :on-error="uploadErr"
               :beforeUpload="beforeUploadValidate"
               :on-remove="removeFile"
-              :limit="3"
+              :limit="1"
               :on-exceed="fileLimit"
               :file-list="fileList"
             >
@@ -116,15 +116,14 @@
         </tr>
         <tr id="table_heard">
           <td>物料</td>
-          <td width="200x">物料描述</td>
+          <td>物料描述</td>
           <td>数量</td>
           <td>单价</td>
           <td>总金额</td>
-          <td>是否选择</td>
           <td>申请类型</td>
-          <td width="200px">固定资产编码</td>
+          <td>固定资产编码</td>
           <td>费用条目</td>
-          <td width="200px">操作</td>
+          <td>操作</td>
         </tr>
         <tr v-for="(subItems,index) in subListData">
           <template v-for="(subItem,cindex) in subItems">
@@ -137,7 +136,8 @@
         </tr>
         <tr>
           <td colspan="10" align="right">
-            <el-button type="primary" @click="onSubmit()">保存</el-button>
+            <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
+            <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>
           </td>
         </tr>
       </table>
@@ -166,21 +166,10 @@
           <el-form-item label="总金额：" :label-width="formLabelWidth" prop="zje">
             <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
-          <el-form-item label="是否选择：" :label-width="formLabelWidth" prop="sfxz">
-            <el-select v-model="item.sfxz" placeholder="请选择">
-              <el-option
-                v-for="item in choiceOptions"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              ></el-option>
-            </el-select>
-          </el-form-item>
           <el-form-item
             label="申请类型："
             :label-width="formLabelWidth"
             prop="sqlx"
-            v-if="item.sfxz=='是'"
           >
             <el-select v-model="item.sqlx" placeholder="请选择">
               <el-option
@@ -208,6 +197,10 @@ export default {
   data() {
     return {
       msg: "CreateECCTask",
+      buttonType: {
+        Submit: "submit",
+        Save: "save"
+      },
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
@@ -245,7 +238,6 @@ export default {
         sl: "", //数量
         dj: "", //单价
         zje: "", //总金额
-        sfxz: "否", //是否选择
         sqlx: "", //申请类型
         gdzc: "", //固定资产
         fytm: "" //费用条目
@@ -279,11 +271,47 @@ export default {
       editIndex: -1, //是否编辑
       checkIsSpecAppro: false, //判断是否是特殊审批人
       SpecApproId: 0, //特殊审批人ID
-      formLabelWidth: "150px", //dialog lable
+      formLabelWidth: "150px" //dialog lable
     };
   },
   methods: {
-    onSubmit: function() {
+    getCostCenter() {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition: "",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          //去重成本中心
+          var costCenter = [];
+          data.forEach(d => {
+            costCenter.push(d.CostCenter);
+          });
+          console.log("未去重");
+            console.log(costCenter);
+            var costCenterUnique = costCenter.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            costCenterUnique.forEach(element => {
+              this.costCenterArr.push({
+                CostCenter: element
+              });
+            });
+            console.log("去重后");
+            console.log(this.costCenterArr);
+        }
+      });
+    },
+    onSaveOrSubmmit: function(type) {
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
@@ -297,7 +325,8 @@ export default {
           type: "get",
           list: this.approverList,
           baseUrl: this.hostUrl,
-          condition: "?$filter=CostCenter eq  '" + costcenter + "'"
+          condition:
+            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'ECC'"
         };
         var option = common.queryOpt(parm); //获取审批节点请求
         $.when($.ajax(option))
@@ -316,7 +345,8 @@ export default {
                 ProductType: this.ECCTaskForm.productType,
                 Applicant: this.ECCTaskForm.applicant,
                 Total: this.ECCTaskForm.total,
-                AttDescription: this.ECCTaskForm.AttDescription
+                AttDescription: this.ECCTaskForm.AttDescription,
+                SpecialApproverTitle: this.ECCTaskForm.specialApprover
               };
               if (total > 0 && total < 1000) {
                 itemInfo.Approver1Id = data1.Approver1Id;
@@ -335,6 +365,9 @@ export default {
               }
               if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
                 itemInfo.SpecialApproverId = this.SpecApproId;
+              }
+              if (type == "submit") {
+                itemInfo.Status = "Submitted";
               }
               var parm = {
                 type: "post",
@@ -381,15 +414,18 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
+            var selectedCostCenter='';
             data.forEach(d => {
-              this.costCenterArr.push({
-                CostCenter: d.CostCenter,
-                CostCenterName: d.CostCenterName
-              });
+              // this.costCenterArr.push({
+              //   CostCenter: d.CostCenter
+              //   // CostCenterName: d.CostCenterName
+              // });
+              selectedCostCenter=d.CostCenter;
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
               });
             });
+            this.ECCTaskForm.costcenter=selectedCostCenter;
             // if (this.costCenterArr.length > 0) {
             //   this.ECCTaskForm.costcenter = this.costCenterArr[0].CostCenter;
             // }
@@ -426,7 +462,6 @@ export default {
         sl: "",
         dj: "",
         zje: "",
-        sfxz: "否",
         sqlx: "",
         gdzc: "",
         fytm: ""
@@ -495,7 +530,6 @@ export default {
           sl: "",
           dj: "",
           zje: "",
-          sfxz: "否",
           sqlx: "",
           gdzc: "",
           fytm: ""
@@ -511,7 +545,6 @@ export default {
         sl: "",
         dj: "",
         zje: "",
-        sfxz: "否",
         sqlx: "",
         gdzc: "",
         fytm: ""
@@ -572,7 +605,6 @@ export default {
           Amount: d.sl.toString(),
           Price: d.dj.toString(),
           Total: d.zje.toString(),
-          IsSeleted: d.sfxz.toString(),
           RequestType: d.sqlx
         };
         var parm = {
@@ -586,7 +618,7 @@ export default {
         var options = common.queryOpt(parm);
         $.when($.ajax(options))
           .done(req => {
-            this.$message(common.message("success", "物料清单已添加成功!"));
+           // this.$message(common.message("success", "物料清单已添加成功!"));
           })
           .catch(err => {
             this.$message(common.message("error", "物料清单添加失败!"));
@@ -622,8 +654,6 @@ export default {
         this.$message(common.message("error", "请输入数量"));
       } else if (this.item.dj == "") {
         this.$message(common.message("error", "请输入单价"));
-      } else if (this.item.sfxz == "是" && this.item.sqlx == "") {
-        this.$message(common.message("error", "请选择申请类型"));
       } else {
         isSuccess = true;
       }
@@ -745,7 +775,7 @@ export default {
       );
     }, //附件上传前对文件格式和大小进行验证
     fileLimit: function(files, fileList) {
-      this.$message(common.message("error", "最多只能上传三个文件!"));
+      this.$message(common.message("error", "最多只能上传一个文件!"));
     }, //超出文件数量回调函数
     getCurrentUser: function() {
       var parm = {
@@ -845,6 +875,7 @@ export default {
     this.ECCTaskForm.applicantNumber = common.generateUUID();
     this.getCurrentUser();
     this.getAppTypeAndProType();
+    this.getCostCenter();
     this.loading = false;
   }
 };

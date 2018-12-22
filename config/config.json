@@ -15,6 +15,7 @@
     "jquery": "https://code.jquery.com/jquery-3.1.0.min.js"
   },
   "localizedResources": {
-    "O365FinanceWebPartWebPartStrings": "lib/webparts/o365FinanceWebPart/loc/{locale}.js"
+    "O365FinanceWebPartWebPartStrings": "lib/webparts/o365FinanceWebPart/loc/{locale}.js",
+    "PropertyControlStrings": "node_modules/@pnp/spfx-property-controls/lib/loc/{locale}.js"
   }
 }

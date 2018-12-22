@@ -1,9 +1,12 @@
 <template>
   <div>
-    <table class="duigong" style="  border-collapse: collapse;">
+    <table class="duigongEdit" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">对公付款模板</span>
+          <div style="float:right">
+            <el-button type="primary" @click="print">打印</el-button>
+          </div>
         </td>
       </tr>
       <tr>
@@ -17,6 +20,7 @@
         <td align="right">单据编号：</td>
         <td align="left">
           <el-select
+            :disabled="showApprover==true"
             @change="isHaveContract"
             v-model="PublicPayment.ReceiptNumber"
             filterable
@@ -32,7 +36,11 @@
         </td>
         <td align="right">报销类型：</td>
         <td align="left">
-          <el-select v-model="PublicPayment.ReimbursementType" placeholder="请选择">
+          <el-select
+            :disabled="showApprover==true"
+            v-model="PublicPayment.ReimbursementType"
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in ReimbursementType"
               :key="item.value"
@@ -43,7 +51,11 @@
         </td>
         <td align="right">结算方式：</td>
         <td align="left" colspan="5">
-          <el-select v-model="PublicPayment.SettlementType" placeholder="请选择">
+          <el-select
+            :disabled="showApprover==true"
+            v-model="PublicPayment.SettlementType"
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in SettlementType"
               :key="item.value"
@@ -60,7 +72,12 @@
         </td>
         <td align="right">成本中心：</td>
         <td align="left">
-          <el-select v-model="PublicPayment.CostCenter" placeholder="请选择" size="medium">
+          <el-select
+            :disabled="showApprover==true"
+            v-model="PublicPayment.CostCenter"
+            placeholder="请选择"
+            size="medium"
+          >
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -72,6 +89,7 @@
         <td align="right">特殊审批人：</td>
         <td colspan="2">
           <el-input
+            :disabled="showApprover==true"
             v-model="PublicPayment.SpecialApprover"
             placeholder="特殊审批人"
             @change="speApprChange"
@@ -83,6 +101,7 @@
         <td>
           <el-input
             @change="CalculateAmountInlowercase"
+            :disabled="showApprover==true"
             v-model="PublicPayment.InvoiceValue"
             placeholder="发票金额"
           ></el-input>
@@ -91,6 +110,7 @@
         <td align="left">
           <el-select
             @change="CalculateAmountInlowercase"
+            :disabled="showApprover==true"
             v-model="PublicPayment.Currency"
             placeholder="请选择"
           >
@@ -106,6 +126,7 @@
         <td colspan="2">
           <el-input
             @change="CalculateAmountInlowercase"
+            :disabled="showApprover==true"
             v-model="PublicPayment.ExchangeRate"
             placeholder="汇率"
           ></el-input>
@@ -130,7 +151,11 @@
         <td colspan="3" style="color:#409eff">此项报销有借款时必须要填写借款单号</td>
         <td align="right">借款单号：</td>
         <td colspan="4">
-          <el-input v-model="PublicPayment.LoanNumber" placeholder="借款单号"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.LoanNumber"
+            placeholder="借款单号"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -139,34 +164,46 @@
       <tr>
         <td align="right">收款单位名称：</td>
         <td colspan="7">
-          <el-input v-model="PublicPayment.CollectionUnit" placeholder="收款单位名称"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.CollectionUnit"
+            placeholder="收款单位名称"
+          ></el-input>
         </td>
       </tr>
       <tr>
         <td rowspan="3" style="writing-mode:lr-tb">汇款、汇票时填写</td>
         <td align="right">开户行：</td>
         <td colspan="3">
-          <el-input v-model="PublicPayment.OpeningBank" placeholder="开户行"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.OpeningBank"
+            placeholder="开户行"
+          ></el-input>
         </td>
         <td align="right">账号：</td>
         <td colspan="2">
-          <el-input v-model="PublicPayment.Account" placeholder="账号"></el-input>
+          <el-input :disabled="showApprover==true" v-model="PublicPayment.Account" placeholder="账号"></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">省/直辖市：</td>
         <td colspan="3">
-          <el-input v-model="PublicPayment.City" placeholder="省/直辖市"></el-input>
+          <el-input :disabled="showApprover==true" v-model="PublicPayment.City" placeholder="省/直辖市"></el-input>
         </td>
         <td align="right">市/县：</td>
         <td colspan="2">
-          <el-input v-model="PublicPayment.County" placeholder="市/县"></el-input>
+          <el-input :disabled="showApprover==true" v-model="PublicPayment.County" placeholder="市/县"></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">汇款附言：</td>
         <td colspan="6">
-          <el-input v-model="PublicPayment.DetailsOfPayment" placeholder="省/直辖市"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.DetailsOfPayment"
+            placeholder="省/直辖市"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -179,7 +216,7 @@
         <td align="right">合同号：</td>
         <td colspan="2" align="left">
           <el-select
-            :disabled="disabledContract===1"
+            :disabled="disabledContract===1 "
             @change="changeMoney()"
             v-model="PublicPayment.ContractNumber"
             filterable
@@ -221,35 +258,48 @@
       <tr>
         <td align="right">项目名称：</td>
         <td colspan="2">
-          <el-input v-model="PublicPayment.ProjectName" placeholder="合同号"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.ProjectName"
+            placeholder="合同号"
+          ></el-input>
         </td>
         <td align="right">项目编号：</td>
         <td colspan="3">
-          <el-input v-model="PublicPayment.ProjectNumber" placeholder="项目编号"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.ProjectNumber"
+            placeholder="项目编号"
+          ></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">运费专用发票：</td>
         <td align="left">
-          <el-checkbox v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
+          <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
         </td>
         <td colspan="5" align="left">
           <el-button type="primary" @click="dialogTableVisible = true">税票清单</el-button>
-          <el-button type="primary" @click="addTaxReceipt">添加税票</el-button>
+          <el-button :disabled="showApprover==true" type="primary" @click="addTaxReceipt">添加税票</el-button>
           <el-button type="primary" @click="dialogTableVisible2 = true">费用分摊清单</el-button>
-          <el-button type="primary" @click="dialogFormVisible2=true">添加费用分摊</el-button>
+          <el-button
+            :disabled="showApprover==true"
+            type="primary"
+            @click="dialogFormVisible2=true"
+          >添加费用分摊</el-button>
         </td>
       </tr>
       <tr>
         <td align="right">备注：</td>
         <td colspan="7">
-          <el-input v-model="PublicPayment.Remark" placeholder="备注"></el-input>
+          <el-input :disabled="showApprover==true" v-model="PublicPayment.Remark" placeholder="备注"></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">费用类别：</td>
         <td align="left">
           <el-select
+            :disabled="showApprover==true"
             @change="PublicPayment.CostAccount=''"
             v-model="PublicPayment.ExpenseCategory"
             placeholder="请选择"
@@ -264,7 +314,11 @@
         </td>
         <td align="right">费用科目:</td>
         <td colspan="5" align="left">
-          <el-select v-model="PublicPayment.CostAccount" placeholder="请选择">
+          <el-select
+            :disabled="showApprover==true"
+            v-model="PublicPayment.CostAccount"
+            placeholder="请选择"
+          >
             <template v-for="item in costAccountOptions">
               <el-option
                 v-if="PublicPayment.ExpenseCategory==item.Type"
@@ -280,20 +334,43 @@
       <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
-          <el-input v-model="PublicPayment.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
+          <el-input
+            :disabled="showFA==true"
+            v-model="PublicPayment.CodeOfFixedAssets"
+            placeholder="固定资产编码"
+          ></el-input>
         </td>
       </tr>
 
       <tr>
         <td align="right">结算：</td>
         <td colspan="7" align="left">
-          <el-checkbox v-model="PublicPayment.IsSettlement"></el-checkbox>
+          <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsSettlement"></el-checkbox>
         </td>
       </tr>
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
-          <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>
+          <!-- <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
+          <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>-->
+          <el-button
+            type="primary"
+            @click="onSaveOrSubmmit(buttonType.Submit)"
+            v-show="showEditor"
+          >提交</el-button>
+          <el-button
+            @click="onSaveOrSubmmit(buttonType.Save)"
+            v-show="showEditor"
+            type="primary"
+            plain
+          >保存</el-button>
+          <el-button type="primary" @click="onApproval(buttonType.Approve)" v-show="showApprover">批准</el-button>
+          <el-button
+            @click="onApproval(buttonType.Reject)"
+            v-show="showApprover"
+            type="danger"
+            plain
+          >拒绝</el-button>
+          <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
         </td>
       </tr>
     </table>
@@ -439,6 +516,176 @@
         <el-button type="primary" @click="onAddItem2()">确 定</el-button>
       </div>
     </el-dialog>
+
+    <!-- 打印模板 -->
+    <div style="display:none" id="print">
+      <div style="margin-top:20px;" id="myPrintArea">
+        <!--startprint1-->
+        <table
+          style=" min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
+        >
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
+              colspan="4"
+            >联想（北京）有限公司（0 0 0 1）</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
+              colspan="4"
+            >GP Payment form</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
+            >SheetId:</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
+            >Applicant:</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
+            >Contact Phone:</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
+            >Submit time:</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+            >{{this.PublicPayment.ApplicationNumber}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">62193</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">2018-11-09</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Company Name:联想（北京）有限公司（0 0 0 1）</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Expense Category:{{this.PublicPayment.ExpenseCategory}}</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Cost Center Group:{{this.PublicPayment.CostCenter}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Finance Counter:</td>
+          </tr>
+          <tr>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Cost Center:</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Payment:{{this.PublicPayment.SettlementType}}</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Amount:{{this.PublicPayment.AmountInlowercase}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Amount（In Words）:{{this.PublicPayment. CapitalizationAmount}}</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Currency:{{this.PublicPayment.Currency}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Borrowing Form No:</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Name Of Receiver:{{this.PublicPayment.Currency}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Bank：{{this.PublicPayment.Bank}}</td>
+          </tr>
+          <tr>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Account No.：</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Province/Municipality：{{this.PublicPayment.City}}</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >City/County：{{this.PublicPayment.County}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Remit Postscript：</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Project Name:{{this.PublicPayment.ProjectName}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Project No:{{this.PublicPayment.ProjectNumber}}</td>
+          </tr>
+          <tr>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">
+              Contract No:
+              <span style="color: aqua">{{this.PublicPayment.ContractNumber}}</span>
+            </td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Currency:{{this.PublicPayment.Currency}}</td>
+          </tr>
+          <tr>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Service:</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Percentage of Finished and Paid Accepted Portion:{{ ((Number(this.AccountPaid)/Number(this.PublicPayment.money))*100).toFixed(2)}}%</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Total amount:{{this.PublicPayment.Money}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >Percentage of Finished and Paid Amount:{{this.AccountPaid==""?0:this.AccountPaid}}</td>
+          </tr>
+
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
+              colspan="4"
+            >Approver/Approved Time:</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
+              colspan="4"
+            >Notes(Usage/Others) Time:{{this.PublicPayment.Remark}}</td>
+          </tr>
+        </table>
+        <div>
+          <p>
+            谢寰-xiehuan1 Manager-Senior Manager
+            <span style="color:red">（Hand Input）</span>
+          </p>
+          <p>
+            谢寰-xiehuan1 Manager-Senior Manager
+            <span style="color:red">（Hand Input）</span>
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script>
@@ -454,6 +701,8 @@ export default {
       SubInfoListType: "SP.Data.TaxReceiptListItem", //税票清单列表类型，用于post请求
       subListName2: "ExpenseAllocation",
       SubInfoListType2: "SP.Data.ExpenseAllocationListItem", //费用分摊列表类型，用于post请求
+      GPPPTaskListType: "SP.Data.PaymentApproval_x0020_任务ListItem", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
+      GpPPTaskListName: "PaymentApproval 任务",
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
       ContractListName: "ContractList", //合同列表pushtable
@@ -472,7 +721,9 @@ export default {
       ReceiptNumbers: [], //已完成的采购申请单
       buttonType: {
         Submit: "submit",
-        Save: "save"
+        Save: "save",
+        Approve: "approve",
+        Reject: "reject"
       },
       PublicPayment: {
         ReimbursementType: "", //报销类型
@@ -503,9 +754,11 @@ export default {
         CodeOfFixedAssets: "", //固定资产编码
         ApplicationNumber: "", //申请单号
         ReceiptNumber: "", //单据编号
-        IsSettlement: false, //结算
+        IsSettlement: "", //结算
         SpecialApprover: "" //特殊审批人
       },
+      IsChangeTaxReceipt: false,
+      IsChangeExpenseAllocation: false,
       TaxReceiptList: [], //税票清单
       TaxReceipt: {
         CompanyCode: "", //公司代码
@@ -614,7 +867,14 @@ export default {
       formLabelWidth: "150px", //添加税票清单中的宽度
       expenseCategoryOptions: [], //费用类别
       costAccountOptions: [], //费用科目
-      message: "" //消息文本
+      message: "", //消息文本
+      showEditor: true,
+      showApprover: false,
+      showFA: false,
+      requestIsReject: false,
+      currentStep: "",
+      currentItemId: 0,
+      taskId: 0
     };
   },
   methods: {
@@ -674,8 +934,38 @@ export default {
             parseFloat(this.PublicPayment.InvoiceValue) *
             parseFloat(this.PublicPayment.ExchangeRate);
         }
-              this.convertMoney()
+        this.convertMoney()
       }
+    },
+    print() {
+      common.print("#myPrintArea");
+    },
+    onEnd: function() {
+      var itemInfo = {
+        __metadata: {
+          type: this.mainListType
+        },
+        Status: "Dumped"
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.$message(common.message("success", "终止流程成功!"));
+          this.$router.push("/home");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "终止流程失败!"));
+          this.$router.push("/home");
+        });
     },
     getExpenseCategory() {
       //获取费用类别
@@ -705,7 +995,6 @@ export default {
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
     },
-
     getCostAccount() {
       var that = this;
       var parm = {
@@ -749,18 +1038,12 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-               var selectedCostCenter='';
               data.forEach(d => {
-                // this.costCenterArr.push({
-                //   CostCenter: d.CostCenter,
-                //   CostCenterName: d.CostCenterName
-                // });
-                selectedCostCenter=d.CostCenter;
+      
                 this.companyCodeArr.push({
                   CompanyCode: d.CompanyCode
                 });
               });
-              this.PublicPayment.CostCenter=selectedCostCenter;
             } else {
               this.$message(
                 common.message(
@@ -950,9 +1233,11 @@ export default {
     },
     del(index) {
       this.TaxReceiptList.splice(index, 1);
+      this.IsChangeTaxReceipt = true;
     },
     del2(index) {
       this.ExpenseAllocationList.splice(index, 1);
+      this.IsChangeExpenseAllocation = true;
     },
     onEditItem(index) {
       this.TaxReceipt = this.TaxReceiptList[index];
@@ -1000,6 +1285,7 @@ export default {
           type: "error"
         });
       } else {
+        this.IsChangeTaxReceipt = true;
         if (this.editIndex != -1) {
           //编辑
           this.TaxReceiptList[this.editIndex] = this.TaxReceipt;
@@ -1027,7 +1313,7 @@ export default {
           type: "error"
         });
       } else {
-        debugger;
+        this.IsChangeExpenseAllocation = true;
         if (this.editIndex2 != -1) {
           //编辑
           this.ExpenseAllocationList[this.editIndex2] = this.ExpenseAllocation;
@@ -1121,8 +1407,7 @@ export default {
             IsSettlement: this.PublicPayment.IsSettlement.toString(),
             IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
             Remark: this.PublicPayment.Remark,
-            SpecialApproverTitle: this.PublicPayment.SpecialApprover,
-            Trustees: this.PublicPayment.Trustees
+            SpecialApproverTitle: this.SpecialApprover
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;
@@ -1143,13 +1428,20 @@ export default {
             itemInfo.SpecialApproverId = this.SpecApproId;
           }
           if (type == "submit") {
-            itemInfo.Status = "Submitted";
+            if (this.currentStep == "Application" && this.taskId != 0) {
+              itemInfo.Status = "Changed";
+            } else {
+              itemInfo.Status = "Submitted";
+            }
+          } else {
+            itemInfo.Status = "Draft";
           }
           parm = {
             type: "post",
-            action: "AddInList",
+            action: "EditListItem",
             baseUrl: this.hostUrl,
             list: this.mainListName,
+            itemID: this.currentItemId,
             item: itemInfo,
             digest: this.requestDigest
           };
@@ -1158,6 +1450,11 @@ export default {
             .done(req => {
               if (this.PublicPayment.IsFreightInvoice) {
                 console.log("调用新增税票清单");
+              }
+              if (type == "submit") {
+                if (this.currentStep == "Application" && this.taskId != 0) {
+                  this.onApproval("approve");
+                }
               }
               this.createTaxReceipt();
               this.createExpenseAllocation();
@@ -1172,6 +1469,33 @@ export default {
       });
     },
     createTaxReceipt() {
+      if (this.IsChangeTaxReceipt) {
+        // var itemInfo = {
+        //   __metadata: {
+        //     type: this.SubInfoListType
+        //   }
+        // };
+        //清空操作
+        var parm = {
+          type: "delete",
+          action: "DeleteListItem",
+          baseUrl: this.hostUrl,
+          list: this.subListName,
+          digest: this.requestDigest,
+          condition:
+            "?$filter=PublicPaymentGUID  eq '" +
+            this.PublicPayment.ApplicationNumber +
+            "'"
+        };
+        var options = common.queryOpt(parm);
+        $.when($.ajax(options))
+          .done(req => {
+            this.$message(common.message("success", "税票更新中!"));
+          })
+          .catch(err => {
+            this.$message(common.message("error", "税票清空时失败!"));
+          });
+      }
       //添加附表数据
       console.log(this.TaxReceiptList);
       this.TaxReceiptList.forEach(item => {
@@ -1209,8 +1533,35 @@ export default {
       });
     },
     createExpenseAllocation() {
+      if (this.IsChangeExpenseAllocation) {
+        // var itemInfo = {
+        //   __metadata: {
+        //     type: this.SubInfoListType
+        //   }
+        // };
+        //清空操作
+        var parm = {
+          type: "delete",
+          action: "DeleteListItem",
+          baseUrl: this.hostUrl,
+          list: this.subListName2,
+          digest: this.requestDigest,
+          condition:
+            "?$filter=PublicPaymentGUID  eq '" +
+            this.PublicPayment.ApplicationNumber +
+            "'"
+        };
+        var options = common.queryOpt(parm);
+        $.when($.ajax(options))
+          .done(req => {
+            this.$message(common.message("success", "费用分摊更新中!"));
+          })
+          .catch(err => {
+            this.$message(common.message("error", "费用分摊更新失败!"));
+          });
+      }
       //添加附表数
-      console.log(this.ExpenseAllocationList);
+      console.log(ExpenseAllocationList);
       this.ExpenseAllocationList.forEach(item => {
         console.log(item);
         var itemInfo = {
@@ -1386,6 +1737,8 @@ export default {
             that.PublicPayment.Money = "";
             that.AccountPaid = "";
             that.UnPaid = "";
+            console.log(that.AccountPaid);
+            console.log(that.UnPaid);
           } else {
             that.PublicPayment.ContractNumber = number;
             that.changeMoney();
@@ -1488,12 +1841,85 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取申请单号失败!"));
         });
+    },
+    onApproval: function(type) {
+      this.loading = true;
+      var taskOutcome;
+      if (type == "approve") {
+        taskOutcome = "已批准"; //Approved 已批准
+      } else {
+        taskOutcome = "已拒绝"; //已拒绝 Rejected
+      }
+      var taskItemInfo = {
+        __metadata: {
+          type: this.GPPPTaskListType
+        },
+        TaskOutcome: taskOutcome,
+        PercentComplete: 1,
+        Status: "已完成" //Completed 已完成
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.GpPPTaskListName,
+        itemID: this.taskId,
+        item: taskItemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      console.log(opt);
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log(req);
+          this.loading = false;
+          this.$message(common.message("success", "审批成功!"));
+          this.$router.push("/home");
+        })
+        .catch(err => {
+          console.log(err);
+          this.loading = false;
+          this.$message(common.message("error", "审批失败!"));
+          this.$router.push("/home");
+        });
+    },
+    loadMainListData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=ApplicationNumber eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
+    loadTaxReceiptData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.subListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=PublicPaymentGUID  eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
+    loadExpenseAllocationData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.subListName2,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=PublicPaymentGUID  eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
     }
   },
   mounted: function() {
-    //onload
     this.loading = true;
-    this.PublicPayment.ApplicationNumber = common.generateUUID();
+    //this.PublicPayment.ApplicationNumber = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();
@@ -1501,6 +1927,147 @@ export default {
     this.getCurrentUser();
     this.getContractNumber();
     this.getGPPRNumber();
+    var applicantNumber = common.GetParameterValues("ApplicantNumber");
+    var step = common.GetParameterValues("Step");
+    this.currentStep = step;
+    var tId = common.GetParameterValues("TaskId");
+    if (typeof Number(tId) == "number") {
+      this.taskId = tId;
+      if (tId > 0 && step != "Application") {
+        this.showEditor = false;
+        this.showApprover = true;
+        if (step == "Approver5") {
+          this.showFA = false;
+        }
+      } else if (tId == 0) {
+        console.log("用户点击的是保存");
+      } else if (tId > 0 && step == "Application") {
+        console.log("该请求已被拒绝");
+        this.requestIsReject = true;
+        this.showEditor = true;
+        this.showApprover = false;
+        this.disabledContract = 1;
+      }
+      var getMainListData = this.loadMainListData(applicantNumber);
+      var getTaxReceiptData = this.loadTaxReceiptData(applicantNumber);
+      var getExpenseAllocationData = this.loadExpenseAllocationData(
+        applicantNumber
+      );
+
+      getMainListData
+        .done(req => {
+          var data = req.d.results;
+          console.log("!1111111111")
+          console.log(data)
+          if (data.length > 0) {
+            //获取主表
+            (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
+              (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
+              (this.PublicPayment.Trustees = data[0].Trustees), //经办人
+              (this.PublicPayment.CostCenter = data[0].CostCenter), //成本中心
+              (this.PublicPayment.Currency = data[0].Currency), //币种
+              (this.PublicPayment.InvoiceValue = data[0].InvoiceValue), //发票金额
+              (this.PublicPayment.ExchangeRate = data[0].ExchangeRate), //汇率
+              (this.PublicPayment.AmountInlowercase =
+                data[0].AmountInlowercase), //金额小写
+              (this.PublicPayment.CapitalizationAmount =
+                data[0].CapitalizationAmount), //金额大写
+              (this.PublicPayment.LoanNumber = data[0].LoanNumber==null?"":data[0].LoanNumber), //借款单号
+              (this.PublicPayment.CollectionUnit = data[0].CollectionUnit==null?"":data[0].CollectionUnit), //收款单位名称
+              (this.PublicPayment.OpeningBank = data[0].OpeningBank==null?"":data[0].OpeningBank), //开户行
+              (this.PublicPayment.Account = data[0].Account==null?"":data[0].Account), //账号
+              (this.PublicPayment.City = data[0].City==null?"":data[0].City), //省市
+              (this.PublicPayment.County = data[0].County==null?"":data[0].County), //市县
+              (this.PublicPayment.DetailsOfPayment = data[0].DetailsOfPayment==null?"":data[0].DetailsOfPayment), //汇款附言
+              (this.PublicPayment.IsContract = data[0].IsContract=="true"?true:false), //是否有合同
+              (this.PublicPayment.ContractNumber = data[0].ContractNumber==null?"":data[0].ContractNumber), //合同号
+              (this.PublicPayment.Money = data[0].Money==null?"":data[0].Money), //金额
+              (this.PublicPayment.ProjectName = data[0].ProjectName==null?"":data[0].ProjectName), //项目名称
+              (this.PublicPayment.ProjectNumber = data[0].ProjectNumber==null?"":data[0].ProjectNumber), //项目编号
+              (this.PublicPayment.IsFreightInvoice = data[0].IsFreightInvoice=="true"?true:false), //运费发票
+              (this.PublicPayment.Remark = data[0].Remark==null?"":data[0].Remark), //备注
+              (this.PublicPayment.ExpenseCategory = data[0].ExpenseCategory==null?"":data[0].ExpenseCategory), //费用类别
+              (this.PublicPayment.CostAccount = data[0].CostAccount==null?"":data[0].CostAccount), //费用科目
+              (this.PublicPayment.CodeOfFixedAssets =
+                data[0].CodeOfFixedAssets), //固定资产编码
+              (this.PublicPayment.ApplicationNumber =
+                data[0].ApplicationNumber), //申请单号
+              (this.PublicPayment.ReceiptNumber = data[0].ReceiptNumber), //单据编号
+              (this.PublicPayment.IsSettlement = data[0].IsSettlement=="true"?true:false), //结算
+              (this.PublicPayment.SpecialApprover = data[0].SpecialApprover); //特殊审批人
+              console.log("!22222222222222")
+            console.log(this.PublicPayment)
+          } else {
+            this.$message(
+              common.message("error", "对公付款列表中不存在该申请单号")
+            );
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载对公付款列表数据失败"));
+        });
+
+      getTaxReceiptData
+        .done(req2 => {
+          console.log(req2);
+          var data = req2.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.TaxReceiptList.push({
+                CompanyCode: d.CompanyCode,
+                InvoiceNumber: d.InvoiceNumber, //发票号
+                Currency: d.Currency, //币种
+                Supplier: d.Supplier, //供应商
+                InvoiceValue: d.InvoiceValue, //发票金额
+                TaxRate: d.TaxRate, //税率
+                TaxCode: d.TaxCode //税码
+              });
+            });
+          } else {
+            // this.$message(
+            //   common.message("error", "税票清单列表中不存在该申请单号")
+            // );
+          }
+        })
+        .catch(error => {
+          this.$message(common.message("error", "加载税票清单失败"));
+        });
+
+      getExpenseAllocationData
+        .done(req2 => {
+          console.log(req2);
+          var data = req2.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.ExpenseAllocationList.push({
+                Title: d.Title, //费用名称
+                Number: d.Number, //费用号码
+                CostCenterNumber: d.CostCenterNumber, //成本中心号码
+                Money: d.Money, //摊出/入金额
+                ProjectName: d.ProjectName, //项目名称
+                ProjectNumber: d.ProjectNumber, //项目号码
+                CostCenterName: d.CostCenterName, //摊出成本中心签批人姓名
+                Abstract: d.Abstract, //摘要
+                IsIn: d.IsIn //是否摊入
+              });
+            });
+          } else {
+            // this.$message(
+            //   common.message("error", "费用分摊列表中不存在该申请单号")
+            // );
+          }
+        })
+        .catch(error => {
+          this.$message(common.message("error", "加载费用分摊失败"));
+        });
+
+      this.loading = false;
+      this.convertMoney()
+    } else {
+      this.loading = false;
+      common.message(common.message("error", "当前链接错误"));
+    }
+
     this.loading = false;
   },
   components: {}
@@ -1508,7 +2075,7 @@ export default {
 </script>
 
 <style>
-.duigong {
+.duigongEdit {
   min-height: 25px;
   line-height: 25px;
   text-align: center;
@@ -1516,11 +2083,11 @@ export default {
   color: gray;
   padding: 2px;
 }
-.duigong tr td {
+.duigongEdit tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.duigong tr:nth-child(15) {
+.duigongEdit tr:nth-child(15) {
   background-color: #409eff;
   font-weight: bold;
   color: white;

@@ -1,23 +1,20 @@
 <template>
-  <div id="ViewECCTask">
-    <table class="viewEccTop">
-      <tr id="View_ECCTable">
-        <td>申请人</td>
+  <div id="ViewGPPRDraft">
+    <table class="ViewGPPRDraftTop">
+      <tr id="View_GPPRDraftTable">
+        <td>经办人</td>
         <td style="width: 300px;">申请单号</td>
         <td>成本中心</td>
         <td>公司代码</td>
         <td>申请类别</td>
-        <td>产品类型</td>
-        <td>流程节点</td>
-        <td>任务ID</td>
         <td>操作</td>
       </tr>
-      <tr v-for="(subItems,index) in eccItems">
+      <tr v-for="(subItems,index) in gpItems">
         <template v-for="(subItem,cindex) in subItems">
           <td>{{subItem}}</td>
         </template>
         <td>
-          <el-button @click="onEditItem(index)" size="small">审批</el-button>
+          <el-button @click="onEditItem(index)" size="small">编辑</el-button>
         </td>
       </tr>
     </table>
@@ -29,13 +26,12 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
-      msg: "My ECC Tasks",
+      msg: "My GP Draft",
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      eccTaskListName: "ECCApproval 任务", //Workflow Tasks  ECCApproval 任务
-      eccMainListName: "ECC", //ECC列表名
+      GpMainListName: "PurchaseRequest", //ECC列表名
       userListName: "EmployeeList", //员工详细信息列表名称
       MyTask: [],
-      eccItems: [],
+      gpItems: [],
       userId: 0,
       loading: true
     };
@@ -43,17 +39,14 @@ export default {
   methods: {
     onEditItem(index) {
       console.log(index);
-      var item = this.eccItems[index];
-      var ApplicantNumber = item.Title;
-      var TaskId = item.TaskId;
-      console.log(ApplicantNumber);
-      console.log(item.Step);
+      var item = this.gpItems[index];
+      var ApplicantNumber = item.ApplicationNumber;
       this.$router.push({
-        path: "/editecctask",
+        path: "/editgppurchase",
         query: {
           ApplicantNumber: ApplicantNumber,
-          Step: item.Step,
-          TaskId: TaskId
+          Step: "Application",
+          TaskId: 0
         }
       });
     },
@@ -64,42 +57,41 @@ export default {
         baseUrl: this.hostUrl
       };
       var option = common.queryOpt(parm);
-      var getCurrentUserDetail = common.service(option);
-      getCurrentUserDetail
+      $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.userId = c.d.Id;
+          console.log(this.userId);
           this.search(loginName, this.userId);
         })
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));
         });
     },
-    getMyTask: function(userId) {
+    getMyDraft: function(userId) {
       var parm = {
         action: "ListItems",
         type: "get",
-        list: this.eccTaskListName,
+        list: this.GpMainListName,
         baseUrl: this.hostUrl,
-        condition:
-          "?$filter=PercentComplete eq 0 and AssignedToId eq " +
-          userId +
-          "&$orderby=ID desc&$top=2000"
-      }; //Completed 已完成
+        condition: "?$filter=AuthorId eq " + userId + " and Status eq 'Draft'"
+      };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
-              var mainInfo = JSON.parse(d.RelatedItems);
-              var itemId = mainInfo[0].ItemId;
-              var step = d.Title;
-              var taskId = d.Id;
-              this.getECCListData(itemId, step, taskId);
+                this.gpItems.push({
+                Consignor: d.Consignor,
+                ApplicationNumber: d.ApplicationNumber,
+                CostCenter: d.CostCenter,
+                CompanyCode: d.CompanyCode,
+                ApplicationType: d.ApplicationType,
+              });
             });
           } else {
-            this.$message(common.message("error", "当前用户无代办任务!"));
+            this.$message(common.message("error", "当前用户无草稿数据!"));
           }
         })
         .catch(err => {
@@ -120,7 +112,7 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             console.log("Current user is in employee list!");
-            this.getMyTask(userId);
+            this.getMyDraft(userId);
           } else {
             this.$message(
               common.message(
@@ -134,68 +126,29 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "检查当前用户出现错误!"));
         });
-    }, //验证用户是否存在于员工表中
-    getECCListData: function(itemId, step, taskId) {
-      var parm = {
-        action: "ListItem",
-        type: "get",
-        list: this.eccMainListName,
-        baseUrl: this.hostUrl,
-        itemID: itemId
-      };
-      var option = common.queryOpt(parm);
-      $.when($.ajax(option))
-        .done(req => {
-          var data = req.d;
-          this.eccItems.push({
-            Applicant: data.Applicant,
-            Title: data.Title,
-            CostCenter: data.CostCenter,
-            CompanyCode: data.CompanyCode,
-            ApplicationType: data.ApplicationType,
-            ProductType: data.ProductType,
-            Step: step,
-            TaskId: taskId
-          });
-        })
-        .catch(err => {
-          this.$message(common.message("error", "获取ECC数据失败!"));
-        });
-    }
+    } //验证用户是否存在于员工表中
   },
   mounted: function() {
     this.loading = true;
     this.getCurrentUser();
     this.loading = false;
-  },
-  computed: {
-    sortEccItems: function() {
-      return sortByKey(this.eccItems, "TaskId");
-    }
   }
 };
-function sortByKey(array, key) {
-  return array.sort(function(a, b) {
-    var x = a[key];
-    var y = b[key];
-    return x < y ? -1 : x > y ? 1 : 0;
-  });
-}
 </script>
 
 <style>
-.viewEccTop tr td {
+.ViewGPPRDraftTop tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
   width: 140px;
 }
-#View_ECCTable td {
+#View_GPPRDraftTable td {
   background-color: #409eff;
   font-weight: bold;
   color: white;
   border: 0px;
 }
-.viewEccTop {
+.ViewGPPRDraftTop {
   min-height: 25px;
   line-height: 25px;
   text-align: center;

@@ -1,10 +1,61 @@
 <template>
   <div id="LeftNav">
-    <ul class="hom-nav">
-      <li v-for="(item,index) in list">
-        <router-link :to="{path:item.Path}">{{item.Name}}</router-link>
-      </li>
-    </ul>
+    <el-menu
+      :default-active="$router.path"
+      class="el-menu-vertical-demo"
+      @open="handleOpen"
+      @close="handleClose"
+      @select="handleSelect"
+    >
+      <el-submenu index="1">
+        <template slot="title">
+          <i class="el-icon-location"></i>
+          <span>固资申请</span>
+        </template>
+        <el-menu-item-group>
+          <el-menu-item index="/viewecctask">我的待办</el-menu-item>
+          <el-menu-item index="/myeccdraft">我的草稿</el-menu-item>
+          <el-menu-item index="/createecctask">固资申请</el-menu-item>
+          <el-menu-item index="/eccreport">固资报表</el-menu-item>
+        </el-menu-item-group>
+      </el-submenu>
+      <el-submenu index="2">
+        <template slot="title">
+          <i class="el-icon-location"></i>
+          <span>GP申请</span>
+        </template>
+        <el-menu-item-group>
+          <el-menu-item index="/viewgppurtasks">我的GP待办</el-menu-item>
+          <el-menu-item index="/viewgppurdraft">我的GP申请草稿</el-menu-item>
+          <el-menu-item index="creategppurchasetask">创建GP申请</el-menu-item>
+          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+        </el-menu-item-group>
+      </el-submenu>
+      <el-submenu index="3">
+        <template slot="title">
+          <i class="el-icon-location"></i>
+          <span>GP付款</span>
+        </template>
+        <el-menu-item-group>
+          <el-menu-item index="/viewgppay">我的GP付款待办</el-menu-item>
+          <el-menu-item index="/mygppaydraft">我的GP付款草稿</el-menu-item>
+          <el-menu-item index="/creategppaytask">创建GP付款</el-menu-item>
+          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+        </el-menu-item-group>
+      </el-submenu>
+      <el-submenu index="4" disabled>
+        <template slot="title">
+          <i class="el-icon-location"></i>
+          <span>员工报销</span>
+        </template>
+        <el-menu-item-group>
+          <el-menu-item index="/viewgppay">ECC待办</el-menu-item>
+          <el-menu-item index="/mygppaydraft">我的ECC草稿</el-menu-item>
+          <el-menu-item index="/creategppaytask">ECC申请</el-menu-item>
+          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+        </el-menu-item-group>
+      </el-submenu>
+    </el-menu>
   </div>
 </template>
 
@@ -13,74 +64,24 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
-      msg: this.GLOBAL.URL,
-      list: [
-        {
-          Name: "Home",
-          Path: "/home"
-        },
-        {
-          Name: "Create ECC Task",
-          Path: "/createecctask"
-        },
-        {
-          Name: "Create GP Purchase Task",
-          Path: "/creategppurchasetask"
-        },
-        {
-          Name: "Create GP Pay Task",
-          Path: "/creategppaytask"
-        },
-        {
-          Name: "Create PTP Task",
-          Path: "/createptptask"
-        },
-        {
-          Name: "My Agent",
-          Path: "/myagent"
-        },
-        {
-          Name: "Create By Me",
-          Path: "/createbyme"
-        }
-      ],
+      msg: this.GLOBAL.URL
     };
   },
+  methods: {
+    handleOpen(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    handleClose(key, keyPath) {
+      console.log(key, keyPath);
+    },
+    handleSelect(key, keyPath) {
+      console.log(keyPath);
+      this.$router.push(keyPath[1]);
+    }
+  },
+  mounted: function() {
+    this.$router.push("/createecctask");
+  }
 };
 </script>
 
-<style>
-.hom-nav li a {
-  display: block;
-  padding: 15px 30px 15px 30px;
-  color: #222;
-  font-size: 16px;
-  text-decoration: none;
-}
-
-.hom-nav li a:hover {
-  text-decoration: none;
-  background: #a7dcff;
-  color: #fff;
-}
-
-ul.hom-nav {
-  background: #fff;
-  border: 1px solid #e9e9e9;
-  list-style-type: none;
-  margin-top: 0px;
-}
-
-* {
-  padding: 0;
-}
-
-.hom-nav li {
-  border-bottom: 1px solid #c5c5c5;
-}
-
-.hom-nav li a:focus {
-  background: #409eff;
-  color: #fff;
-}
-</style>
