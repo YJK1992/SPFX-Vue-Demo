@@ -7,6 +7,7 @@
 
       <el-form-item label="日期时间段：">
         <el-date-picker
+          value-format="yyyy-MM-dd"
           v-model="Condition.applicationDate"
           type="daterange"
           range-separator="至"
@@ -29,7 +30,7 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="结算方式：">
+      <!-- <el-form-item label="结算方式：" v-show="false">
         <el-select v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
             v-for="item in SettlementType"
@@ -38,7 +39,7 @@
             :value="item.value"
           ></el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
 
       <el-form-item>
         <el-button type="primary" @click="onSubmit">查询</el-button>
@@ -145,11 +146,11 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0]+"T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1]+"T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -160,11 +161,11 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0] +"T00:00:00Z"+
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1] +"T00:00:00Z"+
                 "'";
             } else {
               condition +=
@@ -213,7 +214,7 @@ export default {
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
-          var data=req.d.results
+          var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
               this.SubTableData.push({

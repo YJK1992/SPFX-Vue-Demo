@@ -33,6 +33,7 @@
       </el-form-item>
       <el-form-item label="申请时间段：">
         <el-date-picker
+          value-format="yyyy-MM-dd"
           v-model="Condition.Date"
           type="daterange"
           range-separator="至"
@@ -41,9 +42,9 @@
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="单据编号：">
-        <el-input v-model="Condition.ApplicantNumber" placeholder="审批人"></el-input>
+        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
       </el-form-item>
-      <el-form-item label="公司代码：">
+      <!-- <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -52,7 +53,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
       <el-form-item>
         <el-button type="primary" @click="onSubmit">查询</el-button>
       </el-form-item>
@@ -89,7 +90,7 @@ export default {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       //列表名称
       mainListName: "PublicPayment", //ECC列表名
-      userListName:"EmployeeList",
+      userListName: "EmployeeList",
       ReimbursementType: [
         //报销类型
         {
@@ -155,7 +156,7 @@ export default {
         SettlementType: "",
         Status: "",
         Date: "",
-        ApplicantNumber: "",
+        ApplicationNumber: "",
         CompanyCode: ""
       },
       CompanyCodeArr: [],
@@ -180,11 +181,11 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0]+"T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1] +"T00:00:00Z"+
                 "'";
             } else {
               condition +=
@@ -195,11 +196,11 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0]+"T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1] +"T00:00:00Z"+
                 "'";
             } else {
               condition +=
@@ -218,8 +219,8 @@ export default {
         condition: condition
       };
       var option = common.queryOpt(parm);
-      console.log("1111111111")
-      console.log(option)
+      console.log("1111111111");
+      console.log(option);
       $.when($.ajax(option)).done(req => {
         var data = req.d.results;
         if (data.length > 0) {

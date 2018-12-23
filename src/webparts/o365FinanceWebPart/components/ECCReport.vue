@@ -13,6 +13,7 @@
       </el-form-item>
       <el-form-item label="日期时间段：">
         <el-date-picker
+          value-format="yyyy-MM-dd"
           v-model="Condition.applicationDate"
           type="daterange"
           range-separator="至"
@@ -42,12 +43,12 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="物控人员：">
-        <el-input v-model="Condition.MaterialControl" placeholder="审批人"></el-input>
-      </el-form-item>
+      <!-- <el-form-item label="物控人员：">
+        <el-input v-model="Condition.MaterialControl" placeholder="审批人" v-show="false"></el-input>
+      </el-form-item> -->
 
       <el-form-item label="申请单号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="审批人"></el-input>
+        <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
 
       <el-form-item label="公司代码：">
@@ -141,7 +142,7 @@ export default {
         ApplicationType: "", //申请类型
         Status: "", //状态
         MaterialControl: "", //物控人员
-        ApplicationNumber: "", //申请单号
+        Title: "", //申请单号
         CompanyCode: ""
       },
       //主表数据
@@ -168,11 +169,11 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0]+"T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1]+"T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -183,11 +184,11 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +
+                this.Condition[item][0] +"T00:00:00Z"+
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +
+                this.Condition[item][1] +"T00:00:00Z"+
                 "'";
             } else {
               condition +=
@@ -218,8 +219,8 @@ export default {
               CostCenter: d.CostCenter,
               Applicant: d.Applicant,
               ApplicationType: d.ApplicationType,
-              MailTo: "",
-              ProductType: d.ProductType
+              ProductType: d.ProductType,
+              MailTo: ""
             });
           });
         }

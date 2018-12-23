@@ -811,8 +811,8 @@ export default {
           action: "ListItems",
           list: this.userListName,
           condition:
-            "?$filter=EmployeeName eq  '" +
-            speApproverName +
+            "?$filter=EmployeeID eq  '" +
+            speApproverName.toLowerCase() +
             "' and IsSpecial eq '1'",
           baseUrl: this.hostUrl
         };
@@ -822,10 +822,10 @@ export default {
             var data = req.d.results;
             console.log(data);
             if (data.length > 0) {
-              data.forEach(d => {
-                loginName = d.EmployeeID;
-              });
-              loginName = "i:0#.f|membership|" + loginName;
+              // data.forEach(d => {
+              //   loginName = d.EmployeeID;
+              // });
+              loginName = "i:0#.f|membership|" + speApproverName;
               var parm2 = {
                 type: "get",
                 action: "UserByName",
@@ -838,9 +838,9 @@ export default {
                 .done(re => {
                   console.log(re);
                   this.SpecApproId = re.d.Id;
-                  alert(this.SpecApproId);
+                  // alert(this.SpecApproId);
                   this.checkIsSpecAppro = true;
-                  alert(this.checkIsSpecAppro);
+                  // alert(this.checkIsSpecAppro);
                   this.loading = false;
                 })
                 .catch(err => {
