@@ -59,7 +59,7 @@
           <el-input disabled v-model="PublicPayment.Trustees" placeholder="经办人"></el-input>
         </td>
         <td align="right">成本中心：</td>
-        <td align="left">
+        <td colspan="4" align="left">
           <el-select v-model="PublicPayment.CostCenter" placeholder="请选择" size="medium">
             <el-option
               v-for="item in costCenterArr"
@@ -69,14 +69,7 @@
             ></el-option>
           </el-select>
         </td>
-        <td align="right">特殊审批人：</td>
-        <td colspan="2">
-          <el-input
-            v-model="PublicPayment.SpecialApprover"
-            placeholder="特殊审批人"
-            @change="speApprChange"
-          ></el-input>
-        </td>
+
       </tr>
       <tr>
         <td align="right">发票金额：</td>
@@ -130,7 +123,7 @@
         <td colspan="3" style="color:#409eff">此项报销有借款时必须要填写借款单号</td>
         <td align="right">借款单号：</td>
         <td colspan="4">
-          <el-input v-model="PublicPayment.LoanNumber" placeholder="借款单号"></el-input>
+          <el-input :disabled="PublicPayment.ReimbursementType!='费用借款'" v-model="PublicPayment.LoanNumber" placeholder="借款单号"></el-input>
         </td>
       </tr>
       <tr>
@@ -283,13 +276,23 @@
           <el-input v-model="PublicPayment.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
         </td>
       </tr>
-
       <tr>
-        <td align="right">结算：</td>
-        <td colspan="7" align="left">
-          <el-checkbox v-model="PublicPayment.IsSettlement"></el-checkbox>
+                <td align="right">特殊审批人：</td>
+        <td colspan="7">
+          <el-input
+            v-model="PublicPayment.SpecialApprover"
+            placeholder="特殊审批人"
+            @change="speApprChange"
+          ></el-input>
         </td>
       </tr>
+
+      <!-- <tr>
+        <td align="right">结算：</td>
+        <td colspan="7" align="left">
+          <el-checkbox display v-model="PublicPayment.IsSettlement"></el-checkbox>
+        </td>
+      </tr> -->
       <tr>
         <td colspan="8" align="right">
           <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>

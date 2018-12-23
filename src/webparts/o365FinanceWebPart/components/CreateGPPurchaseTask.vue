@@ -46,16 +46,7 @@
           </el-select>
         </td>
       </tr>
-      <tr>
-        <td align="right">特殊审批人：</td>
-        <td colspan="7">
-          <el-input
-            v-model="purchaseRequestData.SpecialApprover"
-            placeholder="特殊审批人"
-            @change="speApprChange"
-          ></el-input>
-        </td>
-      </tr>
+
       <tr>
         <td align="right">交货地址：</td>
         <td colspan="7">
@@ -67,7 +58,7 @@
           <el-button type="primary" icon="el-icon-plus" @click="dialogFormVisible = true">添加项目行</el-button>
         </td>
       </tr>
-      <tr>
+      <tr id="create_GPPurchase">
         <td width="170px">供应商</td>
         <td>供应商部件</td>
         <td width="100px">数量</td>
@@ -137,7 +128,7 @@
         </td>
         <td align="right">费用类别：</td>
         <td>
-          <el-select
+          <el-select :disabled="purchaseRequestData.ApplicationType=='固定资产'"
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
@@ -152,7 +143,7 @@
         </td>
         <td align="right">费用科目：</td>
         <td colspan="3" align="left">
-          <el-select v-model="purchaseRequestData.CostAccount" placeholder="请选择">
+          <el-select :disabled="purchaseRequestData.ApplicationType=='固定资产'" v-model="purchaseRequestData.CostAccount" placeholder="请选择">
             <template v-for="item in costAccountOptions">
               <el-option
                 v-if="purchaseRequestData.ExpenseCategory==item.Type"
@@ -167,10 +158,19 @@
       <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
-          <el-input disabled v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
+          <el-input :disabled="purchaseRequestData.ApplicationType!='固定资产'" v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
         </td>
       </tr>
-
+      <tr>
+        <td align="right">特殊审批人：</td>
+        <td colspan="7">
+          <el-input
+            v-model="purchaseRequestData.SpecialApprover"
+            placeholder="特殊审批人"
+            @change="speApprChange"
+          ></el-input>
+        </td>
+      </tr>
       <tr>
         <td colspan="8" align="right">
           <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
@@ -578,7 +578,7 @@ export default {
         var options = common.queryOpt(parm);
         $.when($.ajax(options))
           .done(req => {
-            this.$message(common.message("success", "供应商已添加成功!"));
+            //this.$message(common.message("success", "供应商已添加成功!"));
           })
           .catch(err => {
             this.$message(common.message("error", "供应商添加失败!"));
@@ -645,10 +645,10 @@ export default {
         this.message = "请输入金额;";
       } else if (this.purchaseRequestData.ApplicationType == "") {
         this.message = "请选择申请类型;";
-      } else if (this.purchaseRequestData.ExpenseCategory == "") {
-        this.message = "请选择费用类别;";
-      } else if (this.purchaseRequestData.CostAccount == "") {
-        this.message = "请选择费用科目;";
+      // } else if (this.purchaseRequestData.ExpenseCategory == "") {
+      //   this.message = "请选择费用类别;";
+      // } else if (this.purchaseRequestData.CostAccount == "") {
+      //   this.message = "请选择费用科目;";
       } else {
         isSuccess = true;
       }
@@ -865,7 +865,7 @@ export default {
   word-wrap: break-word;
   word-break: break-all;
 }
-.caigou tr:nth-child(8) {
+#create_GPPurchase {
   background-color: #409eff;
   font-weight: bold;
   color: white;

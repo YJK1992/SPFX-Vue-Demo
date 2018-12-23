@@ -166,11 +166,7 @@
           <el-form-item label="总金额：" :label-width="formLabelWidth" prop="zje">
             <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
-          <el-form-item
-            label="申请类型："
-            :label-width="formLabelWidth"
-            prop="sqlx"
-          >
+          <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
             <el-select v-model="item.sqlx" placeholder="请选择">
               <el-option
                 v-for="item in subApplicationTypeOpt"
@@ -179,6 +175,14 @@
                 :value="item.value"
               ></el-option>
             </el-select>
+          </el-form-item>
+          <el-form-item
+            label="费用条目："
+            :label-width="formLabelWidth"
+            prop="fytm"
+            v-show="item.sqlx=='费用'"
+          >
+            <el-input v-model="item.fytm" placeholder="请输入费用条目"></el-input>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -293,21 +297,21 @@ export default {
             costCenter.push(d.CostCenter);
           });
           console.log("未去重");
-            console.log(costCenter);
-            var costCenterUnique = costCenter.filter(function(
-              element,
-              index,
-              array
-            ) {
-              return array.indexOf(element) === index;
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.costCenterArr.push({
+              CostCenter: element
             });
-            costCenterUnique.forEach(element => {
-              this.costCenterArr.push({
-                CostCenter: element
-              });
-            });
-            console.log("去重后");
-            console.log(this.costCenterArr);
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
         }
       });
     },
@@ -326,7 +330,7 @@ export default {
           list: this.approverList,
           baseUrl: this.hostUrl,
           condition:
-            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'ECC'"
+            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
         };
         var option = common.queryOpt(parm); //获取审批节点请求
         $.when($.ajax(option))
@@ -382,7 +386,14 @@ export default {
                 .done(req => {
                   var attUrl = req.d.AttachmentFiles.__deferred.uri;
                   this.uploadAttFileToItem(attUrl);
-                  this.$message(common.message("success", "ECC数据提交成功!"));
+                  this.$message({
+                    showClose: true,
+                    message:
+                      "固定资产申请提交成功!" +
+                      this.ECCTaskForm.applicantNumber,
+                    type: "success",
+                    duration: 0
+                  });
                   this.createEccSubInfoItem(this.subListData); //创建子表数据
                   this.loading = false;
                   this.$router.push("/home");
@@ -390,7 +401,7 @@ export default {
                 .catch(err => {
                   this.loading = false;
                   this.$message(
-                    common.message("error", "提交ECC主表数据时出现了错误!")
+                    common.message("error", "提交固资数据时出现了错误!")
                   );
                 });
             }
@@ -414,24 +425,14 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var selectedCostCenter='';
+            var selectedCostCenter = "";
             data.forEach(d => {
-              // this.costCenterArr.push({
-              //   CostCenter: d.CostCenter
-              //   // CostCenterName: d.CostCenterName
-              // });
-              selectedCostCenter=d.CostCenter;
+              selectedCostCenter = d.CostCenter;
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
               });
             });
-            this.ECCTaskForm.costcenter=selectedCostCenter;
-            // if (this.costCenterArr.length > 0) {
-            //   this.ECCTaskForm.costcenter = this.costCenterArr[0].CostCenter;
-            // }
-            // if (this.companyCodeArr.length > 0) {
-            //   this.ECCTaskForm.companycode = this.companyCodeArr[0].CompanyCode;
-            // }
+            this.ECCTaskForm.costcenter = selectedCostCenter;
           } else {
             this.$message(
               common.message(
@@ -618,7 +619,7 @@ export default {
         var options = common.queryOpt(parm);
         $.when($.ajax(options))
           .done(req => {
-           // this.$message(common.message("success", "物料清单已添加成功!"));
+            // this.$message(common.message("success", "物料清单已添加成功!"));
           })
           .catch(err => {
             this.$message(common.message("error", "物料清单添加失败!"));
@@ -654,6 +655,10 @@ export default {
         this.$message(common.message("error", "请输入数量"));
       } else if (this.item.dj == "") {
         this.$message(common.message("error", "请输入单价"));
+      } else if (this.item.sqlx == "") {
+        this.$message(common.message("error", "请输入申请类型"));
+      } else if (this.item.sqlx == "费用" && this.item.fytm == "") {
+        this.$message(common.message("error", "请输入费用条目"));
       } else {
         isSuccess = true;
       }
@@ -743,11 +748,11 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.split(".")[1] === "xls";
-      const extension2 = file.name.split(".")[1] === "xlsx";
-      const extension3 = file.name.split(".")[1] === "doc";
-      const extension4 = file.name.split(".")[1] === "docx";
-      const extension5 = file.name.split(".")[1] === "txt";
+      const extension = file.name.toLowerCase().split(".")[1] === "xls";
+      const extension2 = file.name.toLowerCase().split(".")[1] === "xlsx";
+      const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
+      const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
+      const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&

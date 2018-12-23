@@ -71,7 +71,7 @@
           <el-input disabled v-model="PublicPayment.Trustees" placeholder="经办人"></el-input>
         </td>
         <td align="right">成本中心：</td>
-        <td align="left">
+        <td colspan="4" align="left">
           <el-select
             :disabled="showApprover==true"
             v-model="PublicPayment.CostCenter"
@@ -86,15 +86,7 @@
             ></el-option>
           </el-select>
         </td>
-        <td align="right">特殊审批人：</td>
-        <td colspan="2">
-          <el-input
-            :disabled="showApprover==true"
-            v-model="PublicPayment.SpecialApprover"
-            placeholder="特殊审批人"
-            @change="speApprChange"
-          ></el-input>
-        </td>
+
       </tr>
       <tr>
         <td align="right">发票金额：</td>
@@ -152,7 +144,7 @@
         <td align="right">借款单号：</td>
         <td colspan="4">
           <el-input
-            :disabled="showApprover==true"
+            :disabled="showApprover==true?true:PublicPayment.ReimbursementType!='费用借款'"
             v-model="PublicPayment.LoanNumber"
             placeholder="借款单号"
           ></el-input>
@@ -341,13 +333,24 @@
           ></el-input>
         </td>
       </tr>
-
       <tr>
+                <td align="right">特殊审批人：</td>
+        <td colspan="7">
+          <el-input
+            :disabled="showApprover==true"
+            v-model="PublicPayment.SpecialApprover"
+            placeholder="特殊审批人"
+            @change="speApprChange"
+          ></el-input>
+        </td>
+      </tr>
+
+      <!-- <tr>
         <td align="right">结算：</td>
         <td colspan="7" align="left">
           <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsSettlement"></el-checkbox>
         </td>
-      </tr>
+      </tr> -->
       <tr>
         <td colspan="8" align="right">
           <!-- <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>

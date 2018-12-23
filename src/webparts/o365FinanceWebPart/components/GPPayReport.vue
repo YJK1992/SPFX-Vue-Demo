@@ -22,9 +22,9 @@
         </el-select>
       </el-form-item>
       <el-form-item label="状态：">
-        <el-select v-model="Condition.State" placeholder="请选择">
+        <el-select v-model="Condition.Status" placeholder="请选择">
           <el-option
-            v-for="item in State"
+            v-for="item in Status"
             :key="item.value"
             :label="item.value"
             :value="item.value"
@@ -109,7 +109,7 @@ export default {
           label: "其他"
         }
       ],
-      State: [
+      Status: [
         {
           value: "Draft"
         },
@@ -153,7 +153,7 @@ export default {
       Condition: {
         ReimbursementType: "",
         SettlementType: "",
-        State: "",
+        Status: "",
         Date: "",
         ApplicantNumber: "",
         CompanyCode: ""

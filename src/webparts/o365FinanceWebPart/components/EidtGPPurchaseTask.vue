@@ -91,7 +91,7 @@
           >添加项目行</el-button>
         </td>
       </tr>
-      <tr>
+      <tr id="edit_GPPurchase">
         <td width="170px">供应商</td>
         <td>供应商部件</td>
         <td width="100px">数量</td>
@@ -172,10 +172,11 @@
         <td align="right">费用类别：</td>
         <td>
           <el-select
+       
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
-            :disabled="showApprover==true"
+             :disabled="showApprover==true?true:purchaseRequestData.ApplicationType=='固定资产'"
           >
             <el-option
               v-for="item in expenseCategoryOptions"
@@ -190,7 +191,7 @@
           <el-select
             v-model="purchaseRequestData.CostAccount"
             placeholder="请选择"
-            :disabled="showApprover==true"
+            :disabled="showApprover==true?true:purchaseRequestData.ApplicationType=='固定资产'"
           >
             <template v-for="item in costAccountOptions">
               <el-option
@@ -206,7 +207,7 @@
       <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
-          <el-input disabled v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
+          <el-input  :disabled="showApprover==true?true:purchaseRequestData.ApplicationType!='固定资产'" v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
         </td>
       </tr>
 
@@ -716,7 +717,7 @@ export default {
         var options = common.queryOpt(parm);
         $.when($.ajax(options))
           .done(req => {
-            this.$message(common.message("success", "供应商已添加成功!"));
+            //this.$message(common.message("success", "供应商已添加成功!"));
           })
           .catch(err => {
             this.$message(common.message("error", "供应商添加失败!"));
@@ -776,10 +777,10 @@ export default {
         this.message = "请输入金额;";
       } else if (this.purchaseRequestData.ApplicationType == "") {
         this.message = "请选择申请类型;";
-      } else if (this.purchaseRequestData.ExpenseCategory == "") {
-        this.message = "请选择费用类别;";
-      } else if (this.purchaseRequestData.CostAccount == "") {
-        this.message = "请选择费用科目;";
+      // } else if (this.purchaseRequestData.ExpenseCategory == "") {
+      //   this.message = "请选择费用类别;";
+      // } else if (this.purchaseRequestData.CostAccount == "") {
+      //   this.message = "请选择费用科目;";
       } else {
         isSuccess = true;
       }
@@ -1146,7 +1147,7 @@ export default {
   word-wrap: break-word;
   word-break: break-all;
 }
-.caigouEdit tr:nth-child(8) {
+#edit_GPPurchase {
   background-color: #409eff;
   font-weight: bold;
   color: white;

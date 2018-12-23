@@ -230,10 +230,20 @@
               ></el-option>
             </el-select>
           </el-form-item>
-          <el-form-item label="固定资产：" :label-width="formLabelWidth" prop="gdzc" v-show="currentStep=='Approver5'&&item.sqlx=='固定资产'">
+          <el-form-item
+            label="固定资产："
+            :label-width="formLabelWidth"
+            prop="gdzc"
+            v-show="currentStep=='Approver5'&&item.sqlx=='固定资产'"
+          >
             <el-input v-model="item.gdzc" placeholder="请输入固定资产"></el-input>
           </el-form-item>
-          <el-form-item label="费用条目：" :label-width="formLabelWidth" prop="fytm" v-show="currentStep=='Approver5'&&item.sqlx=='费用'">
+          <el-form-item
+            label="费用条目："
+            :label-width="formLabelWidth"
+            prop="fytm"
+            v-show="item.sqlx=='费用'"
+          >
             <el-input v-model="item.fytm" placeholder="请输入费用条目"></el-input>
           </el-form-item>
         </el-form>
@@ -439,7 +449,7 @@ export default {
         .done(req => {
           this.loading = false;
           this.$message(common.message("success", "审批成功!"));
-          if(this.currentStep=="Approver5"){
+          if (this.currentStep == "Approver5") {
             this.deleteSubListItems();
           }
           this.$router.push("/home");
@@ -465,7 +475,7 @@ export default {
           list: this.approverList,
           baseUrl: this.hostUrl,
           condition:
-            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'ECC'"
+            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
         };
         var option = common.queryOpt(parm); //获取审批节点请求
         $.when($.ajax(option))
@@ -577,7 +587,13 @@ export default {
                       });
                   }
                 }
-                this.$message(common.message("success", "ECC数据保存成功!"));
+                this.$message({
+                  showClose: true,
+                  message:
+                    "固定资产申请提交成功!" + this.ECCTaskForm.applicantNumber,
+                  type: "success",
+                  duration: 0
+                });
                 console.log(this.isChangeSubListData);
                 if (this.isChangeSubListData) {
                   console.log("change sub data");
@@ -590,7 +606,7 @@ export default {
               .catch(err => {
                 this.loading = false;
                 this.$message(
-                  common.message("error", "提交ECC主表数据时出现了错误!")
+                  common.message("error", "提交固定资产数据时出现了错误!")
                 );
                 this.$router.push("/home");
               });
@@ -796,8 +812,8 @@ export default {
           Price: d.dj.toString(),
           Total: d.zje.toString(),
           RequestType: d.sqlx,
-          CostItems:d.fytm,
-          FixedAssetsCode:d.gdzc
+          CostItems: d.fytm,
+          FixedAssetsCode: d.gdzc
         };
         var parm = {
           type: "post",
@@ -846,6 +862,10 @@ export default {
         this.$message(common.message("error", "请输入数量"));
       } else if (this.item.dj == "") {
         this.$message(common.message("error", "请输入单价"));
+      } else if (this.item.sqlx == "") {
+        this.$message(common.message("error", "请输入申请类型"));
+      } else if (this.item.sqlx == "费用" && this.item.fytm == "") {
+        this.$message(common.message("error", "请输入费用条目"));
       } else {
         isSuccess = true;
       }
@@ -927,11 +947,11 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.split(".")[1] === "xls";
-      const extension2 = file.name.split(".")[1] === "xlsx";
-      const extension3 = file.name.split(".")[1] === "doc";
-      const extension4 = file.name.split(".")[1] === "docx";
-      const extension5 = file.name.split(".")[1] === "txt";
+      const extension = file.name.toLowerCase().split(".")[1] === "xls";
+      const extension2 = file.name.toLowerCase().split(".")[1] === "xlsx";
+      const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
+      const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
+      const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
