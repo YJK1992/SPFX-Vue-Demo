@@ -88,7 +88,7 @@
       </tr>
     </table>
     <el-dialog title="物料信息" :visible.sync="dialogTableVisible">
-      <el-table :data="gridData">
+      <el-table :data="SubTableData">
         <el-table-column property="Materiel" label="物料" width="150"></el-table-column>
         <el-table-column property="Amount" label="数量" width="150"></el-table-column>
         <el-table-column property="Price" label="单价" width="150"></el-table-column>

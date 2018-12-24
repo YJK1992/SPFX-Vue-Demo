@@ -32,7 +32,7 @@
         </td>
         <td align="right">报销类型：</td>
         <td align="left">
-          <el-select v-model="PublicPayment.ReimbursementType" placeholder="请选择">
+          <el-select v-model="PublicPayment.ReimbursementType" placeholder="请选择" @change="clearNumber">
             <el-option
               v-for="item in ReimbursementType"
               :key="item.value"
@@ -69,7 +69,6 @@
             ></el-option>
           </el-select>
         </td>
-
       </tr>
       <tr>
         <td align="right">发票金额：</td>
@@ -123,7 +122,11 @@
         <td colspan="3" style="color:#409eff">此项报销有借款时必须要填写借款单号</td>
         <td align="right">借款单号：</td>
         <td colspan="4">
-          <el-input :disabled="PublicPayment.ReimbursementType!='费用借款'" v-model="PublicPayment.LoanNumber" placeholder="借款单号"></el-input>
+          <el-input
+            :disabled="PublicPayment.ReimbursementType!='费用借款'"
+            v-model="PublicPayment.LoanNumber"
+            placeholder="借款单号"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -277,7 +280,7 @@
         </td>
       </tr>
       <tr>
-                <td align="right">特殊审批人：</td>
+        <td align="right">特殊审批人：</td>
         <td colspan="7">
           <el-input
             v-model="PublicPayment.SpecialApprover"
@@ -292,7 +295,7 @@
         <td colspan="7" align="left">
           <el-checkbox display v-model="PublicPayment.IsSettlement"></el-checkbox>
         </td>
-      </tr> -->
+      </tr>-->
       <tr>
         <td colspan="8" align="right">
           <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
@@ -621,7 +624,13 @@ export default {
     };
   },
   methods: {
-     getCostCenter() {
+    clearNumber() {
+      if (this.PublicPayment.ReimbursementType != "费用借款") {
+        //改变时候如果不是费用借款的时候清空掉单据编号
+        this.PublicPayment.LoanNumber = "";
+      }
+    },
+    getCostCenter() {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -639,21 +648,21 @@ export default {
             costCenter.push(d.CostCenter);
           });
           console.log("未去重");
-            console.log(costCenter);
-            var costCenterUnique = costCenter.filter(function(
-              element,
-              index,
-              array
-            ) {
-              return array.indexOf(element) === index;
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.costCenterArr.push({
+              CostCenter: element
             });
-            costCenterUnique.forEach(element => {
-              this.costCenterArr.push({
-                CostCenter: element
-              });
-            });
-            console.log("去重后");
-            console.log(this.costCenterArr);
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
         }
       });
     },
@@ -677,7 +686,7 @@ export default {
             parseFloat(this.PublicPayment.InvoiceValue) *
             parseFloat(this.PublicPayment.ExchangeRate);
         }
-              this.convertMoney()
+        this.convertMoney();
       }
     },
     getExpenseCategory() {
@@ -752,18 +761,18 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-               var selectedCostCenter='';
+              var selectedCostCenter = "";
               data.forEach(d => {
                 // this.costCenterArr.push({
                 //   CostCenter: d.CostCenter,
                 //   CostCenterName: d.CostCenterName
                 // });
-                selectedCostCenter=d.CostCenter;
+                selectedCostCenter = d.CostCenter;
                 this.companyCodeArr.push({
                   CompanyCode: d.CompanyCode
                 });
               });
-              this.PublicPayment.CostCenter=selectedCostCenter;
+              this.PublicPayment.CostCenter = selectedCostCenter;
             } else {
               this.$message(
                 common.message(

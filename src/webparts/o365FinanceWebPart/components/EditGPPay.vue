@@ -37,6 +37,7 @@
         <td align="right">报销类型：</td>
         <td align="left">
           <el-select
+            @change="clearNumber"
             :disabled="showApprover==true"
             v-model="PublicPayment.ReimbursementType"
             placeholder="请选择"
@@ -881,6 +882,12 @@ export default {
     };
   },
   methods: {
+    clearNumber(){
+      if(this.PublicPayment.ReimbursementType!="费用借款"){
+        //改变时候如果不是费用借款的时候清空掉单据编号
+          this.PublicPayment.LoanNumber="";
+      }
+    },
     getCostCenter() {
       var parm = {
         type: "get",

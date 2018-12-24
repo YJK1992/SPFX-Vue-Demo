@@ -18,7 +18,12 @@
           </td>
           <td>成本中心 ：</td>
           <td colspan="2">
-            <el-select v-model="ECCTaskForm.costcenter" placeholder="请选择" size="medium">
+            <el-select
+              v-model="ECCTaskForm.costcenter"
+              placeholder="请选择"
+              size="medium"
+              @change="costCenterChange"
+            >
               <el-option
                 v-for="item in costCenterArr"
                 :key="item.CostCenter"
@@ -46,7 +51,12 @@
           </td>
           <td>申请类别 ：</td>
           <td colspan="2">
-            <el-select v-model="ECCTaskForm.applicantType" placeholder="请选择" size="medium">
+            <el-select
+              v-model="ECCTaskForm.applicantType"
+              placeholder="请选择"
+              size="medium"
+              @change="applicantTypeChange"
+            >
               <el-option
                 v-for="item in applicantTypeOpts"
                 :key="item.Title"
@@ -279,6 +289,65 @@ export default {
     };
   },
   methods: {
+    applicantTypeChange: function() {
+      this.productTypeOpts = [];
+      this.ECCTaskForm.productType=""
+      this.loading = true;
+      var applicantType = this.ECCTaskForm.applicantType;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.productTypeListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=ApplicantType eq '" + applicantType + "'"
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(d2 => {
+              this.productTypeOpts.push({
+                Title: d2.Title
+              });
+            });
+            this.loading = false;
+          } else {
+            this.loading = false;
+            this.$message(common.message("error", "未能找到对应的产品类型!"));
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "获取产品类型失败!"));
+        });
+    },
+    costCenterChange: function() {
+      this.loading = true;
+      var costCenter = this.ECCTaskForm.costcenter;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.approverList,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=CostCenter eq  '" + costCenter + "' and Type eq 'FA'"
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.loading = false;
+          if (req.d.results.length == 0) {
+            this.$message(
+              common.message("error", "未找到对应成本中心的审批节点!")
+            );
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "校验成本中心出错!"));
+        });
+    },
     getCostCenter() {
       var parm = {
         type: "get",
@@ -404,6 +473,11 @@ export default {
                     common.message("error", "提交固资数据时出现了错误!")
                   );
                 });
+            } else {
+              this.loading = false;
+              this.$message(
+                common.message("error", "未找到对应成本中心的审批节点!")
+              );
             }
           })
           .catch(err => {
@@ -553,7 +627,6 @@ export default {
       this.dialogFormVisible = false;
     }, //点击取消按钮
     getAppTypeAndProType: function() {
-      var that = this;
       var parm1 = {
         action: "ListItems",
         type: "get",
@@ -561,33 +634,33 @@ export default {
         baseUrl: this.hostUrl,
         condition: ""
       };
-      var parm2 = {
-        action: "ListItems",
-        type: "get",
-        list: this.productTypeListName,
-        baseUrl: this.hostUrl,
-        condition: ""
-      };
+      // var parm2 = {
+      //   action: "ListItems",
+      //   type: "get",
+      //   list: this.productTypeListName,
+      //   baseUrl: this.hostUrl,
+      //   condition: ""
+      // };
       var option1 = common.queryOpt(parm1);
-      var option2 = common.queryOpt(parm2);
-      $.when($.ajax(option1), $.ajax(option2))
-        .done(function(req1, req2) {
-          var data1 = req1[0].d.results;
-          var data2 = req2[0].d.results;
+      // var option2 = common.queryOpt(parm2);
+      $.when($.ajax(option1))
+        .done(req1 => {
+          var data1 = req1.d.results;
+          // var data2 = req2[0].d.results;
           if (data1.length > 0) {
             data1.forEach(d1 => {
-              that.applicantTypeOpts.push({
+              this.applicantTypeOpts.push({
                 Title: d1.Title
               });
             });
           }
-          if (data2.length > 0) {
-            data2.forEach(d2 => {
-              that.productTypeOpts.push({
-                Title: d2.Title
-              });
-            });
-          }
+          // if (data2.length > 0) {
+          //   data2.forEach(d2 => {
+          //     that.productTypeOpts.push({
+          //       Title: d2.Title
+          //     });
+          //   });
+          // }
         })
         .catch(err => {
           this.loading = false;

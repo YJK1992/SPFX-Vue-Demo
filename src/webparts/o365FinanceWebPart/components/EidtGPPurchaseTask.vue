@@ -157,6 +157,7 @@
         <td align="right">申请类型：</td>
         <td align="left">
           <el-select
+            @change="clearCodeOrSelect"
             v-model="purchaseRequestData.ApplicationType"
             placeholder="请选择"
             :disabled="showApprover==true"
@@ -172,11 +173,10 @@
         <td align="right">费用类别：</td>
         <td>
           <el-select
-       
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
-             :disabled="showApprover==true?true:purchaseRequestData.ApplicationType=='固定资产'"
+            :disabled="showApprover==true?true:purchaseRequestData.ApplicationType=='固定资产'"
           >
             <el-option
               v-for="item in expenseCategoryOptions"
@@ -207,7 +207,11 @@
       <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
-          <el-input  :disabled="showApprover==true?true:purchaseRequestData.ApplicationType!='固定资产'" v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
+          <el-input
+            :disabled="showApprover==true?true:purchaseRequestData.ApplicationType!='固定资产'"
+            v-model="purchaseRequestData.CodeOfFixedAssets"
+            placeholder="固定资产编码"
+          ></el-input>
         </td>
       </tr>
 
@@ -358,6 +362,14 @@ export default {
     };
   },
   methods: {
+    clearCodeOrSelect() {
+      if (this.purchaseRequestData.ApplicationType == "费用") {
+        this.purchaseRequestData.CodeOfFixedAssets = "";
+      } else {
+        this.purchaseRequestData.CostAccount = "";
+        this.purchaseRequestData.ExpenseCategory = "";
+      }
+    },
     disabledMoney() {
       if (this.purchaseRequestData.IsContract) {
         this.isDisabledMoney = true;
@@ -777,10 +789,10 @@ export default {
         this.message = "请输入金额;";
       } else if (this.purchaseRequestData.ApplicationType == "") {
         this.message = "请选择申请类型;";
-      // } else if (this.purchaseRequestData.ExpenseCategory == "") {
-      //   this.message = "请选择费用类别;";
-      // } else if (this.purchaseRequestData.CostAccount == "") {
-      //   this.message = "请选择费用科目;";
+        // } else if (this.purchaseRequestData.ExpenseCategory == "") {
+        //   this.message = "请选择费用类别;";
+        // } else if (this.purchaseRequestData.CostAccount == "") {
+        //   this.message = "请选择费用科目;";
       } else {
         isSuccess = true;
       }
@@ -1070,7 +1082,8 @@ export default {
             this.purchaseRequestData.CostCenter = data[0].CostCenter;
             this.purchaseRequestData.CompanyCode = data[0].CompanyCode;
             this.purchaseRequestData.DeliveryAddress = data[0].DeliveryAddress;
-            this.purchaseRequestData.IsContract = data[0].IsContract=="true"?true:false;
+            this.purchaseRequestData.IsContract =
+              data[0].IsContract == "true" ? true : false;
             this.purchaseRequestData.ApplicationNumber =
               data[0].ApplicationNumber;
             this.purchaseRequestData.ContractNumber = data[0].ContractNumber;
@@ -1085,7 +1098,7 @@ export default {
               data[0].SpecialApproverTitle;
             this.currentItemId = data[0].Id;
 
-          this.isDisabledMoney =  this.purchaseRequestData.IsContract ;
+            this.isDisabledMoney = this.purchaseRequestData.IsContract;
           } else {
             this.$message(
               common.message("error", "采购申请列表中不存在该申请单号")

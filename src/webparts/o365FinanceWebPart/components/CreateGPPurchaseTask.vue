@@ -117,7 +117,7 @@
       <tr>
         <td align="right">申请类型：</td>
         <td align="left">
-          <el-select v-model="purchaseRequestData.ApplicationType" placeholder="请选择">
+          <el-select @change="clearCodeOrSelect" v-model="purchaseRequestData.ApplicationType" placeholder="请选择">
             <el-option
               v-for="item in applicationTypeOptions"
               :key="item.value"
@@ -290,6 +290,14 @@ export default {
     };
   },
   methods: {
+    clearCodeOrSelect(){
+      if(this.purchaseRequestData.ApplicationType=="费用"){
+        this.purchaseRequestData.CodeOfFixedAssets="";
+      }else{
+        this.purchaseRequestData.CostAccount=""
+        this.purchaseRequestData.ExpenseCategory=""
+      }
+    },
     disabledMoney() {
       if (this.purchaseRequestData.IsContract) {
         this.isDisabledMoney = true;

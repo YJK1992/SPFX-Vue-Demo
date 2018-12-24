@@ -64,7 +64,7 @@
     </table>
 
     <el-dialog title="供应商信息" :visible.sync="dialogTableVisible">
-      <el-table :data="gridData">
+      <el-table :data="SubTableData">
         <el-table-column property="Supplier" label="供应商" width="150"></el-table-column>
         <el-table-column property="SupplierParts" label="供应商部件" width="150"></el-table-column>
         <el-table-column property="Amount" label="总金额" width="150"></el-table-column>
@@ -201,9 +201,12 @@ export default {
       });
     },
     getSubList(index) {
+      console.log("111111111")
+      console.log(index)
       this.dialogTableVisible = true;
       this.SubTableData = [];
-      var applicationNumber = this.TableData[index].PurchaseRequestGUID;
+      var applicationNumber = this.TableData[index].ApplicationNumber;
+      console.log(applicationNumber)
       var parm = {
         type: "get",
         action: "ListItems",
@@ -212,9 +215,12 @@ export default {
         condition: "?$filter=PurchaseRequestGUID eq '" + applicationNumber + "'"
       };
       var opt = common.queryOpt(parm);
+      console.log("222222222")
+      console.log(opt)
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
+          console.log(data)
           if (data.length > 0) {
             data.forEach(d => {
               this.SubTableData.push({
@@ -225,7 +231,7 @@ export default {
               });
             });
           } else {
-            this.$message(common.message("waring", "没有供应商数据信息!"));
+            this.$message(common.message("warning", "没有供应商数据信息!"));
           }
         })
         .catch(err => {

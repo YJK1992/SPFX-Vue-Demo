@@ -20,6 +20,7 @@
               placeholder="请选择"
               size="medium"
               :disabled="showApprover==true"
+              @change="costCenterChange"
             >
               <el-option
                 v-for="item in costCenterArr"
@@ -58,6 +59,7 @@
               placeholder="请选择"
               size="medium"
               :disabled="showApprover==true"
+              @change="applicantTypeChange"
             >
               <el-option
                 v-for="item in applicantTypeOpts"
@@ -356,6 +358,65 @@ export default {
     };
   },
   methods: {
+    applicantTypeChange: function() {
+      this.productTypeOpts = [];
+      this.ECCTaskForm.productType = "";
+      this.loading = true;
+      var applicantType = this.ECCTaskForm.applicantType;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.productTypeListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=ApplicantType eq '" + applicantType + "'"
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(d2 => {
+              this.productTypeOpts.push({
+                Title: d2.Title
+              });
+            });
+            this.loading = false;
+          } else {
+            this.loading = false;
+            this.$message(common.message("error", "未能找到对应的产品类型!"));
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "获取产品类型失败!"));
+        });
+    },
+    costCenterChange: function() {
+      this.loading = true;
+      var costCenter = this.ECCTaskForm.costcenter;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.approverList,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=CostCenter eq  '" + costCenter + "' and Type eq 'FA'"
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.loading = false;
+          if (req.d.results.length == 0) {
+            this.$message(
+              common.message("error", "未找到对应成本中心的审批节点!")
+            );
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "校验成本中心出错!"));
+        });
+    },
     getCostCenter() {
       var parm = {
         type: "get",
@@ -523,7 +584,7 @@ export default {
               } else {
                 itemInfo.Status = "Draft";
               }
-              var parm = {
+              var parm2 = {
                 type: "post",
                 action: "EditListItem",
                 baseUrl: this.hostUrl,
@@ -532,84 +593,90 @@ export default {
                 item: itemInfo,
                 digest: this.requestDigest
               };
-            }
-            var options = common.queryOpt(parm);
-            $.when($.ajax(options))
-              .done(req => {
-                if (type == "submit") {
-                  console.log("Is submit");
-                  if (this.currentStep == "Application" && this.taskId != 0) {
-                    this.onApproval("approve");
+              var options = common.queryOpt(parm2);
+              $.when($.ajax(options))
+                .done(req => {
+                  if (type == "submit") {
+                    console.log("Is submit");
+                    if (this.currentStep == "Application" && this.taskId != 0) {
+                      this.onApproval("approve");
+                    }
                   }
-                }
-                if (this.startNoAttr) {
-                  console.log("Start No attachment");
-                  if (this.fileList.length > 0) {
-                    var attUrl =
-                      this.hostUrl +
-                      "/_api/web/lists/getbytitle('" +
-                      this.mainListName +
-                      "')/items(" +
-                      this.currentItemId +
-                      ")/AttachmentFiles";
-                    this.uploadAttFileToItem(attUrl);
+                  if (this.startNoAttr) {
+                    console.log("Start No attachment");
+                    if (this.fileList.length > 0) {
+                      var attUrl =
+                        this.hostUrl +
+                        "/_api/web/lists/getbytitle('" +
+                        this.mainListName +
+                        "')/items(" +
+                        this.currentItemId +
+                        ")/AttachmentFiles";
+                      this.uploadAttFileToItem(attUrl);
+                    }
+                  } else {
+                    console.log("Start have attachment");
+                    if (this.deleteAttName != "") {
+                      console.log("have change attachment");
+                      var parm = {
+                        type: "delete",
+                        action: "DeleteAttachment",
+                        baseUrl: this.hostUrl,
+                        digest: this.requestDigest,
+                        list: this.mainListName,
+                        itemID: this.currentItemId,
+                        fileName: this.deleteAttName
+                      };
+                      var opt = common.queryOpt(parm);
+                      var deleteFile = common.service(opt);
+                      deleteFile
+                        .done(reqf => {
+                          if (this.fileList.length > 0) {
+                            var attUrl =
+                              this.hostUrl +
+                              "/_api/web/lists/getbytitle('" +
+                              this.mainListName +
+                              "')/items(" +
+                              this.currentItemId +
+                              ")/AttachmentFiles";
+                            this.uploadAttFileToItem(attUrl);
+                          }
+                        })
+                        .catch(errf => {
+                          this.$message(
+                            common.message("error", "删除附件错误")
+                          );
+                        });
+                    }
                   }
-                } else {
-                  console.log("Start have attachment");
-                  if (this.deleteAttName != "") {
-                    console.log("have change attachment");
-                    var parm = {
-                      type: "delete",
-                      action: "DeleteAttachment",
-                      baseUrl: this.hostUrl,
-                      digest: this.requestDigest,
-                      list: this.mainListName,
-                      itemID: this.currentItemId,
-                      fileName: this.deleteAttName
-                    };
-                    var opt = common.queryOpt(parm);
-                    var deleteFile = common.service(opt);
-                    deleteFile
-                      .done(reqf => {
-                        if (this.fileList.length > 0) {
-                          var attUrl =
-                            this.hostUrl +
-                            "/_api/web/lists/getbytitle('" +
-                            this.mainListName +
-                            "')/items(" +
-                            this.currentItemId +
-                            ")/AttachmentFiles";
-                          this.uploadAttFileToItem(attUrl);
-                        }
-                      })
-                      .catch(errf => {
-                        this.$message(common.message("error", "删除附件错误"));
-                      });
+                  this.$message({
+                    showClose: true,
+                    message:
+                      "固定资产申请提交成功!" +
+                      this.ECCTaskForm.applicantNumber,
+                    type: "success",
+                    duration: 0
+                  });
+                  console.log(this.isChangeSubListData);
+                  if (this.isChangeSubListData) {
+                    console.log("change sub data");
+                    this.deleteSubListItems();
                   }
-                }
-                this.$message({
-                  showClose: true,
-                  message:
-                    "固定资产申请提交成功!" + this.ECCTaskForm.applicantNumber,
-                  type: "success",
-                  duration: 0
-                });
-                console.log(this.isChangeSubListData);
-                if (this.isChangeSubListData) {
-                  console.log("change sub data");
-                  this.deleteSubListItems();
-                }
 
-                this.loading = false;
-                this.$router.push("/home");
-              })
-              .catch(err => {
-                this.loading = false;
-                this.$message(
-                  common.message("error", "提交固定资产数据时出现了错误!")
-                );
-                this.$router.push("/home");
-              });
+                  this.loading = false;
+                  this.$router.push("/home");
+                })
+                .catch(err => {
+                  this.loading = false;
+                  this.$message(
+                    common.message("error", "提交固定资产数据时出现了错误!")
+                  );
+                  this.$router.push("/home");
+                });
+            }else{
+              this.loading = false;
+              this.$message(common.message("error", "未能获取到对应的审批节点!"));
+            }
           })
           .catch(err => {
             this.loading = false;
@@ -658,6 +725,8 @@ export default {
       this.item = this.subListData[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
+      this.materielOpt = [];
+      this.addMaterielInfo()
     }, //编辑项目行
     onAddRow: function() {
       this.loading = true;
@@ -672,6 +741,9 @@ export default {
         fytm: ""
       };
       this.materielOpt = [];
+      this.addMaterielInfo()
+    }, //新增项目行
+    addMaterielInfo:function(){
       var appType = this.ECCTaskForm.applicantType;
       var proType = this.ECCTaskForm.productType;
       var parm = {
@@ -717,7 +789,7 @@ export default {
           this.loading = false;
           this.dialogFormVisible = false;
         });
-    }, //新增项目行
+    },
     onSubItemSave(formName) {
       var valid = this.subItemVerification();
       this.isChangeSubListData = true;
@@ -758,7 +830,6 @@ export default {
       this.dialogFormVisible = false;
     }, //点击取消按钮
     getAppTypeAndProType: function() {
-      var that = this;
       var parm1 = {
         action: "ListItems",
         type: "get",
@@ -766,30 +837,14 @@ export default {
         baseUrl: this.hostUrl,
         condition: ""
       };
-      var parm2 = {
-        action: "ListItems",
-        type: "get",
-        list: this.productTypeListName,
-        baseUrl: this.hostUrl,
-        condition: ""
-      };
       var option1 = common.queryOpt(parm1);
-      var option2 = common.queryOpt(parm2);
-      $.when($.ajax(option1), $.ajax(option2))
-        .done(function(req1, req2) {
-          var data1 = req1[0].d.results;
-          var data2 = req2[0].d.results;
+      $.when($.ajax(option1))
+        .done(req1 => {
+          var data1 = req1.d.results;
           if (data1.length > 0) {
             data1.forEach(d1 => {
-              that.applicantTypeOpts.push({
+              this.applicantTypeOpts.push({
                 Title: d1.Title
-              });
-            });
-          }
-          if (data2.length > 0) {
-            data2.forEach(d2 => {
-              that.productTypeOpts.push({
-                Title: d2.Title
               });
             });
           }
@@ -1152,6 +1207,7 @@ export default {
   mounted: function() {
     this.loading = true;
     this.getCostCenter();
+    this.getAppTypeAndProType();
     this.requestDigest = common.getRequestDigest();
     var applicantNumber = common.GetParameterValues("ApplicantNumber");
     var step = common.GetParameterValues("Step");

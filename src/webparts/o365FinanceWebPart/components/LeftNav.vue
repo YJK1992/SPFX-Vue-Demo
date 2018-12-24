@@ -12,9 +12,9 @@
           <span>固资申请</span>
         </template>
         <el-menu-item-group>
-          <el-menu-item index="/createecctask">固资申请</el-menu-item>
           <el-menu-item index="/viewecctask">我的待办</el-menu-item>
-          <el-menu-item index="/myeccdraft">我的草稿</el-menu-item>  
+          <el-menu-item index="/myeccdraft">我的草稿</el-menu-item>
+          <el-menu-item index="/createecctask">固资申请</el-menu-item>
           <el-menu-item index="/eccreport">固资报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
