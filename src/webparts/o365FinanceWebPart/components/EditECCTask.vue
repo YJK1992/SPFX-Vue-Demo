@@ -201,7 +201,12 @@
       <el-dialog title="新增物料" :visible.sync="dialogFormVisible">
         <el-form :model="item">
           <el-form-item label="物料：" :label-width="formLabelWidth" prop="wl">
-            <el-select v-model="item.wl" placeholder="请选择" @change="wlChange">
+            <el-select
+              v-model="item.wl"
+              placeholder="请选择"
+              @change="wlChange"
+              :disabled="showEditor==false"
+            >
               <el-option
                 v-for="i in materielOpt"
                 :key="i.Materiel"
@@ -214,7 +219,14 @@
             <el-input v-model="item.ms" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="数量：" :label-width="formLabelWidth" prop="sl">
-            <el-input-number v-model="item.sl" @change="slChange" size="medium" :min="1" label="数量"></el-input-number>
+            <el-input-number
+              :disabled="showEditor==false"
+              v-model="item.sl"
+              @change="slChange"
+              size="medium"
+              :min="1"
+              label="数量"
+            ></el-input-number>
           </el-form-item>
           <el-form-item label="单价：" :label-width="formLabelWidth" prop="dj">
             <el-input v-model="item.dj" autocomplete="off" :disabled="true"></el-input>
@@ -223,7 +235,7 @@
             <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
-            <el-select v-model="item.sqlx" placeholder="请选择">
+            <el-select v-model="item.sqlx" placeholder="请选择" :disabled="showEditor==false">
               <el-option
                 v-for="item in subApplicationTypeOpt"
                 :key="item.value"
@@ -246,7 +258,7 @@
             prop="fytm"
             v-show="item.sqlx=='费用'"
           >
-            <el-input v-model="item.fytm" placeholder="请输入费用条目"></el-input>
+            <el-input v-model="item.fytm" placeholder="请输入费用条目" :disabled="showEditor==false"></el-input>
           </el-form-item>
         </el-form>
         <div slot="footer" class="dialog-footer">
@@ -488,6 +500,17 @@ export default {
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
+      if (this.currentStep == "Approver5") {
+        if (this.checkFixedAsset()) {
+          this.$message(common.message("error", "固定资产编码不能为空!"));
+        }else{
+          this.updateTaskStatus(taskOutcome);
+        }
+      } else {
+        this.updateTaskStatus(taskOutcome);
+      }
+    },
+    updateTaskStatus: function(taskOutcome) {
       var taskItemInfo = {
         __metadata: {
           type: this.eccTaskListType
@@ -520,6 +543,18 @@ export default {
           this.$message(common.message("error", "审批失败!"));
           this.$router.push("/home");
         });
+    },
+    checkFixedAsset: function() {
+      var haveFixedIsNull = false;
+      console.log("8888888");
+      console.log(this.subListData);
+      this.subListData.forEach(d => {
+        console.log(d);
+        if (d.sqlx == "固定资产" && (d.gdzc == "" || d.gdzc == null)) {
+          haveFixedIsNull = true;
+        }
+      });
+      return haveFixedIsNull;
     },
     saveOrSubmmit: function(type) {
       var validate = this.mainFormVerification();
@@ -673,9 +708,11 @@ export default {
                   );
                   this.$router.push("/home");
                 });
-            }else{
+            } else {
               this.loading = false;
-              this.$message(common.message("error", "未能获取到对应的审批节点!"));
+              this.$message(
+                common.message("error", "未能获取到对应的审批节点!")
+              );
             }
           })
           .catch(err => {
@@ -726,7 +763,7 @@ export default {
       this.editIndex = index;
       this.dialogFormVisible = true;
       this.materielOpt = [];
-      this.addMaterielInfo()
+      this.addMaterielInfo();
     }, //编辑项目行
     onAddRow: function() {
       this.loading = true;
@@ -741,9 +778,9 @@ export default {
         fytm: ""
       };
       this.materielOpt = [];
-      this.addMaterielInfo()
+      this.addMaterielInfo();
     }, //新增项目行
-    addMaterielInfo:function(){
+    addMaterielInfo: function() {
       var appType = this.ECCTaskForm.applicantType;
       var proType = this.ECCTaskForm.productType;
       var parm = {
@@ -1075,9 +1112,6 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-              // data.forEach(d => {
-              //   loginName = d.EmployeeID;
-              // });
               loginName = "i:0#.f|membership|" + speApproverName;
               var parm2 = {
                 type: "get",

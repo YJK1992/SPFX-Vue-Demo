@@ -679,7 +679,8 @@ export default {
           Amount: d.sl.toString(),
           Price: d.dj.toString(),
           Total: d.zje.toString(),
-          RequestType: d.sqlx
+          RequestType: d.sqlx,
+          CostItems:d.fytm
         };
         var parm = {
           type: "post",

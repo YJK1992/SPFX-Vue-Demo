@@ -12,9 +12,9 @@
           <span>固资申请</span>
         </template>
         <el-menu-item-group>
+          <el-menu-item index="/createecctask">固资申请</el-menu-item>
           <el-menu-item index="/viewecctask">我的待办</el-menu-item>
           <el-menu-item index="/myeccdraft">我的草稿</el-menu-item>
-          <el-menu-item index="/createecctask">固资申请</el-menu-item>
           <el-menu-item index="/eccreport">固资报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
@@ -24,9 +24,9 @@
           <span>GP申请</span>
         </template>
         <el-menu-item-group>
+          <el-menu-item index="/creategppurchasetask">采购申请</el-menu-item>
           <el-menu-item index="/viewgppurtasks">我的待办</el-menu-item>
           <el-menu-item index="/viewgppurdraft">我的草稿</el-menu-item>
-          <el-menu-item index="/creategppurchasetask">采购申请</el-menu-item>
           <el-menu-item index="/gppurchasereport">采购申请报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
@@ -36,9 +36,9 @@
           <span>GP付款</span>
         </template>
         <el-menu-item-group>
+          <el-menu-item index="/creategppaytask">对公付款</el-menu-item>
           <el-menu-item index="/viewgppay">我的待办</el-menu-item>
           <el-menu-item index="/mygppaydraft">我的草稿</el-menu-item>
-          <el-menu-item index="/creategppaytask">对公付款</el-menu-item>
           <el-menu-item index="/gppayreport">对公付款报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
