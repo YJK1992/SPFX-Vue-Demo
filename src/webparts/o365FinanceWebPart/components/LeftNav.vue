@@ -39,7 +39,12 @@
           <el-menu-item index="/creategppaytask">对公付款</el-menu-item>
           <el-menu-item index="/viewgppay">我的待办</el-menu-item>
           <el-menu-item index="/mygppaydraft">我的草稿</el-menu-item>
-          <el-menu-item index="/gppayreport">对公付款报表</el-menu-item>
+          <el-menu-item index="/gppayreport">GP付款总表</el-menu-item>
+          <el-menu-item index="/gppayremittancereport">汇款</el-menu-item>
+          <el-menu-item index="/gppaytaxbillreport1">税票清单数据导出F43</el-menu-item>
+          <el-menu-item index="/gppaytaxbillreport2">税票清单数据导出F53</el-menu-item>
+          <el-menu-item index="/gppaybillreport">Paybill</el-menu-item>
+          <el-menu-item index="/gppayassetreport">资产对公付款报表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
       <el-submenu index="4" disabled>

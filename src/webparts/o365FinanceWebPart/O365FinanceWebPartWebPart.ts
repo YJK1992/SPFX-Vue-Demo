@@ -33,6 +33,11 @@ import MyGPPayDraft from "./components/MyGPPayDraft.vue";
 import ECCReport from "./components/ECCReport.vue";
 import GPPayReport from "./components/GPPayReport.vue";
 import GPPurchaseReport from "./components/GPPurchaseReport.vue";
+import GPPayRemittanceReport from "./components/GPPayRemittanceReport.vue";
+import GPPayTaxBillReport1 from "./components/GPPayTaxBillReport1.vue";
+import GPPayTaxBillReport2 from "./components/GPPayTaxBillReport2.vue";
+import GPPayBillReport from "./components/GPPayBillReport.vue";
+import GPPayAssetReport from "./components/GPPayAssetReport.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -76,6 +81,11 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/eccreport', component: ECCReport },
       { path: '/gppayreport', component: GPPayReport },
       { path: '/gppurchasereport', component: GPPurchaseReport },
+      { path: '/gppayremittancereport', component: GPPayRemittanceReport },
+      { path: '/gppaytaxbillreport1', component: GPPayTaxBillReport1 },
+      { path: '/gppaytaxbillreport2', component: GPPayTaxBillReport2 },
+      { path: '/gppaybillreport', component: GPPayBillReport },
+      { path: '/gppayassetreport', component: GPPayAssetReport },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 
