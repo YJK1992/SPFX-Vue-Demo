@@ -15,9 +15,9 @@
         <el-select allow-create="true" v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
             v-for="item in SettlementMethodArr"
-            :key="item.Title"
-            :label="item.Title"
-            :value="item.Title"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -33,7 +33,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
+      </el-form-item>-->
       <el-form-item label="币种：">
         <el-select allow-create="true" v-model="Condition.Currency" placeholder="请选择">
           <el-option
@@ -157,7 +157,8 @@ export default {
         CompanyCode: "" //公司代码
       }, //筛选条件
       TableData: [], //主表数据
-      SubTableData: []
+      SubTableData: [],
+      dialogTableVisible: false
     };
   },
   methods: {
@@ -165,7 +166,8 @@ export default {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' ";
+      var condition =
+        "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' ";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {

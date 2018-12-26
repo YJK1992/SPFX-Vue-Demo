@@ -26,7 +26,7 @@
       <!-- <el-form-item label="结算人：">
         <el-input v-model="Condition.Title" placeholder="结算人"></el-input>
       </el-form-item>-->
-      <el-form-item label="公司代码：">
+      <!-- <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -35,7 +35,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
 
       <el-form-item label="币种">
         <el-select v-model="Condition.Currency" placeholder="请选择">
@@ -57,6 +57,7 @@
       <tr id="report_GPPayTaxBillReport2">
         <td style="width: 300px;">申请单号</td>
         <td>公司代码</td>
+        <td>经办人</td>
         <td>币种</td>
         <td>银行科目</td>
         <td>文本</td>
@@ -92,7 +93,6 @@
   </div>
 </template>
 
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -266,10 +266,10 @@ export default {
               Trustees: d.Trustees, //经办人
               Currency: d.Currency, //币种
               BankSubject: "", //银行科目,
-              TXT: '', 文本,
+              TXT: '', //文本,
               ScopeOfService: "", //业务范围
               InvoiceValue: d.InvoiceValue, //金额
-              TXT1: '', //借款单号
+              TXT1: '', //文本
               BankSubjectAllocation: "", //银行科目分配,
               SupplierNumber: "", //供应商编号,
               SpecialGeneralLedger: "", //特别总账

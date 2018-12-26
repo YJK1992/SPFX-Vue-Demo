@@ -26,7 +26,7 @@
       <!-- <el-form-item label="结算人：">
         <el-input v-model="Condition.Title" placeholder="结算人"></el-input>
       </el-form-item>-->
-      <el-form-item label="公司代码：">
+      <!-- <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -35,7 +35,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item>
+      </el-form-item> -->
 
       <el-form-item label="币种">
         <el-select v-model="Condition.Currency" placeholder="请选择">

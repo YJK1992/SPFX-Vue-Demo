@@ -36,7 +36,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
+      </el-form-item>-->
       <el-form-item>
         <el-button type="primary" @click="onSubmit">查询</el-button>
       </el-form-item>
@@ -113,8 +113,8 @@ export default {
         SettlementDate: "", //结算日期
         Currency: "", //币种
         CompanyCode: "" //公司代码
-      },//筛选条件
-      TableData: [],//主表数据
+      }, //筛选条件
+      TableData: [] //主表数据
     };
   },
   methods: {
@@ -123,45 +123,23 @@ export default {
       console.log("筛选条件");
       console.log(this.Condition);
       var condition = "?$filter=SettlementType eq '汇款'";
-      var conditionCount = 0;
-
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          conditionCount++;
-          if (conditionCount == 1) {
-            if (item == "SettlementDate") {
-              condition +=
-                "?$filter=Modified gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Modified lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
-            }
+          //存在条件
+          if (item == "ApplicantDate") {
+            condition +=
+              " and Created gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Created lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
           } else {
-            if (item == "SettlementDate") {
-              condition +=
-                " and Modified gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Modified lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                " and " + item + " eq '" + this.Condition[item] + "'";
-            }
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
           }
         }
       }
@@ -188,7 +166,7 @@ export default {
               money: d.Money,
               detailsOfPayment: d.DetailsOfPayment,
               isWrittenOff: "",
-              poNumber:""
+              poNumber: ""
             });
           });
         }
