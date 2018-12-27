@@ -31,6 +31,9 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="单据编号：">
+        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
+      </el-form-item>
       <el-form-item label="申请时间段：">
         <el-date-picker
           value-format="yyyy-MM-dd"
@@ -41,10 +44,7 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-      <el-form-item label="单据编号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
-      </el-form-item>
-      <!-- <el-form-item label="公司代码：">
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -53,37 +53,74 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
+      </el-form-item>
+      <el-form-item label="经办人ID：">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      </el-form-item>
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button @click="onExcel()" type="primary">导出Excel</el-button>
       </el-form-item>
     </el-form>
-
-    <table class="gpPayReport">
+    <el-table :data="TableData" style="width: 100%" max-height="600">
+      <el-table-column fixed prop="ApplicationNumber" label="单据编号" width="300"></el-table-column>
+      <el-table-column prop="ReimbursementType" label="报销类型"></el-table-column>
+      <el-table-column prop="SettlementType" label="结算方式"></el-table-column>
+      <el-table-column prop="Trustees" label="经办人"></el-table-column>
+      <el-table-column prop="Money" label="金额"></el-table-column>
+      <el-table-column prop="ExpenseCategory" label="费用类别"></el-table-column>
+      <el-table-column prop="Status" label="状态"></el-table-column>
+      <el-table-column prop="Created" label="申请日期"></el-table-column>
+      <el-table-column prop="SettlementPerson" label="签批/结算人"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!-- <table class="gpPayReport">
       <tr id="gpPayReportTable">
         <td>单据号</td>
-        <td>报销类型</td>
         <td>结算方式</td>
         <td>经办人</td>
+        <td>人员编号</td>
+        <td>最高审批人编号</td>
         <td>金额</td>
-        <td>费用类别</td>
-        <td>状态</td>
-        <td>申请日期</td>
-        <td>签批/结算人</td>
+        <td>成本中心编号</td>
+        <td>所属事业部</td>
+        <td>费用编号</td>
+        <td>费用名称</td>
+        <td>资产号</td>
+        <td>税码</td>
+        <td>发票号码</td>
+        <td>借款单号</td>
+        <td>借款金额</td>
+        <td>借款人编号</td>
+        <td>差额</td>
+        <td>特别总账标志</td>
+        <td>分配</td>
+        <td>定/限额</td>
+        <td>备注</td>
+        <td>PO号</td>
+        <td style="width: 100px;">操作</td>
       </tr>
       <tr v-for="(subItems,index) in TableData">
         <template v-for="(subItem,cindex) in subItems">
           <td>{{subItem}}</td>
         </template>
+        <td>
+          <el-button @click="viewItem(index)" size="small">查看</el-button>
+        </td>
       </tr>
-    </table>
+    </table>-->
   </div>
 </template>
 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
-
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -150,6 +187,18 @@ export default {
           label: "汇票"
         }
       ],
+      filterVal: [],
+      excelColumns: [
+        "单据编号",
+        "报销类型",
+        "结算方式",
+        "经办人",
+        "金额",
+        "费用类别",
+        "状态",
+        "申请日期",
+        "签批/结算人"
+      ], //excel字段名
       //筛选条件
       Condition: {
         ReimbursementType: "",
@@ -157,7 +206,8 @@ export default {
         Status: "",
         Date: "",
         ApplicationNumber: "",
-        CompanyCode: ""
+        CompanyCode: "",
+        TrusteesEmail: "" //经办人ID
       },
       CompanyCodeArr: [],
       //主表数据
@@ -181,12 +231,17 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0]+"T00:00:00Z" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +"T00:00:00Z"+
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
+            } else if (item == "TrusteesEmail") {
+              condition +=
+                "?$filter=TrusteesEmail eq '" + this.Condition[item] + "'";
             } else {
               condition +=
                 "?$filter=" + item + " eq '" + this.Condition[item] + "'";
@@ -196,11 +251,13 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0]+"T00:00:00Z" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +"T00:00:00Z"+
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -210,35 +267,7 @@ export default {
         }
       }
       console.log(condition);
-
-      var parm = {
-        type: "get",
-        action: "ListItems",
-        list: this.mainListName,
-        baseUrl: this.hostUrl,
-        condition: condition
-      };
-      var option = common.queryOpt(parm);
-      console.log("1111111111");
-      console.log(option);
-      $.when($.ajax(option)).done(req => {
-        var data = req.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.TableData.push({
-              ApplicationNumber: d.ApplicationNumber,
-              ReimbursementType: d.ReimbursementType,
-              SettlementType: d.SettlementType,
-              Trustees: d.Trustees,
-              InvoiceValue: d.InvoiceValue,
-              ExpenseCategory: d.ExpenseCategory,
-              Status: d.Status,
-              Created: d.Created,
-              SettlementPerson: ""
-            });
-          });
-        }
-      });
+      this.loadMainList(condition);
     },
     getCompanyCode: function() {
       //获取公司代码和成本中心
@@ -272,6 +301,59 @@ export default {
               CompanyCode: element
             });
           });
+        }
+      });
+    },
+    onExcel: function() {
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "对公付款总报表",
+        fileType: "xlsx",
+        sheetName: "对公付款总报表"
+      };
+      efn.toExcel(excelInfo);
+    },
+    loadMainList: function(condition) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: condition
+      };
+      var option = common.queryOpt(parm);
+      console.log("1111111111");
+      console.log(option);
+      $.when($.ajax(option)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          data.forEach(d => {
+            this.TableData.push({
+              ApplicationNumber: d.ApplicationNumber,
+              ReimbursementType: d.ReimbursementType,
+              SettlementType: d.SettlementType,
+              Trustees: d.Trustees + "-" + d.TrusteesEmail,
+              Money: d.Money,
+              ExpenseCategory: d.ExpenseCategory,
+              Status: d.Status,
+              Created: d.Created,
+              SettlementPerson: ""
+            });
+          });
+        }
+      });
+    },
+    viewItem: function(index) {
+      var applicantNumber = this.TableData[index].ApplicationNumber;
+      this.$router.push({
+        path: "/detailgppay",
+        query: {
+          ApplicantNumber: applicantNumber
         }
       });
     }

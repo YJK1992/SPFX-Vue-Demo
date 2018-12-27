@@ -4,7 +4,7 @@
       <el-form-item label="日期时间段：">
         <el-date-picker
           value-format="yyyy-MM-dd"
-          v-model="Condition.ApplicationDate"
+          v-model="Condition.SettlingTime"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -23,10 +23,12 @@
         </el-select>
       </el-form-item>
 
-      <!-- <el-form-item label="结算人：">
-        <el-input v-model="Condition.Title" placeholder="结算人"></el-input>
-      </el-form-item>-->
-      <!-- <el-form-item label="公司代码：">
+      <el-form-item label="经办人">
+        <el-input v-model="Condition.Trustees" placeholder="经办人"></el-input>
+      </el-form-item>
+
+
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -35,7 +37,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
+      </el-form-item>
 
       <el-form-item label="币种">
         <el-select v-model="Condition.Currency" placeholder="请选择">
@@ -49,53 +51,35 @@
       </el-form-item>
 
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onExcel">导出Excel</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="GPPayTaxBillReport2">
-      <tr id="report_GPPayTaxBillReport2">
-        <td style="width: 300px;">申请单号</td>
-        <td>公司代码</td>
-        <td>经办人</td>
-        <td>币种</td>
-        <td>银行科目</td>
-        <td>文本</td>
-        <td>业务范围</td>
-        <td>金额</td>
-        <td>文本</td>
-        <td>银行科目分配</td>
-        <td>供应商编号</td>
-        <td>特别总账</td>
-        <td>分配</td>
-        <td>PO号</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
-        </template>
-        <!-- <td>
-          <el-button @click="getSubList(index)" size="small">查看</el-button>
-        </td> -->
-      </tr>
-    </table>
-
-    <el-dialog title="物料信息" :visible.sync="dialogTableVisible">
-      <el-table :data="SubTableData">
-        <el-table-column property="Materiel" label="物料" width="150"></el-table-column>
-        <el-table-column property="Amount" label="数量" width="150"></el-table-column>
-        <el-table-column property="Price" label="单价" width="150"></el-table-column>
-        <el-table-column property="Total" label="总金额" width="150"></el-table-column>
-        <el-table-column property="FixedAssetsCode" label="固定资产编码" width="150"></el-table-column>
-        <el-table-column property="RequestType" label="费用类别" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+    <el-table :data="TableData" style="width: 100%" height="600">
+      <el-table-column prop="ApplicationNumber" label="单据号" width="150"></el-table-column>
+      <el-table-column prop="CopmanyCode" label="公司代码" width="150"></el-table-column>
+      <el-table-column prop="Currency" label="币种" width="100"></el-table-column>
+      <el-table-column prop="BankSubject" label="银行科目" width="150"></el-table-column>
+      <el-table-column prop="TXT" label="文本" width="300"></el-table-column>
+      <el-table-column prop="ScopeOfService" label="业务范围" width="150"></el-table-column>
+      <el-table-column prop="InvoiceValue" label="金额" width="150"></el-table-column>
+      <el-table-column prop="TXT1" label="文本" width="300"></el-table-column>
+      <el-table-column prop="BankSubjectAllocation" label="银行科目分配" width="150"></el-table-column>
+      <el-table-column prop="SupplierNumbe" label="供应商编码" width="270"></el-table-column>
+      <el-table-column prop="SpecialGeneralLedger" label="特别总账" width="150"></el-table-column>
+      <el-table-column prop="Allocation" label="分配" width="150"></el-table-column>
+      <el-table-column prop="PONumber" label="PO号" width="150"></el-table-column>
+    </el-table>
   </div>
 </template>
 
+ 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 
 export default {
   data() {
@@ -107,13 +91,30 @@ export default {
       userListName: "EmployeeList", //员工表
       //初始化筛选数据
       CompanyCodeArr: [], //公司代码
+      //Excel导出列
+      excelColumns: [
+        "单据编号",
+        "公司代码",
+        "币种",
+        "银行科目",
+        "文本",
+        "业务范围",
+        "金额",
+        "文本",
+        "银行科目分配",
+        "供应商编号",
+        "特别总账",
+        "分配",
+        "PO号"
+      ],
       //筛选条件
       Condition: {
         SettlementType: "", //结算方式
-        ApplicationDate: "", //申请日期
+        SettlingTime: "", //申请日期
         Title: "", //申请单号
         CompanyCode: "", //公司代码
-        Currency: "" //币种
+        Currency: "", //币种
+         Trustees: "" //经办人
       },
       //结算方式
       SettlementType: [
@@ -178,10 +179,27 @@ export default {
       //子表数据
       SubTableData: [],
       //其他
-      dialogTableVisible: false
+      dialogTableVisible: false,
+      //导出属性列
+      filterVal: []
     };
   },
   methods: {
+    //导出Excel
+    onExcel: function() {
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "税票清单数据导出F53",
+        fileType: "xlsx",
+        sheetName: "税票清单数据导出F53"
+      };
+      efn.toExcel(excelInfo);
+    },
     //获取公司代码
     getCompanyCode: function() {
       //获取公司代码和成本中心
@@ -224,7 +242,8 @@ export default {
       console.log("筛选条件");
       console.log(this.Condition);
       //默认对公付款
-      var condition = "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' ";
+      var condition =
+        "?$filter=ReimbursementType eq '对公付款' and IsFreightInvoice eq 'true' ";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
@@ -262,14 +281,14 @@ export default {
           data.forEach(d => {
             this.TableData.push({
               ApplicationNumber: d.ApplicationNumber, //申请单号
-              CopmanyCode: '', //结算方式
-              Trustees: d.Trustees, //经办人
+              CopmanyCode: d.CopmanyCode, //公司代码
+              // Trustees: d.Trustees, //经办人
               Currency: d.Currency, //币种
               BankSubject: "", //银行科目,
-              TXT: '', //文本,
+              TXT: d.Trustees + "-" + d.TrusteesEmail+'报'+d.ExpenseCategory, //文本
               ScopeOfService: "", //业务范围
               InvoiceValue: d.InvoiceValue, //金额
-              TXT1: '', //文本
+              TXT1: d.Trustees + "-" + d.TrusteesEmail+'报'+d.ExpenseCategory, //文本
               BankSubjectAllocation: "", //银行科目分配,
               SupplierNumber: "", //供应商编号,
               SpecialGeneralLedger: "", //特别总账

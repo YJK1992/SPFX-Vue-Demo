@@ -169,6 +169,17 @@
             >删除</el-button>
           </td>
         </tr>
+        <tr v-show="currentStep!='Application'&&Number(taskId)>0">
+          <td>审批意见：</td>
+          <td colspan="9" style="text-align:left;">
+            <el-input
+              type="textarea"
+              :autosize="{ minRows: 2, maxRows: 4}"
+              placeholder="请输入内容"
+              v-model="Comments"
+            ></el-input>
+          </td>
+        </tr>
         <tr>
           <td colspan="10" align="right">
             <el-button
@@ -285,6 +296,7 @@ export default {
       },
       isChangeSubListData: false,
       taskId: 0,
+      OTC:"",
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
@@ -312,8 +324,9 @@ export default {
         specialApprover: "",
         total: 0,
         userId: "",
-        AttDescription: ""
+        AttDescription: "",
       }, //ECC主表
+      Comments:"",
       subListData: [], // ECC物料副表
       fileList: [], //附件列表数据
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
@@ -503,7 +516,7 @@ export default {
       if (this.currentStep == "Approver5") {
         if (this.checkFixedAsset()) {
           this.$message(common.message("error", "固定资产编码不能为空!"));
-        }else{
+        } else {
           this.updateTaskStatus(taskOutcome);
         }
       } else {
@@ -517,6 +530,7 @@ export default {
         },
         TaskOutcome: taskOutcome,
         PercentComplete: 1,
+        Body:this.Comments,
         Status: "已完成" //Completed 已完成
       };
       var parm = {
@@ -1282,6 +1296,7 @@ export default {
             this.ECCTaskForm.specialApprover = data[0].SpecialApproverTitle;
             this.ECCTaskForm.AttDescription = data[0].AttDescription;
             this.currentItemId = data[0].Id;
+            //this.OTC=data[0].OTC;
             if (data[0].Attachments) {
               var attUrl = data[0].AttachmentFiles.__deferred.uri;
               var getAtt = this.loadAttachment(attUrl);

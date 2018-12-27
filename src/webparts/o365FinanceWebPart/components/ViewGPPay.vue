@@ -1,10 +1,55 @@
 <template>
   <div id="ViewGpPurchase">
+    <el-form :inline="true" :model="Condition" class="demo-form-inline">
+      <el-form-item label="申请日期">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.ApplicationDate"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
+
+      <el-form-item label="结算方式">
+        <el-select v-model="Condition.SettlementType" placeholder="请选择">
+          <el-option
+            v-for="item in SettlementType"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item label="经办人">
+        <el-input v-model="Condition.Trustees" placeholder="经办人"></el-input>
+      </el-form-item>
+
+      <el-form-item label="公司代码：">
+        <el-select v-model="Condition.CompanyCode" placeholder="请选择">
+          <el-option
+            v-for="item in CompanyCodeArr"
+            :key="item.CompanyCode"
+            :label="item.CompanyCode"
+            :value="item.CompanyCode"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
+      <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
+        <el-button type="primary" @click="getMyTask(userId)">查询</el-button>
+      </el-form-item>
+    </el-form>
+
     <table class="ViewGpPurchase">
       <tr id="View_GpPurchase">
         <td>经办人</td>
         <td style="width: 300px;">申请单号</td>
         <td>报销类型</td>
+        <td>费用科目</td>
         <td>结算方式</td>
         <td>成本中心</td>
         <td>发票金额</td>
@@ -37,11 +82,79 @@ export default {
       userListName: "EmployeeList", //员工详细信息列表名称
       MyTask: [],
       gpItems: [],
+      //筛选条件
+      Condition: {
+        SettlementType: "", //结算方式
+        ApplicationDate: "", //申请日期
+        Title: "", //申请单号
+        CompanyCode: "", //公司代码
+        Trustees: "" //经办人
+      },
+      CompanyCodeArr: [], //公司代码
+      //结算方式
+      SettlementType: [
+        {
+          value: "清帐",
+          label: "清帐"
+        },
+        {
+          value: "支票",
+          label: "支票"
+        },
+        {
+          value: "汇款",
+          label: "汇款"
+        },
+        {
+          value: "信用证",
+          label: "信用证"
+        },
+        {
+          value: "汇票",
+          label: "汇票"
+        }
+      ],
       userId: 0,
       loading: true
     };
   },
   methods: {
+    //获取公司代码
+    getCompanyCode: function() {
+      //获取公司代码和成本中心
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition: "",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          var companycode = []; //未去重公司代码
+          //填充原始数据
+          data.forEach(d => {
+            companycode.push(d.CompanyCode);
+          });
+          //去重操作
+          var comopanyCodeUnique = companycode.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+
+          comopanyCodeUnique.forEach(element => {
+            this.CompanyCodeArr.push({
+              CompanyCode: element
+            });
+          });
+        }
+      });
+    },
     onViewItem(index) {
       console.log(index);
       var item = this.gpItems[index];
@@ -77,15 +190,38 @@ export default {
         });
     },
     getMyTask: function(userId) {
+      userId = this.userId == 0 ? userId : this.userId;
+      var condition =
+        "?$filter=PercentComplete eq 0 and AssignedToId eq " +
+        userId +
+        "&$orderby=ID desc&$top=2000";
+
+      for (var item in this.Condition) {
+        if (this.Condition[item] != null && this.Condition[item] != "") {
+          //存在条件
+          if (item == "ApplicationDate") {
+            condition +=
+              " and Created gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Created lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
+          } else {
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
+          }
+        }
+      }
       var parm = {
         action: "ListItems",
         type: "get",
         list: this.GpTaskListName,
         baseUrl: this.hostUrl,
-        condition:
-          "?$filter=PercentComplete eq 0 and AssignedToId eq " +
-          userId +
-          "&$orderby=ID desc&$top=2000"
+        condition: condition
       }; //Completed 已完成
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -144,19 +280,20 @@ export default {
         baseUrl: this.hostUrl,
         itemID: itemId
       };
-      
+
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
           var data = req.d;
           this.gpItems.push({
-            Trustees : data.Trustees ,
+            Trustees: data.Trustees,
             ApplicationNumber: data.ApplicationNumber,
-            ReimbursementType:data.ReimbursementType,
-            SettlementType:data.SettlementType,
-            CostCenter:data.CostCenter,
-            InvoiceValue:data.InvoiceValue,
-            Currency:data.Currency,
+            ReimbursementType: data.ReimbursementType,
+            CostAccount: data.CostAccount,
+            SettlementType: data.SettlementType,
+            CostCenter: data.CostCenter,
+            InvoiceValue: data.InvoiceValue,
+            Currency: data.Currency,
             Step: step,
             TaskId: taskId
           });

@@ -1,10 +1,10 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="日期时间段：">
+      <el-form-item label="结算时间：">
         <el-date-picker
           value-format="yyyy-MM-dd"
-          v-model="Condition.ApplicationDate"
+          v-model="Condition.SettlingTime"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -23,10 +23,15 @@
         </el-select>
       </el-form-item>
 
-      <!-- <el-form-item label="结算人：">
-        <el-input v-model="Condition.Title" placeholder="结算人"></el-input>
-      </el-form-item>-->
-      <!-- <el-form-item label="公司代码：">
+      <el-form-item label="经办人">
+        <el-input v-model="Condition.Trustees" placeholder="经办人"></el-input>
+      </el-form-item>
+
+      <el-form-item label="结算人">
+        <el-input v-model="Condition.SettlementOfPeople" placeholder="结算人"></el-input>
+      </el-form-item>
+
+      <el-form-item label="公司代码">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -35,7 +40,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
+      </el-form-item>
 
       <el-form-item label="币种">
         <el-select v-model="Condition.Currency" placeholder="请选择">
@@ -49,51 +54,37 @@
       </el-form-item>
 
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onExcel">导出Excel</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="GPPayBillReport">
-      <tr id="report_GPPayBillReport">
-        <td style="width: 300px;">申请单号</td>
-        <td>结算方式</td>
-        <td>经办人</td>
-        <td>人员编号</td>
-        <td>最高级审批人编号</td>
-        <td>金额</td>
-        <td>所属事业部(成本中心描述)</td>
-        <td>出差目的地</td>
-        <td>借款单号</td>
-        <td>借款金额</td>
-        <td>借款人编号</td>
-        <td>差额</td>
-        <td>代扣税</td>
-        <td>特别总帐标志</td>
-        <td>分配</td>
-        <td>定/限额</td>
-        <td>备注</td>
-        <td>PO号</td>
-        <td>操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
-        </template>
-        <td>
-          <el-button @click="getSubList(index)" size="small">查看</el-button>
-        </td>
-      </tr>
-    </table>
-
-    <el-dialog title="费用分摊" :visible.sync="dialogTableVisible">
-      <el-table style="width:100%" :data="SubTableData">
-        <el-table-column property="Number" label="费用编号" width="150"></el-table-column>
-        <el-table-column property="Title" label="费用名称" width="150"></el-table-column>
-        <el-table-column property="CostCenterNumber" label="成本中心编号" width="150"></el-table-column>
-        <el-table-column property="ProjectName" label="项目名称" width="150"></el-table-column>
-        <el-table-column property="ProjectNumber" label="项目编号" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+    <el-table :data="JoinTableData" style="width: 100%" height="600">
+      <el-table-column prop="ApplicationNumber" label="单据号" width="150"></el-table-column>
+      <el-table-column prop="SettlementType" label="结算方式" width="150"></el-table-column>
+      <el-table-column prop="Trustees" label="经办人" width="150"></el-table-column>
+      <el-table-column prop="EmployeeCode" label="人员编号" width="150"></el-table-column>
+      <el-table-column prop="TheHighestPersonNumber" label="最高级审批人编号" width="150"></el-table-column>
+      <el-table-column prop="Money" label="金额" width="150"></el-table-column>
+      <el-table-column prop="ProjectNumber" label="项目编号" width="150"></el-table-column>
+      <el-table-column prop="ProjectName" label="项目名称" width="150"></el-table-column>
+      <el-table-column prop="CostCenterNumber" label="成本中心编号" width="150"></el-table-column>
+      <el-table-column prop="BusinessDivision" label="所属事业部" width="150"></el-table-column>
+      <el-table-column prop="Number" label="费用编号" width="150"></el-table-column>
+      <el-table-column prop="Title" label="费用名称" width="150"></el-table-column>
+      <el-table-column prop="OnBusiness" label="出差目的地" width="150"></el-table-column>
+      <el-table-column prop="LoanNumber" label="借款单号" width="150"></el-table-column>
+      <el-table-column prop="LoanMoney" label="借款金额" width="150"></el-table-column>
+      <el-table-column prop="LoanPersonNumber" label="借款人员编号" width="150"></el-table-column>
+      <el-table-column prop="Balance" label="差额" width="150"></el-table-column>
+      <el-table-column prop="DeductTheTax" label="代扣税" width="150"></el-table-column>
+      <el-table-column prop="SpecialGeneralLedger" label="特别总账标记" width="150"></el-table-column>
+      <el-table-column prop="Allocation" label="分配" width="150"></el-table-column>
+      <el-table-column prop="Quota" label="定/限额" width="150"></el-table-column>
+      <el-table-column prop="Remarke" label="备注" width="150"></el-table-column>
+      <el-table-column prop="PONumber" label="PO号" width="150"></el-table-column>
+    </el-table>
   </div>
 </template>
 
@@ -101,6 +92,7 @@
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 
 export default {
   data() {
@@ -115,10 +107,12 @@ export default {
       //筛选条件
       Condition: {
         SettlementType: "", //结算方式
-        ApplicationDate: "", //申请日期
+        SettlingTime: "", //结算时间
         Title: "", //申请单号
         CompanyCode: "", //公司代码
-        Currency: "" //币种
+        Currency: "", //币种
+        SettlementOfPeople: "", //结算人
+        Trustees: "" //经办人
       },
       //结算方式
       SettlementType: [
@@ -178,15 +172,56 @@ export default {
           label: "其他"
         }
       ],
-      //主表数据
-      TableData: [],
-      //子表数据
-      SubTableData: [],
       //其他
-      dialogTableVisible: false
+      dialogTableVisible: false,
+      //导出属性列
+      filterVal: [],
+      //Excdltitle
+      excelColumns: [
+        "单据号",
+        "结算方式",
+        "经办人",
+        "人员编号",
+        "最高级审批人编号",
+        "金额",
+        "项目编号",
+        "项目名称",
+        "成本中心编号",
+        "所属事业部",
+        "费用编号",
+        "费用名称",
+        "出差目的地",
+        "借款单号",
+        "借款金额",
+        "借款人员编号",
+        "差额",
+        "代扣税",
+        "特别总账标记",
+        "分配",
+        "定/限额",
+        "备注",
+        "PO号"
+      ],
+      //合并数据行
+      JoinTableData: []
     };
   },
   methods: {
+    //导出Excel
+    onExcel: function() {
+      for (var item in this.JoinTableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.JoinTableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "PayBill",
+        fileType: "xlsx",
+        sheetName: "PayBill"
+      };
+      efn.toExcel(excelInfo);
+    },
     //获取公司代码
     getCompanyCode: function() {
       //获取公司代码和成本中心
@@ -225,7 +260,7 @@ export default {
     },
     //查询主表
     onSubmit() {
-      this.TableData = [];
+      this.JoinTableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
       var conditionCount = 0;
@@ -284,42 +319,21 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.TableData.push({
-              ApplicationNumber: d.ApplicationNumber, //申请单号
-              SettlementType: d.SettlementType, //结算方式
-              Trustees: d.Trustees, //经办人
-              PersonCode: "", //人员编号
-              TheHighestPersonNumber: "", //最高审批人编号,
-              InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
-              BusinessDivision: "", //所属事业部编号
-              OnBusiness: "", //出差目的地
-              LoanNumber: d.LoanNumber, //借款单号
-              LoanMoney: "", //借款金额,
-              LoanPersonNumber: "", //借款人编号,
-              Balance: "", //差额
-              DeductTheTax: "", //代扣税
-              SpecialGeneralLedger: "", //特别总账
-              Allocation: "", //分配
-              Quota: "", //定/限额
-              Remarke: d.Remark, //备注
-              PONumber: "" //PO号
-            });
+            //查询子报表
+            this.getSubList(d);
           });
         }
       });
     },
     //查询自报表
-    getSubList(index) {
-      //查询费用分摊
-      this.dialogTableVisible = true;
-      this.SubTableData = [];
-      var applicationNumber = this.TableData[index].ApplicationNumber;
+    getSubList(mainItem) {
       var parm = {
         type: "get",
         action: "ListItems",
         list: this.subListName,
         baseUrl: this.hostUrl,
-        condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
+        condition:
+          "?$filter=PublicPaymentGUID eq '" + mainItem.ApplicationNumber + "'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
@@ -327,20 +341,62 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
-              this.SubTableData1.push({
-                Title: d.Title, //费用名称
-                Number: d.Number, //费用号码
-                CostCenterNumber: d.CostCenterNumber, //成本中心编号
+              this.JoinTableData.push({
+                ApplicationNumber: mainItem.ApplicationNumber, //申请单号
+                SettlementType: mainItem.SettlementType, //结算方式
+                Trustees: mainItem.Trustees + "-" + mainItem.TrusteesEmail, //经办人
+                EmployeeCode: mainItem.EmployeeCode, //人员编号
+                TheHighestPersonNumber: "", //最高审批人编号
+                Money: d.Money, //费用分摊的摊入或摊出的金额
+                ProjectNumber: d.ProjectNumber, //项目编号
                 ProjectName: d.ProjectName, //项目名称
-                ProjectNumber: d.ProjectNumber //项目编号
+                CostCenterNumber: d.CostCenterNumber, //成本中心编号
+                BusinessDivision: "", //所属事业部编号
+                Number: d.Number, //费用号码
+                Title: d.Title, //费用名称
+                OnBusiness: "", //出差目的地
+                LoanNumber: mainItem.LoanNumber, //借款单号
+                LoanMoney: "", //借款金额,
+                LoanPersonNumber: "", //借款人编号,
+                Balance: "", //差额
+                DeductTheTax: "", //代扣税
+                SpecialGeneralLedger: "", //特别总账
+                Allocation: "", //分配
+                Quota: "", //定/限额
+                Remarke: mainItem.Remark, //备注
+                PONumber: "" //PO号
               });
             });
           } else {
-            this.$message(common.message("warning", "没有费用分摊数据!"));
+            this.JoinTableData.push({
+              ApplicationNumber: mainItem.ApplicationNumber, //申请单号
+              SettlementType: mainItem.SettlementType, //结算方式
+              Trustees: mainItem.Trustees + "-" + mainItem.TrusteesEmail, //经办人
+              EmployeeCode: mainItem.EmployeeCode, //人员编号
+              TheHighestPersonNumber: "", //最高审批人编号
+              Money: "", //费用分摊的摊入或摊出的金额
+              ProjectNumber: "", //项目编号
+              ProjectName: "", //项目名称
+              CostCenterNumber: "", //成本中心编号
+              BusinessDivision: "", //所属事业部编号
+              Number: "", //费用号码
+              Title: "", //费用名称
+              OnBusiness: "", //出差目的地
+              LoanNumber: mainItem.LoanNumber, //借款单号
+              LoanMoney: "", //借款金额,
+              LoanPersonNumber: "", //借款人编号,
+              Balance: "", //差额
+              DeductTheTax: "", //代扣税
+              SpecialGeneralLedger: "", //特别总账
+              Allocation: "", //分配
+              Quota: "", //定/限额
+              Remarke: mainItem.Remark, //备注
+              PONumber: "" //PO号
+            });
           }
         })
         .catch(err => {
-          this.$message(common.message("error", "没有费用分摊数据!"));
+          this.$message(common.message("error", "查询费用分摊时错误!"));
         });
     }
   },

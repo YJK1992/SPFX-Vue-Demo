@@ -72,7 +72,7 @@
           <el-input disabled v-model="PublicPayment.Trustees" placeholder="经办人"></el-input>
         </td>
         <td align="right">成本中心：</td>
-        <td colspan="4" align="left">
+        <td align="left">
           <el-select
             :disabled="showApprover==true"
             v-model="PublicPayment.CostCenter"
@@ -88,6 +88,22 @@
           </el-select>
         </td>
 
+        <td align="right">公司代码 ：</td>
+        <td align="left" colspan="2">
+          <el-select
+            :disabled="showApprover==true"
+            v-model="PublicPayment.CompanyCode"
+            placeholder="请选择"
+            size="medium"
+          >
+            <el-option
+              v-for="item in companyCodeArr"
+              :key="item.CompanyCode"
+              :label="item.CompanyCode"
+              :value="item.CompanyCode"
+            ></el-option>
+          </el-select>
+        </td>
       </tr>
       <tr>
         <td align="right">发票金额：</td>
@@ -202,14 +218,18 @@
       <tr>
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
-          <el-checkbox :disabled="disabledContract===1" v-model="PublicPayment.IsContract"></el-checkbox>
+          <el-checkbox
+            :disabled="showApprover==true"
+            @change="clearContract"
+            v-model="PublicPayment.IsContract"
+          ></el-checkbox>
         </td>
       </tr>
       <tr>
         <td align="right">合同号：</td>
         <td colspan="2" align="left">
           <el-select
-            :disabled="disabledContract===1 "
+            :disabled="showApprover==true?true:PublicPayment.IsContract==false"
             @change="changeMoney()"
             v-model="PublicPayment.ContractNumber"
             filterable
@@ -267,16 +287,36 @@
         </td>
       </tr>
       <tr>
-        <td align="right">运费专用发票：</td>
+        <td align="right">增值税/运费专用发票</td>
         <td align="left">
           <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
         </td>
         <td colspan="5" align="left">
-          <el-button type="primary" @click="dialogTableVisible = true">税票清单</el-button>
-          <el-button :disabled="showApprover==true" type="primary" @click="addTaxReceipt">添加税票</el-button>
-          <el-button type="primary" @click="dialogTableVisible2 = true">费用分摊清单</el-button>
           <el-button
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsFreightInvoice"
+            type="primary"
+            @click="dialogTableVisible = true"
+          >税票清单</el-button>
+          <el-button
+            :disabled="showApprover==true?true:!PublicPayment.IsFreightInvoice"
+            type="primary"
+            @click="addTaxReceipt"
+          >添加税票</el-button>
+        </td>
+      </tr>
+      <tr>
+        <td align="right">费用分摊</td>
+        <td align="left">
+          <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsExpenseAllocation"></el-checkbox>
+        </td>
+        <td colspan="5" align="left">
+          <el-button
+            :disabled="!PublicPayment.IsExpenseAllocation"
+            type="primary"
+            @click="dialogTableVisible2 = true"
+          >费用分摊清单</el-button>
+          <el-button
+            :disabled="showApprover==true?true:!PublicPayment.IsExpenseAllocation"
             type="primary"
             @click="dialogFormVisible2=true"
           >添加费用分摊</el-button>
@@ -328,14 +368,14 @@
         <td align="right">固定资产编码：</td>
         <td colspan="7">
           <el-input
-            :disabled="showFA==true"
+            :disabled="showApprover==true"
             v-model="PublicPayment.CodeOfFixedAssets"
             placeholder="固定资产编码"
           ></el-input>
         </td>
       </tr>
       <tr>
-                <td align="right">特殊审批人：</td>
+        <td align="right">特殊审批人：</td>
         <td colspan="7">
           <el-input
             :disabled="showApprover==true"
@@ -346,12 +386,12 @@
         </td>
       </tr>
 
-      <!-- <tr>
+      <tr>
         <td align="right">结算：</td>
         <td colspan="7" align="left">
-          <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsSettlement"></el-checkbox>
+          <el-checkbox :disabled="showFA==true" v-model="PublicPayment.IsSettlement"></el-checkbox>
         </td>
-      </tr> -->
+      </tr>
       <tr>
         <td colspan="8" align="right">
           <!-- <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
@@ -710,7 +750,7 @@ export default {
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
       ContractListName: "ContractList", //合同列表pushtable
-      disabledContract: 0, //是否禁用合同相关选项 0是不禁用
+
       approverList: "ApproveNode", //审批节点列表名
       userArr: [], //用户信息数据数组
       costCenterArr: [], //成本中心数组
@@ -759,7 +799,9 @@ export default {
         ApplicationNumber: "", //申请单号
         ReceiptNumber: "", //单据编号
         IsSettlement: "", //结算
-        SpecialApprover: "" //特殊审批人
+        SpecialApprover: "", //特殊审批人
+        IsExpenseAllocation: false, //是否有费用分摊
+        CompanyCode: "" //公司代码
       },
       IsChangeTaxReceipt: false,
       IsChangeExpenseAllocation: false,
@@ -882,10 +924,31 @@ export default {
     };
   },
   methods: {
-    clearNumber(){
-      if(this.PublicPayment.ReimbursementType!="费用借款"){
+    clearContract() {
+      if (!this.PublicPayment.IsContract) {
+        this.PublicPayment.ContractNumber = ""; //合同号
+        this.PublicPayment.Money = ""; //金额
+        this.ContractList = []; //还原
+        this.AccountPaid = ""; //已付款
+        this.UnPaid = ""; //未付款
+      }
+    },
+    IsMoneyConsistent() {
+      var _in = 0.0;
+      var _out = 0.0;
+      this.ExpenseAllocationList.forEach(element => {
+        if (element.IsIn) {
+          _in += Number(element.Money);
+        } else {
+          _out += Number(element.Money);
+        }
+      });
+      return _in == _out;
+    },
+    clearNumber() {
+      if (this.PublicPayment.ReimbursementType != "费用借款") {
         //改变时候如果不是费用借款的时候清空掉单据编号
-          this.PublicPayment.LoanNumber="";
+        this.PublicPayment.LoanNumber = "";
       }
     },
     getCostCenter() {
@@ -1154,6 +1217,11 @@ export default {
         !this.calculateMoney()
       ) {
         this.message = "税票清单和表单金额总和不一致;";
+      } else if (
+        this.ExpenseAllocationList.length > 0 &&
+        !this.IsMoneyConsistent()
+      ) {
+        this.message = "摊入摊出金额不一致;";
       } else {
         isSuccess = true;
       }
@@ -1416,7 +1484,9 @@ export default {
             IsSettlement: this.PublicPayment.IsSettlement.toString(),
             IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
             Remark: this.PublicPayment.Remark,
-            SpecialApproverTitle: this.SpecialApprover
+            SpecialApproverTitle: this.SpecialApprover,
+            CompanyCode: this.PublicPayment.CompanyCode,
+            IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString()
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;
@@ -1459,14 +1529,16 @@ export default {
             .done(req => {
               if (this.PublicPayment.IsFreightInvoice) {
                 console.log("调用新增税票清单");
+                this.createTaxReceipt();
+              }
+              if (this.PublicPayment.IsExpenseAllocation) {
+                this.createExpenseAllocation();
               }
               if (type == "submit") {
                 if (this.currentStep == "Application" && this.taskId != 0) {
                   this.onApproval("approve");
                 }
               }
-              this.createTaxReceipt();
-              this.createExpenseAllocation();
               this.$message(common.message("success", "对公付款添加成功!"));
               this.loading = false;
               this.$router.push("/home");
@@ -1576,7 +1648,9 @@ export default {
                     // this.$message(common.message("success", "税票更新中!"));
                   })
                   .catch(err => {
-                    this.$message(common.message("error", "费用清单清空时失败!"));
+                    this.$message(
+                      common.message("error", "费用清单清空时失败!")
+                    );
                   });
               });
             } else {
@@ -1760,7 +1834,6 @@ export default {
           console.log(number);
           //没有合同号
           if (number == null || number == "") {
-            that.disabledContract = 0;
             that.PublicPayment.IsContract = false;
             that.PublicPayment.ContractNumber = "";
             that.PublicPayment.Money = "";
@@ -1771,8 +1844,6 @@ export default {
           } else {
             that.PublicPayment.ContractNumber = number;
             that.changeMoney();
-
-            that.disabledContract = 1;
           }
         }
       });
@@ -1975,7 +2046,6 @@ export default {
         this.requestIsReject = true;
         this.showEditor = true;
         this.showApprover = false;
-        this.disabledContract = 1;
       }
       var getMainListData = this.loadMainListData(applicantNumber);
       var getTaxReceiptData = this.loadTaxReceiptData(applicantNumber);
@@ -2043,9 +2113,13 @@ export default {
               (this.PublicPayment.IsSettlement =
                 data[0].IsSettlement == "true" ? true : false), //结算
               (this.PublicPayment.SpecialApprover = data[0].SpecialApprover); //特殊审批人
+            this.PublicPayment.IsExpenseAllocation =
+              data[0].IsExpenseAllocation== "true" ? true : false; //是否有费用分摊
+            this.PublicPayment.CompanyCode = data[0].CompanyCode; //是否有费用分摊
             this.currentItemId = data[0].Id;
             console.log("!22222222222222");
             console.log(this.PublicPayment);
+            this.changeMoney();
           } else {
             this.$message(
               common.message("error", "对公付款列表中不存在该申请单号")
@@ -2097,7 +2171,7 @@ export default {
                 ProjectNumber: d.ProjectNumber, //项目号码
                 CostCenterName: d.CostCenterName, //摊出成本中心签批人姓名
                 Abstract: d.Abstract, //摘要
-                IsIn: d.IsIn //是否摊入
+                IsIn: d.IsIn=="true"?true:false //是否摊入
               });
             });
           } else {

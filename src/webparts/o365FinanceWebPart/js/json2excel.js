@@ -52,11 +52,6 @@ var efn = {
   },
 
   Workbook: function () {
-
-    // if (!(this instanceof Workbook)) {
-    //   return new this.Workbook()
-    // }
-
     this.SheetNames = []
     this.Sheets = {}
   },
@@ -67,32 +62,21 @@ var efn = {
     for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF
     return buf
   },
-  test: function () {
-    alert("test")
-  },
-  toExcel: function ({
-    th,
-    data,
-    fileName,
-    fileType,
-    sheetName
-  }) {
-    data.unshift(th)
+  
+  toExcel: function (excelInfo) {
+    excelInfo.excelData.unshift(excelInfo.excelColumns)
     const wb = new this.Workbook()
-    const ws = this.data2ws(data)
-    sheetName = sheetName || 'sheet1'
-    wb.SheetNames.push(sheetName)
-    wb.Sheets[sheetName] = ws
-    fileType = fileType || 'xlsx'
+    const ws = this.data2ws(excelInfo.excelData)
+    wb.SheetNames.push(excelInfo.sheetName)
+    wb.Sheets[excelInfo.sheetName] = ws
     var wbout = XLSX.write(wb, {
-      bookType: fileType,
+      bookType: excelInfo.fileType,
       bookSST: false,
       type: 'binary'
     })
-    fileName = fileName || '列表'
     saveAs(new Blob([this.s2ab(wbout)], {
       type: "application/octet-stream"
-    }), `${fileName}.${fileType}`)
+    }), `${excelInfo.fileName}.${excelInfo.fileType}`)
   }
 }
 

@@ -39,45 +39,34 @@
             :value="item.value"
           ></el-option>
         </el-select>
-      </el-form-item> -->
-
+      </el-form-item>-->
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onExcel">导出Excel</el-button>
       </el-form-item>
     </el-form>
-
-    <table class="gpPurchaseReport">
-      <tr id="report_gpPurchaseReport">
-        <td style="width: 300px;">申请单号</td>
-        <td>标题</td>
-        <td>经办人</td>
-        <td>操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+    <el-table :data="TableData" style="width: 100%" max-height="500">
+      <el-table-column fixed prop="ApplicationNumber" label="申请单号" width="300"></el-table-column>
+      <el-table-column prop="Title" label="标题"></el-table-column>
+      <el-table-column prop="Consignor" label="经办人"></el-table-column>
+      <el-table-column prop="Supplier" label="供应商"></el-table-column>
+      <el-table-column prop="SupplierParts" label="供应商部件"></el-table-column>
+      <el-table-column prop="Amount" label="总金额"></el-table-column>
+      <el-table-column prop="Taxation" label="税金"></el-table-column>
+      <!-- <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-        <td>
-          <el-button @click="getSubList(index)" size="small">查看</el-button>
-        </td>
-      </tr>
-    </table>
-
-    <el-dialog title="供应商信息" :visible.sync="dialogTableVisible">
-      <el-table :data="SubTableData">
-        <el-table-column property="Supplier" label="供应商" width="150"></el-table-column>
-        <el-table-column property="SupplierParts" label="供应商部件" width="150"></el-table-column>
-        <el-table-column property="Amount" label="总金额" width="150"></el-table-column>
-        <el-table-column property="Taxation" label="税金" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+      </el-table-column>-->
+    </el-table>
   </div>
 </template>
 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
-
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -125,12 +114,33 @@ export default {
       //主表数据
       TableData: [],
       //子表数据
-      SubTableData: [],
-      //其他
-      dialogTableVisible: false
+      excelColumns: [
+        "申请单号",
+        "标题",
+        "经办人",
+        "供应商",
+        "供应商部件",
+        "总金额",
+        "税金"
+      ],
+      filterVal: []
     };
   },
   methods: {
+    onExcel: function() {
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "对公申请报表",
+        fileType: "xlsx",
+        sheetName: "对公申请报表"
+      };
+      efn.toExcel(excelInfo);
+    },
     onSubmit() {
       this.TableData = [];
       console.log("筛选条件");
@@ -146,11 +156,13 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0]+"T00:00:00Z" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1]+"T00:00:00Z" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -161,11 +173,13 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +"T00:00:00Z"+
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +"T00:00:00Z"+
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -176,6 +190,9 @@ export default {
       }
 
       console.log(condition);
+      this.getMainList(condition);
+    },
+    getMainList: function(condition) {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -185,28 +202,18 @@ export default {
       };
 
       var option = common.queryOpt(parm);
-      console.log("ppp111");
-      console.log(option);
       $.when($.ajax(option)).done(req => {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.TableData.push({
-              ApplicationNumber: d.ApplicationNumber,
-              Title: d.Title,
-              Consignor: d.Consignor
-            });
+            this.getSubList(d);
           });
         }
       });
     },
-    getSubList(index) {
-      console.log("111111111")
-      console.log(index)
-      this.dialogTableVisible = true;
-      this.SubTableData = [];
-      var applicationNumber = this.TableData[index].ApplicationNumber;
-      console.log(applicationNumber)
+    getSubList(mainItem) {
+      var applicationNumber = mainItem.ApplicationNumber;
+      console.log(applicationNumber);
       var parm = {
         type: "get",
         action: "ListItems",
@@ -215,15 +222,18 @@ export default {
         condition: "?$filter=PurchaseRequestGUID eq '" + applicationNumber + "'"
       };
       var opt = common.queryOpt(parm);
-      console.log("222222222")
-      console.log(opt)
+      console.log("222222222");
+      console.log(opt);
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
-          console.log(data)
+          console.log(data);
           if (data.length > 0) {
             data.forEach(d => {
-              this.SubTableData.push({
+              this.TableData.push({
+                ApplicationNumber: mainItem.ApplicationNumber,
+                Title: mainItem.Title,
+                Consignor: mainItem.Consignor,
                 Supplier: d.Supplier,
                 SupplierParts: d.SupplierParts,
                 Amount: d.Amount,
@@ -231,7 +241,15 @@ export default {
               });
             });
           } else {
-            this.$message(common.message("warning", "没有供应商数据信息!"));
+            this.TableData.push({
+              ApplicationNumber: mainItem.ApplicationNumber,
+              Title: mainItem.Title,
+              Consignor: mainItem.Consignor,
+              Supplier: "",
+              SupplierParts: "",
+              Amount: "",
+              Taxation: ""
+            });
           }
         })
         .catch(err => {

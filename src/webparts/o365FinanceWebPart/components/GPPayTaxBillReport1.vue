@@ -1,16 +1,6 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="申请日期段：">
-        <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.ApplicantDate"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
       <el-form-item label="结算方式：">
         <el-select allow-create="true" v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
@@ -21,10 +11,10 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <!-- <el-form-item label="结算人：">
-        <el-input v-model="Condition.SettlementPerson" placeholder="结算人" v-show="false"></el-input>
-      </el-form-item>-->
-      <!-- <el-form-item label="公司代码：">
+      <el-form-item label="经办人ID：">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      </el-form-item>
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -33,7 +23,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item>-->
+      </el-form-item>
       <el-form-item label="币种：">
         <el-select allow-create="true" v-model="Condition.Currency" placeholder="请选择">
           <el-option
@@ -44,47 +34,51 @@
           ></el-option>
         </el-select>
       </el-form-item>
+      <el-form-item label="结算日期段：">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.SettlingTime"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button @click="onExcel()" type="primary">导出Excel</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="GPPayTaxBillReport1">
-      <tr id="report_GPPayTaxBillReport1">
-        <td style="width: 300px;">单据编号</td>
-        <td>币种</td>
-        <td>业务范围</td>
-        <td>科目</td>
-        <td>成本中心</td>
-        <td>项目编号</td>
-        <td>分配</td>
-        <td>PO号</td>
-        <td>操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+    <el-table :data="TableData" style="width: 100%" max-height="500">
+      <el-table-column fixed prop="ApplicationNumber" label="单据号" width="300"></el-table-column>
+      <el-table-column prop="CompanyCode" label="公司代码"></el-table-column>
+      <el-table-column prop="InvoiceNumber" label="发票号"></el-table-column>
+      <el-table-column prop="Currency" label="币种"></el-table-column>
+      <el-table-column prop="SupplierCode" label="供应商编号"></el-table-column>
+      <el-table-column prop="Money" label="金额"></el-table-column>
+      <el-table-column prop="TaxCode" label="税码"></el-table-column>
+      <el-table-column prop="BussinessScope" label="业务范围"></el-table-column>
+      <el-table-column prop="Tex" label="文本"></el-table-column>
+      <el-table-column prop="CostAccount" label="科目号"></el-table-column>
+      <el-table-column prop="CostCenter" label="成本中心"></el-table-column>
+      <el-table-column prop="SettlementPerson" label="内部订单"></el-table-column>
+      <el-table-column prop="Distribution" label="分配"></el-table-column>
+      <el-table-column fixed="right" prop="PONumber" label="PO号"></el-table-column>
+      <!-- <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-        <td>
-          <el-button @click="getSubList(index)" size="small">查看</el-button>
-        </td>
-      </tr>
-    </table>
-    <el-dialog title="税票信息" :visible.sync="dialogTableVisible">
-      <el-table :data="SubTableData">
-        <el-table-column property="CompanyCode" label="公司代码" width="150"></el-table-column>
-        <el-table-column property="InvoiceNumber" label="发票号" width="150"></el-table-column>
-        <el-table-column property="Supplier" label="供应商编号" width="150"></el-table-column>
-        <el-table-column property="InvoiceValue" label="金额" width="150"></el-table-column>
-        <el-table-column property="TaxCode" label="税码" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+      </el-table-column>-->
+    </el-table>
   </div>
 </template>
 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -149,16 +143,32 @@ export default {
           label: "汇票"
         }
       ],
+      excelColumns: [
+        "单据号",
+        "公司代码",
+        "发票号",
+        "币种",
+        "供应商编号",
+        "金额",
+        "税码",
+        "业务范围",
+        "文本",
+        "科目号",
+        "成本中心",
+        "内部订单",
+        "分配",
+        "PO号"
+      ],
+      filterVal: [],
       CompanyCodeArr: [], //公司代码
       Condition: {
+        TrusteesEmail: "", //经办人ID
         SettlementType: "", //结算方式
-        ApplicantDate: "", //申请日期
+        SettlingTime: "", //申请日期
         Currency: "", //币种
         CompanyCode: "" //公司代码
       }, //筛选条件
-      TableData: [], //主表数据
-      SubTableData: [],
-      dialogTableVisible: false
+      TableData: [] //主表数据
     };
   },
   methods: {
@@ -174,12 +184,12 @@ export default {
           //存在条件
           if (item == "ApplicantDate") {
             condition +=
-              " and Created gt datetime" +
+              " and SettlingTime gt datetime" +
               "'" +
               this.Condition[item][0] +
               "T00:00:00Z" +
               "'" +
-              " and Created lt datetime" +
+              " and SettlingTime lt datetime" +
               "'" +
               this.Condition[item][1] +
               "T00:00:00Z" +
@@ -189,7 +199,9 @@ export default {
           }
         }
       }
-      console.log(condition);
+      this.getMainList(condition);
+    },
+    getMainList: function(condition) {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -202,16 +214,7 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.TableData.push({
-              applicantNumber: d.ApplicationNumber,
-              currency: d.Currency,
-              bussinessScope: "",
-              Subject: "",
-              costCenter: d.CostCenter,
-              projectNumber: d.ProjectNumber,
-              isWrittenOff: "",
-              poNumber: ""
-            });
+            this.getSubList(d);
           });
         }
       });
@@ -251,10 +254,8 @@ export default {
         }
       });
     },
-    getSubList(index) {
-      this.dialogTableVisible = true;
-      this.SubTableData = [];
-      var applicationNumber = this.TableData[index].applicantNumber;
+    getSubList(mainItem) {
+      var applicationNumber = mainItem.ApplicationNumber;
       var parm = {
         type: "get",
         action: "ListItems",
@@ -268,21 +269,69 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
-              this.SubTableData.push({
+              this.TableData.push({
+                ApplicationNumber: applicationNumber,
                 CompanyCode: d.CompanyCode,
                 InvoiceNumber: d.InvoiceNumber,
-                Supplier: d.Supplier,
-                InvoiceValue: d.InvoiceValue,
-                TaxCode: d.TaxCode
+                Currency: mainItem.Currency,
+                SupplierCode: "",
+                Money: mainItem.Money,
+                TaxCode: d.TaxCode,
+                BussinessScope: mainItem.BussinessScope,
+                Tex:
+                  mainItem.Trustees +
+                  "-" +
+                  mainItem.TrusteesEmail +
+                  "报" +
+                  mainItem.ExpenseCategory,
+                CostAccount: mainItem.CostAccount,
+                CostCenter: mainItem.CostCenter,
+                InternalOrder: "",
+                Distribution: "",
+                PONumber: ""
               });
             });
           } else {
-            this.$message(common.message("waring", "没有无聊数据!"));
+            this.TableData.push({
+              ApplicationNumber: applicationNumber,
+              CompanyCode: "",
+              InvoiceNumber: "",
+              Currency: mainItem.Currency,
+              SupplierCode: "",
+              Money: mainItem.Money,
+              TaxCode: "",
+              BussinessScope: mainItem.BussinessScope,
+              Tex:
+                mainItem.Trustees +
+                "-" +
+                mainItem.TrusteesEmail +
+                mainItem.ReimbursementType +
+                mainItem.ExpenseCategory,
+              CostAccount: mainItem.CostAccount,
+              CostCenter: mainItem.CostCenter,
+              InternalOrder: "",
+              Distribution: "",
+              PONumber: ""
+            });
           }
         })
         .catch(err => {
           this.$message(common.message("error", "获取物料数据失败!"));
         });
+    },
+    onExcel: function() {
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "税票清单数据导出F43",
+        fileType: "xlsx",
+        sheetName: "税票清单数据导出F43"
+      };
+      efn.toExcel(excelInfo);
     }
   },
   mounted() {

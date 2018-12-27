@@ -119,7 +119,7 @@
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
           <el-checkbox
-            @change="disabledMoney()"
+            @change="clearContract"
             v-model="purchaseRequestData.IsContract"
             :disabled="showApprover==true"
           ></el-checkbox>
@@ -128,13 +128,12 @@
       <tr>
         <td align="right">合同号：</td>
         <td>
-          <!-- <el-input v-model="purchaseRequestData.ContractNumber" placeholder="合同号"></el-input> -->
           <el-select
             @change="changeMoney()"
             v-model="purchaseRequestData.ContractNumber"
             filterable
             placeholder="请选择"
-            :disabled="showApprover==true"
+            :disabled="showApprover==true?true:purchaseRequestData.IsContract==false"
           >
             <el-option
               v-for="item in ContractNumbers"
@@ -146,12 +145,29 @@
         </td>
         <td align="right">金额：</td>
         <td colspan="5">
-          <el-input
-            v-model="purchaseRequestData.Money"
-            placeholder="金额"
-            :disabled="isDisabledMoney==true"
-          ></el-input>
+          <el-input v-model="purchaseRequestData.Money" placeholder="金额" disabled></el-input>
         </td>
+      </tr>
+      <tr id="create_GPPurchase">
+        <td>合同名称</td>
+        <td>供应商</td>
+        <td>内容</td>
+        <td>法人代表</td>
+        <td>总金额</td>
+        <td>已付款</td>
+        <td colspan="2">未付款</td>
+      </tr>
+      <tr v-for="(subItems,index) in  ContractHistory">
+        <template v-for="(subItem,cindex) in subItems">
+          <td colspan="2" v-if="cindex=='UnPaid'">{{subItem}}</td>
+          <td v-else>{{subItem}}</td>
+        </template>
+      </tr>
+      <tr>
+        <td align="right">已付款：</td>
+        <td align="left" colspan="3">{{AccountPaid}}</td>
+        <td align="right">未付款：</td>
+        <td align="left" colspan="3">{{UnPaid}}</td>
       </tr>
       <tr>
         <td align="right">申请类型：</td>
@@ -358,27 +374,77 @@ export default {
       currentItemId: 0,
       taskId: 0,
       isChangeSubList: false,
-      isDisabledMoney: false
+      AccountPaid: "", //已付款
+      UnPaid: "", //未付款
+      ContractHistory: [] //合同历史信息
     };
   },
   methods: {
+    clearContract() {
+      if (!this.purchaseRequestData.IsContract) {
+        this.purchaseRequestData.ContractNumber = ""; //合同号
+        this.purchaseRequestData.Money = ""; //金额
+        this.ContractHistory = []; //还原
+        this.AccountPaid = ""; //已付款
+        this.UnPaid = ""; //未付款
+      }
+    },
+    getContractHistory() {
+      var that = this;
+      that.ContractHistory = []; //还原
+      //获取合同列表
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.contractListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=Number eq '" +
+          this.purchaseRequestData.ContractNumber +
+          "' "
+      }; //Completed 已完成
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              //push 合同列表
+              that.ContractHistory.push({
+                Name: item.Name,
+                Supplier: item.Suppler,
+                Contents: item.Contents,
+                LegalPerson: item.LegalPerson,
+                Money: item.Money,
+                AccountPaid: item.AccountPaid,
+                UnPaid: item.UnPaid
+              });
+              //累加
+              accountPaid += parseFloat(
+                item.AccountPaid == "" ? 0 : item.AccountPaid
+              );
+            });
+            //合计
+            that.AccountPaid = accountPaid;
+            that.UnPaid =
+              parseFloat(
+                that.purchaseRequestData.Money == ""
+                  ? 0
+                  : that.purchaseRequestData.Money
+              ) - accountPaid;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取合同信息失败!"));
+        });
+    },
     clearCodeOrSelect() {
       if (this.purchaseRequestData.ApplicationType == "费用") {
         this.purchaseRequestData.CodeOfFixedAssets = "";
       } else {
         this.purchaseRequestData.CostAccount = "";
         this.purchaseRequestData.ExpenseCategory = "";
-      }
-    },
-    disabledMoney() {
-      if (this.purchaseRequestData.IsContract) {
-        this.isDisabledMoney = true;
-        this.purchaseRequestData.ContractNumber = "";
-        this.purchaseRequestData.Money = "";
-      } else {
-        this.isDisabledMoney = false;
-        this.purchaseRequestData.ContractNumber = "";
-        this.purchaseRequestData.Money = "";
       }
     },
     getCostCenter() {
@@ -789,10 +855,23 @@ export default {
         this.message = "请输入金额;";
       } else if (this.purchaseRequestData.ApplicationType == "") {
         this.message = "请选择申请类型;";
-        // } else if (this.purchaseRequestData.ExpenseCategory == "") {
-        //   this.message = "请选择费用类别;";
-        // } else if (this.purchaseRequestData.CostAccount == "") {
-        //   this.message = "请选择费用科目;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "费用" &&
+        this.purchaseRequestData.ExpenseCategory == ""
+      ) {
+        this.message = "请选择费用类别;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "费用" &&
+        this.purchaseRequestData.CostAccount == ""
+      ) {
+        this.message = "请选择费用科目;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "固定资产" &&
+        this.purchaseRequestData.CodeOfFixedAssets == ""
+      ) {
+        this.message = "请填写固定资产编码;";
+      } else if (this.subListData.length == 0) {
+        this.message = "请添加项目行;";
       } else {
         isSuccess = true;
       }
@@ -980,6 +1059,7 @@ export default {
           this.purchaseRequestData.Money = item.money;
         }
       });
+      this.getContractHistory();
     },
     onApproval: function(type) {
       this.loading = true;
@@ -1097,8 +1177,10 @@ export default {
             this.purchaseRequestData.SpecialApproverTitle =
               data[0].SpecialApproverTitle;
             this.currentItemId = data[0].Id;
-
-            this.isDisabledMoney = this.purchaseRequestData.IsContract;
+            if (this.purchaseRequestData.IsContract) {
+              //如果存在合同需要拉去一下数据
+              this.getContractHistory();
+            }
           } else {
             this.$message(
               common.message("error", "采购申请列表中不存在该申请单号")

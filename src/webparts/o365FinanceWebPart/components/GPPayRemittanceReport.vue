@@ -1,16 +1,6 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="结算日期段：">
-        <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.SettlementDate"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
       <el-form-item label="收款单位：">
         <el-input v-model="Condition.CollectionUnit" placeholder="收款单位"></el-input>
       </el-form-item>
@@ -24,10 +14,10 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <!-- <el-form-item label="结算人：">
-        <el-input v-model="Condition.SettlementPerson" placeholder="结算人" v-show="false"></el-input>
-      </el-form-item>-->
-      <!-- <el-form-item label="公司代码：">
+      <el-form-item label="经办人ID：">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      </el-form-item>
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -36,36 +26,48 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item>-->
+      </el-form-item>
+      <el-form-item label="结算日期段：">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.SettlementDate"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button @click="onExcel()" type="primary">导出Excel</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="GPPayRemittanceReport">
-      <tr id="report_GPPayRemittanceReport">
-        <td>收款单位</td>
-        <td style="width: 300px;">银行名称</td>
-        <td style="width: 300px;">银行帐号</td>
-        <td>省/直辖市</td>
-        <td>市/县</td>
-        <td>金额</td>
-        <td>附言</td>
-        <td>是否冲销</td>
-        <td>PO号</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+    <el-table :data="TableData" style="width: 100%" max-height="500">
+      <el-table-column fixed prop="CollectionUnit" label="收款单位" width="300"></el-table-column>
+      <el-table-column prop="OpeningBank" label="银行名称"></el-table-column>
+      <el-table-column prop="Account" label="银行帐号"></el-table-column>
+      <el-table-column prop="City" label="省/直辖市"></el-table-column>
+      <el-table-column prop="County" label="市"></el-table-column>
+      <el-table-column prop="Xian" label="县"></el-table-column>
+      <el-table-column prop="Money" label="金额"></el-table-column>
+      <el-table-column prop="DetailsOfPayment" label="附言"></el-table-column>
+      <el-table-column prop="isWrittenOff" label="是否冲销"></el-table-column>
+      <el-table-column fixed="right" prop="poNumber" label="PO号"></el-table-column>
+      <!-- <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-      </tr>
-    </table>
+      </el-table-column> -->
+    </el-table>
   </div>
 </template>
 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -110,11 +112,25 @@ export default {
       CompanyCodeArr: [], //公司代码
       Condition: {
         CollectionUnit: "", //结算单位
-        SettlementDate: "", //结算日期
+        SettlingTime: "", //结算日期
         Currency: "", //币种
-        CompanyCode: "" //公司代码
+        CompanyCode: "", //公司代码
+        TrusteesEmail: "" //经办人ID
       }, //筛选条件
-      TableData: [] //主表数据
+      TableData: [], //主表数据
+      filterVal: [],
+      excelColumns: [
+        "收款单位",
+        "银行名称",
+        "银行帐号",
+        "省/直辖市",
+        "市",
+        "县",
+        "金额",
+        "附言",
+        "是否冲销",
+        "PO号"
+      ]
     };
   },
   methods: {
@@ -143,34 +159,8 @@ export default {
           }
         }
       }
-
       console.log(condition);
-      var parm = {
-        type: "get",
-        action: "ListItems",
-        list: this.mainListName,
-        baseUrl: this.hostUrl,
-        condition: condition
-      };
-      var option = common.queryOpt(parm);
-      $.when($.ajax(option)).done(req => {
-        var data = req.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.TableData.push({
-              collectionUnit: d.CollectionUnit,
-              openingBank: d.OpeningBank,
-              account: d.Account,
-              city: d.City,
-              county: d.County,
-              money: d.Money,
-              detailsOfPayment: d.DetailsOfPayment,
-              isWrittenOff: "",
-              poNumber: ""
-            });
-          });
-        }
-      });
+      this.getMainList(condition);
     },
     getCompanyCodeAndCostCenter() {
       //获取公司代码和成本中心
@@ -206,6 +196,50 @@ export default {
           });
         }
       });
+    },
+    getMainList: function(condition) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: condition
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          data.forEach(d => {
+            this.TableData.push({
+              CollectionUnit: d.CollectionUnit,
+              OpeningBank: d.OpeningBank,
+              Account: d.Account,
+              City: d.City,
+              County: d.County,
+              Xian: "",
+              Money: d.Money,
+              DetailsOfPayment: d.DetailsOfPayment,
+              isWrittenOff: "",
+              poNumber: ""
+            });
+          });
+        }
+      });
+    },
+    
+    onExcel: function() {
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "对公付款汇款报表",
+        fileType: "xlsx",
+        sheetName: "对公付款汇款报表"
+      };
+      efn.toExcel(excelInfo);
     }
   },
   mounted() {

@@ -85,13 +85,14 @@
       <tr>
         <td align="right">是否有合同：</td>
         <td colspan="7" align="left">
-          <el-checkbox @change="disabledMoney()" v-model="purchaseRequestData.IsContract"></el-checkbox>
+          <el-checkbox @change="clearContract" v-model="purchaseRequestData.IsContract"></el-checkbox>
         </td>
       </tr>
       <tr>
         <td align="right">合同号：</td>
         <td align="left">
           <el-select
+            :disabled="purchaseRequestData.IsContract==false"
             @change="changeMoney()"
             v-model="purchaseRequestData.ContractNumber"
             filterable
@@ -107,17 +108,38 @@
         </td>
         <td align="right">金额：</td>
         <td colspan="5">
-          <el-input
-            :disabled="isDisabledMoney==true"
-            v-model="purchaseRequestData.Money"
-            placeholder="金额"
-          ></el-input>
+          <el-input disabled v-model="purchaseRequestData.Money" placeholder="金额"></el-input>
         </td>
+      </tr>
+      <tr id="create_GPPurchase">
+        <td>合同名称</td>
+        <td>供应商</td>
+        <td>内容</td>
+        <td>法人代表</td>
+        <td>总金额</td>
+        <td>已付款</td>
+        <td colspan="2">未付款</td>
+      </tr>
+      <tr v-for="(subItems,index) in  ContractHistory">
+        <template v-for="(subItem,cindex) in subItems">
+          <td colspan="2" v-if="cindex=='UnPaid'">{{subItem}}</td>
+          <td v-else>{{subItem}}</td>
+        </template>
+      </tr>
+      <tr>
+        <td align="right">已付款：</td>
+        <td align="left" colspan="3">{{AccountPaid}}</td>
+        <td align="right">未付款：</td>
+        <td align="left" colspan="3">{{UnPaid}}</td>
       </tr>
       <tr>
         <td align="right">申请类型：</td>
         <td align="left">
-          <el-select @change="clearCodeOrSelect" v-model="purchaseRequestData.ApplicationType" placeholder="请选择">
+          <el-select
+            @change="clearCodeOrSelect"
+            v-model="purchaseRequestData.ApplicationType"
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in applicationTypeOptions"
               :key="item.value"
@@ -128,7 +150,8 @@
         </td>
         <td align="right">费用类别：</td>
         <td>
-          <el-select :disabled="purchaseRequestData.ApplicationType=='固定资产'"
+          <el-select
+            :disabled="purchaseRequestData.ApplicationType=='固定资产'"
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
@@ -143,7 +166,11 @@
         </td>
         <td align="right">费用科目：</td>
         <td colspan="3" align="left">
-          <el-select :disabled="purchaseRequestData.ApplicationType=='固定资产'" v-model="purchaseRequestData.CostAccount" placeholder="请选择">
+          <el-select
+            :disabled="purchaseRequestData.ApplicationType=='固定资产'"
+            v-model="purchaseRequestData.CostAccount"
+            placeholder="请选择"
+          >
             <template v-for="item in costAccountOptions">
               <el-option
                 v-if="purchaseRequestData.ExpenseCategory==item.Type"
@@ -158,7 +185,11 @@
       <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
-          <el-input :disabled="purchaseRequestData.ApplicationType!='固定资产'" v-model="purchaseRequestData.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
+          <el-input
+            :disabled="purchaseRequestData.ApplicationType!='固定资产'"
+            v-model="purchaseRequestData.CodeOfFixedAssets"
+            placeholder="固定资产编码"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -268,6 +299,9 @@ export default {
         Amount: ""
       },
       ContractNumbers: [], //合同号
+      ContractHistory: [], //合同历史信息
+      AccountPaid: "", //已付款
+      UnPaid: "", //未付款
       applicationTypeOptions: [
         {
           value: "费用",
@@ -285,28 +319,75 @@ export default {
       editIndex: -1, //是否编辑
       formLabelWidth: "150px", //dialog lable
       message: "",
-      loading: true,
-      isDisabledMoney: false
+      loading: true
     };
   },
   methods: {
-    clearCodeOrSelect(){
-      if(this.purchaseRequestData.ApplicationType=="费用"){
-        this.purchaseRequestData.CodeOfFixedAssets="";
-      }else{
-        this.purchaseRequestData.CostAccount=""
-        this.purchaseRequestData.ExpenseCategory=""
+    clearContract() {
+      if (!this.purchaseRequestData.IsContract) {
+        this.purchaseRequestData.ContractNumber = ""; //合同号
+        this.purchaseRequestData.Money = ""; //金额
+        this.ContractHistory = []; //还原
+         this.AccountPaid=""; //已付款
+      this.UnPaid="";//未付款
       }
     },
-    disabledMoney() {
-      if (this.purchaseRequestData.IsContract) {
-        this.isDisabledMoney = true;
-        this.purchaseRequestData.ContractNumber = "";
-        this.purchaseRequestData.Money = "";
+    getContractHistory() {
+      var that = this;
+      that.ContractHistory = []; //还原
+      //获取合同列表
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.contractListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=Number eq '" +
+          this.purchaseRequestData.ContractNumber +
+          "' "
+      }; //Completed 已完成
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              //push 合同列表
+              that.ContractHistory.push({
+                Name: item.Name,
+                Supplier: item.Suppler,
+                Contents: item.Contents,
+                LegalPerson: item.LegalPerson,
+                Money: item.Money,
+                AccountPaid: item.AccountPaid,
+                UnPaid: item.UnPaid
+              });
+              //累加
+              accountPaid += parseFloat(
+                item.AccountPaid == "" ? 0 : item.AccountPaid
+              );
+            });
+            //合计
+            that.AccountPaid = accountPaid;
+            that.UnPaid =
+              parseFloat(
+                that.purchaseRequestData.Money == ""
+                  ? 0
+                  : that.purchaseRequestData.Money
+              ) - accountPaid;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取合同信息失败!"));
+        });
+    },
+    clearCodeOrSelect() {
+      if (this.purchaseRequestData.ApplicationType == "费用") {
+        this.purchaseRequestData.CodeOfFixedAssets = "";
       } else {
-        this.isDisabledMoney = false;
-        this.purchaseRequestData.ContractNumber = "";
-        this.purchaseRequestData.Money = "";
+        this.purchaseRequestData.CostAccount = "";
+        this.purchaseRequestData.ExpenseCategory = "";
       }
     },
     getCostCenter() {
@@ -351,6 +432,7 @@ export default {
           this.purchaseRequestData.Money = item.money;
         }
       });
+      this.getContractHistory();
     },
     getExpenseCategory() {
       //获取费用类别
@@ -472,7 +554,10 @@ export default {
     },
     createPurchaseRequestData(type) {
       //创建主表数据
-      var total = Number(this.purchaseRequestData.Money);
+      var total = 0;
+      this.subListData.forEach(element => {
+        total += Number(element.Amount);
+      });
       var costcenter = this.purchaseRequestData.CostCenter;
       var parm = {
         action: "ListItems",
@@ -511,7 +596,7 @@ export default {
           console.log("kkkkkk");
           console.log(itemInfo);
           if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id == null;
+            itemInfo.Approver1Id = data1.Approver1Id;
           } else if (total >= 1000 && total < 20000) {
             itemInfo.Approver1Id = data1.Approver1Id;
             itemInfo.Approver2Id = data1.Approver2Id;
@@ -552,8 +637,8 @@ export default {
             .catch(err => {
               this.$message(common.message("error", "提交数据时出现了错误!"));
             });
-        }else {
-          this.$message(common.message("warning","未找到审批用户!"))
+        } else {
+          this.$message(common.message("warning", "未找到审批用户!"));
         }
       });
     },
@@ -653,15 +738,28 @@ export default {
         this.message = "请输入金额;";
       } else if (this.purchaseRequestData.ApplicationType == "") {
         this.message = "请选择申请类型;";
-      // } else if (this.purchaseRequestData.ExpenseCategory == "") {
-      //   this.message = "请选择费用类别;";
-      // } else if (this.purchaseRequestData.CostAccount == "") {
-      //   this.message = "请选择费用科目;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "费用" &&
+        this.purchaseRequestData.ExpenseCategory == ""
+      ) {
+        this.message = "请选择费用类别;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "费用" &&
+        this.purchaseRequestData.CostAccount == ""
+      ) {
+        this.message = "请选择费用科目;";
+      } else if (
+        this.purchaseRequestData.ApplicationType == "固定资产" &&
+        this.purchaseRequestData.CodeOfFixedAssets == ""
+      ) {
+        this.message = "请填写固定资产编码;";
+      } else if (this.subListData.length == 0) {
+        this.message = "请添加项目行;";
       } else {
         isSuccess = true;
       }
-      console.log("format!!!!")
-      console.log(isSuccess)
+      console.log("format!!!!");
+      console.log(isSuccess);
       return isSuccess;
     },
     itemVerification() {

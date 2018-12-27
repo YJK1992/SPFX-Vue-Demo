@@ -11,16 +11,6 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="日期时间段：">
-        <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.applicationDate"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
       <el-form-item label="申请类别：">
         <el-select allow-create="true" v-model="Condition.ApplicationType" placeholder="请选择">
           <el-option
@@ -31,7 +21,6 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
       <el-form-item label="状态：">
         <el-select v-model="Condition.Status" placeholder="请选择">
           <el-option
@@ -42,15 +31,12 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
       <!-- <el-form-item label="物控人员：">
         <el-input v-model="Condition.MaterialControl" placeholder="审批人" v-show="false"></el-input>
-      </el-form-item> -->
-
+      </el-form-item>-->
       <el-form-item label="申请单号：">
         <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
-
       <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
@@ -61,42 +47,43 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
+      <el-form-item label="日期时间段：">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.applicationDate"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onExcel">导出Excel</el-button>
       </el-form-item>
     </el-form>
 
-    <table class="ECCReport">
-      <tr id="report_ECCReport">
-        <td>公司代码</td>
-        <td style="width: 300px;">申请单号</td>
-        <td>申请人</td>
-        <td>成本中心</td>
-        <td>申请类别</td>
-        <td>产品类别</td>
-        <td>收件人</td>
-        <td>操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+    <el-table :data="TableData" style="width: 100%" max-height="500">
+      <el-table-column fixed prop="Title" label="申请单号" width="300"></el-table-column>
+      <el-table-column prop="companyCode" label="公司代码"></el-table-column>
+      <el-table-column prop="Applicant" label="申请人"></el-table-column>
+      <el-table-column prop="CostCenter" label="成本中心"></el-table-column>
+      <el-table-column prop="ApplicationType" label="申请类别"></el-table-column>
+      <el-table-column prop="ProductType" label="产品类别"></el-table-column>
+      <el-table-column prop="mailTo" label="收件人"></el-table-column>
+      <el-table-column prop="Materiel" label="物料"></el-table-column>
+      <el-table-column prop="Amount" label="数量"></el-table-column>
+      <el-table-column prop="Price" label="单价"></el-table-column>
+      <el-table-column prop="Total" label="总金额"></el-table-column>
+      <el-table-column prop="FixedAssetsCode" label="固定资产编码"></el-table-column>
+      <el-table-column fixed="right" prop="RequestType" label="费用类别"></el-table-column>
+      <!-- <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-        <td>
-          <el-button @click="getSubList(index)" size="small">查看</el-button>
-        </td>
-      </tr>
-    </table>
-    <el-dialog title="物料信息" :visible.sync="dialogTableVisible">
-      <el-table :data="SubTableData">
-        <el-table-column property="Materiel" label="物料" width="150"></el-table-column>
-        <el-table-column property="Amount" label="数量" width="150"></el-table-column>
-        <el-table-column property="Price" label="单价" width="150"></el-table-column>
-        <el-table-column property="Total" label="总金额" width="150"></el-table-column>
-        <el-table-column property="FixedAssetsCode" label="固定资产编码" width="150"></el-table-column>
-        <el-table-column property="RequestType" label="费用类别" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+      </el-table-column>-->
+    </el-table>
   </div>
 </template>
 
@@ -104,7 +91,7 @@
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
-
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -135,22 +122,34 @@ export default {
           value: "Approved"
         }
       ],
+      excelColumns: [
+        "申请单号",
+        "公司代码",
+        "申请人",
+        "成本中心",
+        "申请类别",
+        "产品类别",
+        "收件人",
+        "物料",
+        "数量",
+        "单价",
+        "总金额",
+        "固定资产编码",
+        "费用类别"
+      ],
+      filterVal: [],
       //筛选条件
       Condition: {
         CostCenter: "", //成本中心
         ApplicationDate: "", //申请日期
         ApplicationType: "", //申请类型
         Status: "", //状态
-        MaterialControl: "", //物控人员
+        // MaterialControl: "", //物控人员
         Title: "", //申请单号
         CompanyCode: ""
       },
       //主表数据
-      TableData: [],
-      //子表数据
-      SubTableData: [],
-      //其他
-      dialogTableVisible: false
+      TableData: []
     };
   },
   methods: {
@@ -169,11 +168,13 @@ export default {
               condition +=
                 "?$filter=Created gt datetime" +
                 "'" +
-                this.Condition[item][0]+"T00:00:00Z" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1]+"T00:00:00Z" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -184,11 +185,13 @@ export default {
               condition +=
                 " and Created gt datetime" +
                 "'" +
-                this.Condition[item][0] +"T00:00:00Z"+
+                this.Condition[item][0] +
+                "T00:00:00Z" +
                 "'" +
                 " and Created lt datetime" +
                 "'" +
-                this.Condition[item][1] +"T00:00:00Z"+
+                this.Condition[item][1] +
+                "T00:00:00Z" +
                 "'";
             } else {
               condition +=
@@ -197,8 +200,10 @@ export default {
           }
         }
       }
-
       console.log(condition);
+      this.getMainList(condition);
+    },
+    getMainList: function(condition) {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -212,24 +217,13 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.TableData.push({
-              companyCode: d.CompanyCode,
-              Title: d.Title,
-              Applicant: d.Applicant,
-              CostCenter: d.CostCenter,
-              Applicant: d.Applicant,
-              ApplicationType: d.ApplicationType,
-              ProductType: d.ProductType,
-              MailTo: ""
-            });
+            this.getSubList(d);
           });
         }
       });
     },
-    getSubList(index) {
-      this.dialogTableVisible = true;
-      this.SubTableData = [];
-      var applicationNumber = this.TableData[index].Title;
+    getSubList(MainItem) {
+      var applicationNumber = MainItem.Title;
       var parm = {
         type: "get",
         action: "ListItems",
@@ -243,7 +237,14 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
-              this.SubTableData.push({
+              this.TableData.push({
+                Title: MainItem.Title,
+                companyCode: MainItem.CompanyCode,
+                Applicant: MainItem.Applicant,
+                CostCenter: MainItem.CostCenter,
+                ApplicationType: MainItem.ApplicationType,
+                ProductType: MainItem.ProductType,
+                mailTo: "",
                 Materiel: d.Materiel,
                 Amount: d.Amount,
                 Price: d.Price,
@@ -253,7 +254,21 @@ export default {
               });
             });
           } else {
-            this.$message(common.message("waring", "没有无聊数据!"));
+            this.TableData.push({
+              Title: MainItem.Title,
+              companyCode: MainItem.CompanyCode,
+              Applicant: MainItem.Applicant,
+              CostCenter: MainItem.CostCenter,
+              ApplicationType: MainItem.ApplicationType,
+              ProductType: MainItem.ProductType,
+              mailTo: "",
+              Materiel: "",
+              Amount: "",
+              Price: "",
+              Total: "",
+              FixedAssetsCode: "",
+              RequestType: ""
+            });
           }
         })
         .catch(err => {
@@ -332,6 +347,27 @@ export default {
           });
         }
       });
+    },
+    onExcel: function() {
+      console.log(this.TableData);
+      console.log("222222222222");
+      for (var item in this.TableData[0]) {
+        this.filterVal.push(item);
+      }
+      console.log(this.filterVal);
+      console.log("33333333333333");
+      console.log(this.TableData);
+      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      console.log("44444444444444");
+      console.log(data);
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "固资申请报表",
+        fileType: "xlsx",
+        sheetName: "固资申请"
+      };
+      efn.toExcel(excelInfo);
     }
   },
   mounted() {
