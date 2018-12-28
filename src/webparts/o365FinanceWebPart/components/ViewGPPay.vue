@@ -11,7 +11,6 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-
       <el-form-item label="结算方式">
         <el-select v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
@@ -22,12 +21,13 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
-      <el-form-item label="经办人">
-        <el-input v-model="Condition.Trustees" placeholder="经办人"></el-input>
+      <el-form-item label="申请单号">
+        <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
       </el-form-item>
-
-      <el-form-item label="公司代码：">
+      <el-form-item label="经办人ID">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人"></el-input>
+      </el-form-item>
+      <el-form-item label="公司代码">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -37,10 +37,9 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
       <el-form-item>
         <el-button type="primary" @click="Condition={}">重置</el-button>
-        <el-button type="primary" @click="getMyTask(userId)">查询</el-button>
+        <el-button type="primary" @click="SearchArr()">查询</el-button>
       </el-form-item>
     </el-form>
 
@@ -54,11 +53,13 @@
         <td>成本中心</td>
         <td>发票金额</td>
         <td>币种</td>
+        <td>经办人ID</td>
+        <td>公司代码</td>
         <td>流程节点</td>
         <td>任务ID</td>
         <td>操作</td>
       </tr>
-      <tr v-for="(subItems,index) in gpItems">
+      <tr v-for="(subItems,index) in newArr">
         <template v-for="(subItem,cindex) in subItems">
           <td>{{subItem}}</td>
         </template>
@@ -86,9 +87,9 @@ export default {
       Condition: {
         SettlementType: "", //结算方式
         ApplicationDate: "", //申请日期
-        Title: "", //申请单号
         CompanyCode: "", //公司代码
-        Trustees: "" //经办人
+        TrusteesEmail: "", //经办人Id
+        ApplicationNumber: "" //申请单号
       },
       CompanyCodeArr: [], //公司代码
       //结算方式
@@ -115,10 +116,29 @@ export default {
         }
       ],
       userId: 0,
+      newArr: [],
       loading: true
     };
   },
   methods: {
+    SearchArr() {
+      var newCond = Object.keys(this.Condition);
+      console.log(newCond);
+
+      newCond.forEach(item => {
+        if (this.Condition[item] == "") {
+          delete this.Condition[item];
+        }
+      });
+      console.log(this.Condition);
+
+      var keys = Object.keys(this.Condition);
+      var result = this.gpItems.filter(item => {
+        return keys.every(key => this.Condition[key].indexOf(item[key]) !== -1);
+      });
+      this.newArr = result;
+      console.log(result);
+    },
     //获取公司代码
     getCompanyCode: function() {
       //获取公司代码和成本中心
@@ -190,32 +210,10 @@ export default {
         });
     },
     getMyTask: function(userId) {
-      userId = this.userId == 0 ? userId : this.userId;
       var condition =
         "?$filter=PercentComplete eq 0 and AssignedToId eq " +
         userId +
         "&$orderby=ID desc&$top=2000";
-
-      for (var item in this.Condition) {
-        if (this.Condition[item] != null && this.Condition[item] != "") {
-          //存在条件
-          if (item == "ApplicationDate") {
-            condition +=
-              " and Created gt datetime" +
-              "'" +
-              this.Condition[item][0] +
-              "T00:00:00Z" +
-              "'" +
-              " and Created lt datetime" +
-              "'" +
-              this.Condition[item][1] +
-              "T00:00:00Z" +
-              "'";
-          } else {
-            condition += " and " + item + " eq '" + this.Condition[item] + "'";
-          }
-        }
-      }
       var parm = {
         action: "ListItems",
         type: "get",
@@ -226,6 +224,7 @@ export default {
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
+          console.log("Task success");
           var data = req.d.results;
           if (data.length > 0) {
             data.forEach(d => {
@@ -284,6 +283,7 @@ export default {
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
+          console.log("getGpPRListData");
           var data = req.d;
           this.gpItems.push({
             Trustees: data.Trustees,
@@ -294,9 +294,12 @@ export default {
             CostCenter: data.CostCenter,
             InvoiceValue: data.InvoiceValue,
             Currency: data.Currency,
+            TrusteesEmail: data.TrusteesEmail,
+            CompanyCode: data.CompanyCode,
             Step: step,
             TaskId: taskId
           });
+          console.log(this.gpItems);
         })
         .catch(err => {
           this.$message(common.message("error", "获取GpPP数据失败!"));
@@ -306,6 +309,7 @@ export default {
   mounted: function() {
     this.loading = true;
     this.getCurrentUser();
+    this.getCompanyCode();
     this.loading = false;
   }
 };

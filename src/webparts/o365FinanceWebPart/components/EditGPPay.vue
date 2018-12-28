@@ -739,6 +739,7 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
+      currentUserId: 0, //当前用户Id
       mainListName: "PublicPayment", //对公付款
       subListName: "TaxReceipt", //税票清单
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
@@ -1788,6 +1789,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.PublicPayment.Trustees = c.d.Title;
+          this.currentUserId = c.d.Id;
           this.search(loginName);
         })
         .catch(err => {
@@ -1950,6 +1952,41 @@ export default {
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
+      console.log(opt);
+      if (this.currentStep == "Approver5") {
+        if (this.PublicPayment.IsSettlement) {
+          var mainItemInfo = {
+            __metadata: {
+              type: this.GPPPTaskListType
+            },
+            AuthorizedPersonId: this.currentUserId
+          };
+          var mainParm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: mainItemInfo,
+            digest: this.requestDigest
+          };
+          var mainOpt = common.queryOpt(mainParm);
+          var updateMainList = common.service(mainOpt);
+          updateMainList
+            .done(re => {
+              this.updateTaskInfo(taskOutcome);
+            })
+            .catch(err => {
+              this.$message(common.message("error", "更新主表数据失败"));
+            });
+        } else {
+          this.updateTaskInfo(taskOutcome);
+        }
+      } else {
+        this.updateTaskInfo(taskOutcome);
+      }
+    },
+    updateTaskInfo: function(taskOutcome) {
       var taskItemInfo = {
         __metadata: {
           type: this.GPPPTaskListType
@@ -1968,7 +2005,6 @@ export default {
         digest: this.requestDigest
       };
       var opt = common.queryOpt(parm);
-      console.log(opt);
       $.when($.ajax(opt))
         .done(req => {
           console.log(req);
@@ -2114,7 +2150,7 @@ export default {
                 data[0].IsSettlement == "true" ? true : false), //结算
               (this.PublicPayment.SpecialApprover = data[0].SpecialApprover); //特殊审批人
             this.PublicPayment.IsExpenseAllocation =
-              data[0].IsExpenseAllocation== "true" ? true : false; //是否有费用分摊
+              data[0].IsExpenseAllocation == "true" ? true : false; //是否有费用分摊
             this.PublicPayment.CompanyCode = data[0].CompanyCode; //是否有费用分摊
             this.currentItemId = data[0].Id;
             console.log("!22222222222222");
@@ -2171,7 +2207,7 @@ export default {
                 ProjectNumber: d.ProjectNumber, //项目号码
                 CostCenterName: d.CostCenterName, //摊出成本中心签批人姓名
                 Abstract: d.Abstract, //摘要
-                IsIn: d.IsIn=="true"?true:false //是否摊入
+                IsIn: d.IsIn == "true" ? true : false //是否摊入
               });
             });
           } else {

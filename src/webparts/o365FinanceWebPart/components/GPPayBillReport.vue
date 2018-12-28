@@ -23,8 +23,8 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="经办人">
-        <el-input v-model="Condition.Trustees" placeholder="经办人"></el-input>
+      <el-form-item label="经办人ID">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
       </el-form-item>
 
       <el-form-item label="结算人">

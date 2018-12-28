@@ -64,7 +64,7 @@ var common = {
           break
       }
       opt = {
-        url: queryUrl,
+        url: encodeURI(queryUrl),
         type: 'Get',
         headers: {
           'accept': 'application/json;odata=verbose'
@@ -103,7 +103,7 @@ var common = {
       }
       if (parm.action == 'Attachements') {
         opt = {
-          url: queryUrl,
+          url: encodeURI(queryUrl),
           method: "post",
           headers: headers,
           data: parm.fileArr,
@@ -111,7 +111,7 @@ var common = {
         }
       } else {
         opt = {
-          url: queryUrl,
+          url: encodeURI(queryUrl),
           method: "post",
           headers: headers,
           data: JSON.stringify(parm.item)
@@ -127,14 +127,14 @@ var common = {
     } else if (parm.type == "delete") {
       switch (parm.action) {
         case 'DeleteListItem':
-            queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")";
+          queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")";
           break
         case 'DeleteAttachment':
           queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/items(" + parm.itemID + ")/AttachmentFiles/getByFileName('" + parm.fileName + "')"
           break
       }
       opt = {
-        url: queryUrl,
+        url: encodeURI(queryUrl),
         type: "DELETE",
         headers: {
           "accept": "application/json;odata=verbose",
