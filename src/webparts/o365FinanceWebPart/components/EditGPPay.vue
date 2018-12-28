@@ -740,6 +740,8 @@ export default {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       currentUserId: 0, //当前用户Id
+      currentUserTitle: "", //当前用户名
+      currentUserITCode: "", //邮箱@前的code
       mainListName: "PublicPayment", //对公付款
       subListName: "TaxReceipt", //税票清单
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
@@ -751,7 +753,7 @@ export default {
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
       ContractListName: "ContractList", //合同列表pushtable
-
+      ApprovalHistory: "", //审批历史
       approverList: "ApproveNode", //审批节点列表名
       userArr: [], //用户信息数据数组
       costCenterArr: [], //成本中心数组
@@ -1788,7 +1790,8 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
-          this.PublicPayment.Trustees = c.d.Title;
+          this.currentUserITCode = loginName.split("@")[0];
+          this.currentUserTitle = c.d.Title;
           this.currentUserId = c.d.Id;
           this.search(loginName);
         })
@@ -1947,44 +1950,115 @@ export default {
     onApproval: function(type) {
       this.loading = true;
       var taskOutcome;
+      var mainItemInfo = {
+        __metadata: {
+          type: this.mainListType
+        }
+      };
       if (type == "approve") {
         taskOutcome = "已批准"; //Approved 已批准
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
-      console.log(opt);
+
       if (this.currentStep == "Approver5") {
+        var history = JSON.parse(this.ApprovalHistory);
+        history.approver5 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          this.getCurrentDate();
+        mainItemInfo.ApproverHistory = JSON.stringify(history);
         if (this.PublicPayment.IsSettlement) {
-          var mainItemInfo = {
-            __metadata: {
-              type: this.GPPPTaskListType
-            },
-            AuthorizedPersonId: this.currentUserId
-          };
-          var mainParm = {
-            type: "post",
-            action: "EditListItem",
-            baseUrl: this.hostUrl,
-            list: this.mainListName,
-            itemID: this.currentItemId,
-            item: mainItemInfo,
-            digest: this.requestDigest
-          };
-          var mainOpt = common.queryOpt(mainParm);
-          var updateMainList = common.service(mainOpt);
-          updateMainList
-            .done(re => {
-              this.updateTaskInfo(taskOutcome);
-            })
-            .catch(err => {
-              this.$message(common.message("error", "更新主表数据失败"));
-            });
-        } else {
-          this.updateTaskInfo(taskOutcome);
+          mainItemInfo.AuthorizedPersonId = this.currentUserId;
         }
+        this.updateMainInfo(mainItemInfo, taskOutcome);
       } else {
-        this.updateTaskInfo(taskOutcome);
+        if (this.ApprovalHistory == null || this.ApprovalHistory == "") {
+          var history = {};
+          history.approver1 =
+            this.currentUserTitle +
+            "-" +
+            this.currentUserITCode +
+            "," +
+            this.getCurrentDate();
+          this.ApprovalHistory = JSON.stringify(history);
+        } else {
+          var history = JSON.parse(this.ApprovalHistory);
+          if (this.currentStep == "Approver1") {
+            history.approver1 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              this.getCurrentDate();
+          } else if (this.currentStep == "Approver2") {
+            history.approver2 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              this.getCurrentDate();
+          } else if (this.currentStep == "Approver3") {
+            history.approver3 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              this.getCurrentDate();
+          } else if (this.currentStep == "Approver4") {
+            history.approver4 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              this.getCurrentDate();
+          } else if (this.currentStep == "Approver6") {
+            history.approver6 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              this.getCurrentDate();
+          }
+          this.ApprovalHistory = JSON.stringify(history);
+        }
+        if (this.currentStep == "Approver6") {
+          mainItemInfo.SettlementOfPeopleId = this.currentUserId;
+        }
+        mainItemInfo.SettlingTime = this.getCurrentDate;
+        mainItemInfo.ApproverHistory = this.ApprovalHistory;
+        this.updateMainInfo(mainItemInfo, taskOutcome);
       }
+    },
+    getCurrentDate: function() {
+      var date = new Date();
+      var year = date.getFullYear();
+      var month = date.getMonth() + 1;
+      var day = date.getDate();
+      var currentTime = year + "-" + month + "-" + day;
+      return currentTime;
+    },
+    updateMainInfo: function(mainItemInfo, taskOutcome) {
+      var mainParm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: mainItemInfo,
+        digest: this.requestDigest
+      };
+      var mainOpt = common.queryOpt(mainParm);
+      var updateMainList = common.service(mainOpt);
+      updateMainList
+        .done(re => {
+          this.updateTaskInfo(taskOutcome);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新主表数据失败"));
+        });
     },
     updateTaskInfo: function(taskOutcome) {
       var taskItemInfo = {
@@ -2096,7 +2170,9 @@ export default {
           console.log(data);
           if (data.length > 0) {
             //获取主表
-            (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
+            (this.ApprovalHistory = data[0].ApproverHistory), //审批历史
+              (this.PublicPayment.ReimbursementType =
+                data[0].ReimbursementType), //报销类型
               (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
               (this.PublicPayment.Trustees = data[0].Trustees), //经办人
               (this.PublicPayment.CostCenter = data[0].CostCenter), //成本中心
