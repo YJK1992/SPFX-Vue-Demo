@@ -364,7 +364,7 @@ export default {
         excelColumns: this.excelColumns,
         excelData: data,
         fileName: "固资申请报表",
-        fileType: "xlsx",
+        fileType: "xls",
         sheetName: "固资申请"
       };
       efn.toExcel(excelInfo);

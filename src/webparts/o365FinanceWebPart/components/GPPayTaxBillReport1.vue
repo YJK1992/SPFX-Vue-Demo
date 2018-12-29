@@ -328,7 +328,7 @@ export default {
         excelColumns: this.excelColumns,
         excelData: data,
         fileName: "税票清单数据导出F43",
-        fileType: "xlsx",
+        fileType: "xls",
         sheetName: "税票清单数据导出F43"
       };
       efn.toExcel(excelInfo);

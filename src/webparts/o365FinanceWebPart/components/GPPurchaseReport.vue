@@ -136,7 +136,7 @@ export default {
         excelColumns: this.excelColumns,
         excelData: data,
         fileName: "对公申请报表",
-        fileType: "xlsx",
+        fileType: "xls",
         sheetName: "对公申请报表"
       };
       efn.toExcel(excelInfo);

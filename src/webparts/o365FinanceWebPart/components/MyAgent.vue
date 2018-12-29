@@ -32,7 +32,14 @@ export default {
       var filterVal = ["name", "birthday", "sex", "age"];
       var data = this.excelData.map(v => filterVal.map(k => v[k]));
       var [fileName, fileType, sheetName] = ["测试下载", "xlsx", "测试页"];
-      efn.toExcel({ th, data, fileName, fileType, sheetName });
+      var parm={
+        excelColumns: th,
+        excelData: data,
+        fileName: "test报表",
+        fileType: "xls",
+        sheetName: "test"
+      }
+      efn.toExcel(parm);
     }
   }
 };

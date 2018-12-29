@@ -217,7 +217,7 @@ export default {
         excelColumns: this.excelColumns,
         excelData: data,
         fileName: "PayBill",
-        fileType: "xlsx",
+        fileType: "xls",
         sheetName: "PayBill"
       };
       efn.toExcel(excelInfo);
