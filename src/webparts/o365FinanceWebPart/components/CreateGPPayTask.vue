@@ -551,7 +551,8 @@ export default {
         SpecialApprover: "", //特殊审批人
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
-        EmployeeCode: "" //人员编号
+        EmployeeCode: "", //人员编号
+        BussinessScope:"" //业务范围
       },
       TaxReceiptList: [], //税票清单
       TaxReceipt: {
@@ -823,6 +824,7 @@ export default {
                 this.companyCodeArr.push({
                   CompanyCode: d.CompanyCode
                 });
+                this.PublicPayment.BussinessScope=d.BusinessScope
                 this.PublicPayment.EmployeeCode = d.EmployeeCode;
               });
 
@@ -1223,7 +1225,8 @@ export default {
             CompanyCode: this.PublicPayment.CompanyCode,
             IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
             TrusteesEmail: this.LoginName.split("@")[0],
-            EmployeeCode: this.PublicPayment.EmployeeCode
+            EmployeeCode: this.PublicPayment.EmployeeCode,
+            BussinessScope:this.PublicPayment.BussinessScope
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;

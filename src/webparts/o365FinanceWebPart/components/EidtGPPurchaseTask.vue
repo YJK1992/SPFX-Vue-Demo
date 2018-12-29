@@ -111,8 +111,13 @@
           <td v-else>{{item}}</td>
         </template>
         <td>
-          <el-button @click="onEditItem(index)" size="small">编辑</el-button>
-          <el-button @click="del(index)" type="danger" size="small">删除</el-button>
+          <el-button @click="onEditItem(index)" :disabled="showApprover==true" size="small">编辑</el-button>
+          <el-button
+            @click="del(index)"
+            :disabled="showApprover==true"
+            type="danger"
+            size="small"
+          >删除</el-button>
         </td>
       </tr>
       <tr>
@@ -230,7 +235,12 @@
           ></el-input>
         </td>
       </tr>
-
+      <tr :hidden="showApprover==true?false:true">
+        <td align="right">审批意见：</td>
+        <td colspan="7">
+          <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="Body"></el-input>
+        </td>
+      </tr>
       <tr>
         <td colspan="8" align="right">
           <el-button
@@ -244,13 +254,18 @@
             type="primary"
             plain
           >保存</el-button>
-          <el-button type="primary" @click="onApproval(buttonType.Approve)" v-show="showApprover">批准</el-button>
           <el-button
-            @click="onApproval(buttonType.Reject)"
+            type="primary"
+            @click="onApproval(buttonType.Approved)"
+            v-show="showApprover"
+          >批准</el-button>
+          <el-button type="danger" @click="UpdateMain(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
+          <el-button
+            @click="onApproval(buttonType.Return)"
             v-show="showApprover"
             type="danger"
             plain
-          >拒绝</el-button>
+          >退回</el-button>
           <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
         </td>
       </tr>
@@ -320,8 +335,9 @@ export default {
       buttonType: {
         Submit: "submit",
         Save: "save",
-        Approve: "approve",
-        Reject: "reject"
+        Approved: "Approved",
+        Return: "reject",
+        Rejected: "Rejected"
       },
       purchaseRequestData: {
         Title: "", //标题
@@ -376,10 +392,37 @@ export default {
       isChangeSubList: false,
       AccountPaid: "", //已付款
       UnPaid: "", //未付款
-      ContractHistory: [] //合同历史信息
+      ContractHistory: [], //合同历史信息,
+      Body: ""
     };
   },
   methods: {
+    UpdateMain(type) {
+      var itemInfo = {
+        __metadata: {
+          type: this.mainListType
+        },
+        Status: type
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.onApproval(type);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "终止流程失败!"));
+          this.$router.push("/home");
+        });
+    },
     clearContract() {
       if (!this.purchaseRequestData.IsContract) {
         this.purchaseRequestData.ContractNumber = ""; //合同号
@@ -714,7 +757,7 @@ export default {
             .done(req => {
               if (type == "submit") {
                 if (this.currentStep == "Application" && this.taskId != 0) {
-                  this.onApproval("approve");
+                  this.onApproval("Approved");
                 }
               }
               this.$message(common.message("success", "采购申请添加成功!"));
@@ -766,41 +809,40 @@ export default {
           .catch(error => {
             this.$message(common.message("error", "加载税票清单失败"));
           });
+        //添加附表数据
+        this.subListData.forEach(item => {
+          console.log(item);
+          var itemInfo = {
+            __metadata: {
+              type: this.SubInfoListType
+            },
+            PurchaseRequestGUID: this.purchaseRequestData.ApplicationNumber,
+            Supplier: item.Supplier,
+            SupplierParts: item.SupplierParts,
+            Number: item.Number.toString(),
+            Price: item.Price,
+            Money: item.Money.toString(),
+            Taxation: item.Taxation.toString(),
+            Amount: item.Amount.toString()
+          };
+          var parm = {
+            type: "post",
+            action: "AddInList",
+            baseUrl: this.hostUrl,
+            list: this.subListName,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var options = common.queryOpt(parm);
+          $.when($.ajax(options))
+            .done(req => {
+              //this.$message(common.message("success", "供应商已添加成功!"));
+            })
+            .catch(err => {
+              this.$message(common.message("error", "供应商添加失败!"));
+            });
+        });
       }
-
-      //添加附表数据
-      this.subListData.forEach(item => {
-        console.log(item);
-        var itemInfo = {
-          __metadata: {
-            type: this.SubInfoListType
-          },
-          PurchaseRequestGUID: this.purchaseRequestData.ApplicationNumber,
-          Supplier: item.Supplier,
-          SupplierParts: item.SupplierParts,
-          Number: item.Number.toString(),
-          Price: item.Price,
-          Money: item.Money.toString(),
-          Taxation: item.Taxation.toString(),
-          Amount: item.Amount.toString()
-        };
-        var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.subListName,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            //this.$message(common.message("success", "供应商已添加成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "供应商添加失败!"));
-          });
-      });
     },
     search(userLoginName) {
       var parm = {
@@ -1063,9 +1105,16 @@ export default {
     },
     onApproval: function(type) {
       this.loading = true;
+      var mainItemInfo = {
+        __metadata: {
+          type: this.mainListType
+        }
+      };
       var taskOutcome;
-      if (type == "approve") {
+      if (type == "Approved") {
         taskOutcome = "已批准"; //Approved 已批准
+      } else if (type == "Rejected") {
+        taskOutcome = "已拒绝"; //已拒绝 Rejected
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
@@ -1075,6 +1124,7 @@ export default {
         },
         TaskOutcome: taskOutcome,
         PercentComplete: 1,
+        Body: this.Body,
         Status: "已完成" //Completed 已完成
       };
       var parm = {
@@ -1093,6 +1143,7 @@ export default {
           console.log(req);
           this.loading = false;
           this.$message(common.message("success", "审批成功!"));
+
           this.$router.push("/home");
         })
         .catch(err => {
@@ -1100,6 +1151,26 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "审批失败!"));
           this.$router.push("/home");
+        });
+    },
+    updateTaskStatus(mainItemInfo, taskOutcome) {
+      var mainParm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: mainItemInfo,
+        digest: this.requestDigest
+      };
+      var mainOpt = common.queryOpt(mainParm);
+      var updateMainList = common.service(mainOpt);
+      updateMainList
+        .done(re => {
+          this.updateTaskInfo(taskOutcome);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新主表数据失败"));
         });
     },
     loadMainListData: function(guid) {

@@ -114,7 +114,7 @@
             <el-input
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="请输入内容"
+              placeholder="当选择MD model时，请输入code1 number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -827,18 +827,24 @@ export default {
       const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
       const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
       const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
+      const extension6 = file.name.toLowerCase().split(".")[1] === "pdf";
+      const extension7 = file.name.toLowerCase().split(".")[1] === "xml";
+      const extension8 = file.name.toLowerCase().split(".")[1] === "msg";
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
         !extension2 &&
         !extension3 &&
         !extension4 &&
-        !extension5
+        !extension5&&
+        !extension6 &&
+        !extension7 &&
+        !extension8
       ) {
         this.$message(
           common.message(
             "error",
-            "上传的文件只能是 xls、xlsx、doc、docx、txt 格式!"
+            "上传的文件只能是 xls、xlsx、doc、docx、txt、pdf、xml、msg 格式!"
           )
         );
       }
@@ -850,6 +856,9 @@ export default {
         extension2 ||
         extension3 ||
         extension4 ||
+        extension8 ||
+        extension6 ||
+        extension7 ||
         (extension5 && size)
       );
     }, //附件上传前对文件格式和大小进行验证
@@ -899,7 +908,7 @@ export default {
               // data.forEach(d => {
               //   loginName = d.EmployeeID;
               // });
-              loginName = "i:0#.f|membership|" + speApproverName;
+              loginName = "i:0#.f|membership|" + data[0].EmployeeID;
               var parm2 = {
                 type: "get",
                 action: "UserByName",

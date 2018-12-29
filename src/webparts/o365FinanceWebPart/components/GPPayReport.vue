@@ -26,7 +26,7 @@
           <el-option
             v-for="item in Status"
             :key="item.value"
-            :label="item.value"
+            :label="item.label"
             :value="item.value"
           ></el-option>
         </el-select>
@@ -149,19 +149,28 @@ export default {
       ],
       Status: [
         {
-          value: "Draft"
+          value: "Draft",
+          label: "草稿"
         },
         {
-          value: "Submitted"
+          value: "Submitted",
+          label: "审批中"
         },
         {
-          value: "Changed"
+          value: "Changed",
+          label: "被驳回并提交"
         },
         {
-          value: "Dumped"
+          value: "Dumped",
+          label: "终止"
         },
         {
-          value: "Approved"
+          value: "Rejected",
+          label: "已拒绝"
+        },
+        {
+          value: "Approved",
+          label: "审批完成"
         }
       ],
       SettlementType: [

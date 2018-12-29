@@ -4,9 +4,6 @@
       <tr>
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">对公付款</span>
-          <div style="float:right">
-            <el-button type="primary" @click="print">打印</el-button>
-          </div>
         </td>
       </tr>
       <tr>
@@ -389,7 +386,13 @@
       <tr>
         <td align="right">结算：</td>
         <td colspan="7" align="left">
-          <el-checkbox :disabled="showFA==true" v-model="PublicPayment.IsSettlement"></el-checkbox>
+          <el-checkbox :disabled="showFA==false" v-model="PublicPayment.IsSettlement"></el-checkbox>
+        </td>
+      </tr>
+      <tr :hidden="showApprover==true?false:true">
+        <td align="right">审批意见：</td>
+        <td colspan="7">
+          <el-input type="textarea" :rows="2" placeholder="请输入内容" v-model="Body"></el-input>
         </td>
       </tr>
       <tr>
@@ -407,13 +410,18 @@
             type="primary"
             plain
           >保存</el-button>
-          <el-button type="primary" @click="onApproval(buttonType.Approve)" v-show="showApprover">批准</el-button>
+          <el-button
+            type="primary"
+            @click="onApproval(buttonType.Approved)"
+            v-show="showApprover"
+          >批准</el-button>
+          <el-button type="danger" @click="UpdateMain(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
           <el-button
             @click="onApproval(buttonType.Reject)"
             v-show="showApprover"
             type="danger"
             plain
-          >拒绝</el-button>
+          >退回</el-button>
           <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
         </td>
       </tr>
@@ -432,8 +440,17 @@
         <el-table-column property="TaxCode" label="税码"></el-table-column>
         <el-table-column label="操作" width="150">
           <template slot-scope="scope">
-            <el-button size="mini" @click="onEditItem(scope.$index)">编辑</el-button>
-            <el-button size="mini" type="danger" @click="del(scope.$index)">删除</el-button>
+            <el-button
+              size="mini"
+              :disabled="showApprover==true"
+              @click="onEditItem(scope.$index)"
+            >编辑</el-button>
+            <el-button
+              size="mini"
+              :disabled="showApprover==true"
+              type="danger"
+              @click="del(scope.$index)"
+            >删除</el-button>
           </template>
         </el-table-column>
       </el-table>
@@ -491,8 +508,17 @@
                 <td v-if="cindex!='IsIn'">{{subItem}}</td>
               </template>
               <td>
-                <el-button @click="onEditItem2(index)" size="small">编辑</el-button>
-                <el-button @click="del2(index)" type="danger" size="small">删除</el-button>
+                <el-button
+                  @click="onEditItem2(index)"
+                  :disabled="showApprover==true"
+                  size="small"
+                >编辑</el-button>
+                <el-button
+                  @click="del2(index)"
+                  type="danger"
+                  :disabled="showApprover==true"
+                  size="small"
+                >删除</el-button>
               </td>
             </template>
           </tr>
@@ -515,8 +541,17 @@
                 <td v-if="cindex!='IsIn'">{{subItem}}</td>
               </template>
               <td>
-                <el-button @click="onEditItem2(index)" size="small">编辑</el-button>
-                <el-button @click="del2(index)" type="danger" size="small">删除</el-button>
+                <el-button
+                  :disabled="showApprover==true"
+                  @click="onEditItem2(index)"
+                  size="small"
+                >编辑</el-button>
+                <el-button
+                  :disabled="showApprover==true"
+                  @click="del2(index)"
+                  type="danger"
+                  size="small"
+                >删除</el-button>
               </td>
             </template>
           </tr>
@@ -560,176 +595,6 @@
         <el-button type="primary" @click="onAddItem2()">确 定</el-button>
       </div>
     </el-dialog>
-
-    <!-- 打印模板 -->
-    <div style="display:none" id="print">
-      <div style="margin-top:20px;" id="myPrintArea">
-        <!--startprint1-->
-        <table
-          style=" min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
-        >
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
-              colspan="4"
-            >联想（北京）有限公司（0 0 0 1）</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
-              colspan="4"
-            >GP Payment form</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >SheetId:</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Applicant:</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Contact Phone:</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Submit time:</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-            >{{this.PublicPayment.ApplicationNumber}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">62193</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">2018-11-09</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Company Name:联想（北京）有限公司（0 0 0 1）</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Expense Category:{{this.PublicPayment.ExpenseCategory}}</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Cost Center Group:{{this.PublicPayment.CostCenter}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Finance Counter:</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Cost Center:</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Payment:{{this.PublicPayment.SettlementType}}</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Amount:{{this.PublicPayment.AmountInlowercase}}</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Amount（In Words）:{{this.PublicPayment. CapitalizationAmount}}</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Currency:{{this.PublicPayment.Currency}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Borrowing Form No:</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Name Of Receiver:{{this.PublicPayment.Currency}}</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Bank：{{this.PublicPayment.Bank}}</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Account No.：</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Province/Municipality：{{this.PublicPayment.City}}</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >City/County：{{this.PublicPayment.County}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Remit Postscript：</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Project Name:{{this.PublicPayment.ProjectName}}</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Project No:{{this.PublicPayment.ProjectNumber}}</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">
-              Contract No:
-              <span style="color: aqua">{{this.PublicPayment.ContractNumber}}</span>
-            </td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Currency:{{this.PublicPayment.Currency}}</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Service:</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Percentage of Finished and Paid Accepted Portion:{{ ((Number(this.AccountPaid)/Number(this.PublicPayment.money))*100).toFixed(2)}}%</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Total amount:{{this.PublicPayment.Money}}</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Percentage of Finished and Paid Amount:{{this.AccountPaid==""?0:this.AccountPaid}}</td>
-          </tr>
-
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
-              colspan="4"
-            >Approver/Approved Time:</td>
-          </tr>
-          <tr>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
-              colspan="4"
-            >Notes(Usage/Others) Time:{{this.PublicPayment.Remark}}</td>
-          </tr>
-        </table>
-        <div>
-          <p>
-            谢寰-xiehuan1 Manager-Senior Manager
-            <span style="color:red">（Hand Input）</span>
-          </p>
-          <p>
-            谢寰-xiehuan1 Manager-Senior Manager
-            <span style="color:red">（Hand Input）</span>
-          </p>
-        </div>
-      </div>
-    </div>
   </div>
 </template>
 <script>
@@ -769,8 +634,9 @@ export default {
       buttonType: {
         Submit: "submit",
         Save: "save",
-        Approve: "approve",
-        Reject: "reject"
+        Approved: "Approved",
+        Return: "reject",
+        Rejected: "Rejected"
       },
       PublicPayment: {
         ReimbursementType: "", //报销类型
@@ -923,10 +789,40 @@ export default {
       requestIsReject: false,
       currentStep: "",
       currentItemId: 0,
-      taskId: 0
+      taskId: 0,
+      Approver: "",//打印所需要
+      ApproverArr: [],//打印需要
+      Body:"",//审批意见
+      SettlementPeopleITCode:"",//结算人邮箱@前的code
     };
   },
   methods: {
+    UpdateMain(type) {
+      var itemInfo = {
+        __metadata: {
+          type: this.mainListType
+        },
+        Status: type
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.onApproval(type);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "终止流程失败!"));
+          this.$router.push("/home");
+        });
+    },
     clearContract() {
       if (!this.PublicPayment.IsContract) {
         this.PublicPayment.ContractNumber = ""; //合同号
@@ -1013,9 +909,7 @@ export default {
         this.convertMoney();
       }
     },
-    print() {
-      common.print("#myPrintArea");
-    },
+
     onEnd: function() {
       var itemInfo = {
         __metadata: {
@@ -1955,13 +1849,16 @@ export default {
           type: this.mainListType
         }
       };
-      if (type == "approve") {
+      if (type == "Approved") {
         taskOutcome = "已批准"; //Approved 已批准
+      } else if (type == "Rejected") {
+        taskOutcome = "已拒绝"; //已拒绝 Rejected
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
 
       if (this.currentStep == "Approver5") {
+        this.showFA = true;
         var history = JSON.parse(this.ApprovalHistory);
         history.approver5 =
           this.currentUserTitle +
@@ -1972,6 +1869,8 @@ export default {
         mainItemInfo.ApproverHistory = JSON.stringify(history);
         if (this.PublicPayment.IsSettlement) {
           mainItemInfo.AuthorizedPersonId = this.currentUserId;
+          mainItemInfo.SettlementPeopleITCode=this.currentUserITCode;
+          mainItemInfo.SettlingTime = this.getCurrentDate();
         }
         this.updateMainInfo(mainItemInfo, taskOutcome);
       } else {
@@ -2023,11 +1922,13 @@ export default {
               this.getCurrentDate();
           }
           this.ApprovalHistory = JSON.stringify(history);
+
         }
         if (this.currentStep == "Approver6") {
           mainItemInfo.SettlementOfPeopleId = this.currentUserId;
+          mainItemInfo.SettlementPeopleITCode=this.currentUserITCode;
         }
-        mainItemInfo.SettlingTime = this.getCurrentDate;
+        mainItemInfo.SettlingTime = this.getCurrentDate();
         mainItemInfo.ApproverHistory = this.ApprovalHistory;
         this.updateMainInfo(mainItemInfo, taskOutcome);
       }
@@ -2065,6 +1966,7 @@ export default {
         __metadata: {
           type: this.GPPPTaskListType
         },
+          Body: this.Body,
         TaskOutcome: taskOutcome,
         PercentComplete: 1,
         Status: "已完成" //Completed 已完成
@@ -2232,6 +2134,7 @@ export default {
             console.log("!22222222222222");
             console.log(this.PublicPayment);
             this.changeMoney();
+            this.Loadhistory();
           } else {
             this.$message(
               common.message("error", "对公付款列表中不存在该申请单号")

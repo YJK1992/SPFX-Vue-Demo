@@ -129,7 +129,7 @@
               :disabled="showApprover==true"
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="请输入内容"
+              placeholder="当选择MD model时，请输入code1 number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -198,13 +198,19 @@
               @click="onApproval(buttonType.Approve)"
               v-show="showApprover"
             >批准</el-button>
+            <el-button @click="onEnd(buttonType.Reject)" v-show="showApprover" type="danger">拒绝</el-button>
             <el-button
               @click="onApproval(buttonType.Reject)"
               v-show="showApprover"
               type="danger"
               plain
-            >拒绝</el-button>
-            <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
+            >退回</el-button>
+            <el-button
+              @click="onEnd(buttonType.Stop)"
+              v-show="requestIsReject"
+              type="danger"
+              plain
+            >终止</el-button>
           </td>
         </tr>
       </table>
@@ -292,11 +298,13 @@ export default {
         Submit: "submit",
         Save: "save",
         Approve: "approve",
-        Reject: "reject"
+        Reject: "reject",
+        Return: "return",
+        Stop: "stop"
       },
       isChangeSubListData: false,
       taskId: 0,
-      OTC:"",
+      OTC: "",
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
@@ -324,9 +332,9 @@ export default {
         specialApprover: "",
         total: 0,
         userId: "",
-        AttDescription: "",
+        AttDescription: ""
       }, //ECC主表
-      Comments:"",
+      Comments: "",
       subListData: [], // ECC物料副表
       fileList: [], //附件列表数据
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
@@ -478,12 +486,18 @@ export default {
         }
       });
     },
-    onEnd: function() {
+    onEnd: function(type) {
+      var status = "";
+      if (type == "reject") {
+        status = "Rejected";
+      } else {
+        status = "Dumped";
+      }
       var itemInfo = {
         __metadata: {
           type: this.mainListType
         },
-        Status: "Dumped"
+        Status: status
       };
       var parm = {
         type: "post",
@@ -497,8 +511,12 @@ export default {
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
-          this.$message(common.message("success", "终止流程成功!"));
-          this.$router.push("/home");
+          if(type == "reject"){
+            this.onApproval(type)
+          }else{
+            this.$message(common.message("success", "终止流程成功!"));
+            this.$router.push("/home");
+          }
         })
         .catch(err => {
           this.$message(common.message("error", "终止流程失败!"));
@@ -530,7 +548,7 @@ export default {
         },
         TaskOutcome: taskOutcome,
         PercentComplete: 1,
-        Body:this.Comments,
+        Body: this.Comments,
         Status: "已完成" //Completed 已完成
       };
       var parm = {
@@ -1058,18 +1076,24 @@ export default {
       const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
       const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
       const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
+      const extension6 = file.name.toLowerCase().split(".")[1] === "pdf";
+      const extension7 = file.name.toLowerCase().split(".")[1] === "xml";
+      const extension8 = file.name.toLowerCase().split(".")[1] === "msg";
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
         !extension2 &&
         !extension3 &&
         !extension4 &&
-        !extension5
+        !extension5&&
+        !extension6 &&
+        !extension7 &&
+        !extension8
       ) {
         this.$message(
           common.message(
             "error",
-            "上传的文件只能是 xls、xlsx、doc、docx、txt 格式!"
+            "上传的文件只能是 xls、xlsx、doc、docx、txt、pdf、xml、msg 格式!"
           )
         );
       }
@@ -1081,6 +1105,9 @@ export default {
         extension2 ||
         extension3 ||
         extension4 ||
+        extension8 ||
+        extension6 ||
+        extension7 ||
         (extension5 && size)
       );
     }, //附件上传前对文件格式和大小进行验证
@@ -1216,9 +1243,13 @@ export default {
     },
     deleteSubListItems: function() {
       var getSubDate = this.loadSubListData(this.ECCTaskForm.applicantNumber);
+      console.log("22222222222")
+      console.log(getSubDate)
       getSubDate
         .done(req => {
           var data = req.d.results;
+          console.log("11111111111111111")
+          console.log(data)
           if (data.length > 0) {
             data.forEach(e => {
               var subItemId = e.Id;

@@ -3,8 +3,8 @@
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
       <el-form-item label="申请日期">
         <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.ApplicationDate"
+          value-format="yyyyMMdd"
+          v-model="ApplicationDate"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -38,7 +38,7 @@
         </el-select>
       </el-form-item>
       <el-form-item>
-        <el-button type="primary" @click="Condition={}">重置</el-button>
+        <el-button type="primary" @click="ClearCondition()">重置</el-button>
         <el-button type="primary" @click="SearchArr()">查询</el-button>
       </el-form-item>
     </el-form>
@@ -61,7 +61,7 @@
       </tr>
       <tr v-for="(subItems,index) in newArr">
         <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+          <td v-if="cindex!='Created'">{{subItem}}</td>
         </template>
         <td>
           <el-button @click="onViewItem(index)" size="small">查看</el-button>
@@ -86,11 +86,11 @@ export default {
       //筛选条件
       Condition: {
         SettlementType: "", //结算方式
-        ApplicationDate: "", //申请日期
         CompanyCode: "", //公司代码
         TrusteesEmail: "", //经办人Id
         ApplicationNumber: "" //申请单号
       },
+      ApplicationDate: "", //申请日期
       CompanyCodeArr: [], //公司代码
       //结算方式
       SettlementType: [
@@ -121,6 +121,10 @@ export default {
     };
   },
   methods: {
+    ClearCondition(){
+        this.Condition={};
+        this.ApplicationDate="";
+    },
     SearchArr() {
       var newCond = Object.keys(this.Condition);
       console.log(newCond);
@@ -130,14 +134,34 @@ export default {
           delete this.Condition[item];
         }
       });
-      console.log(this.Condition);
 
       var keys = Object.keys(this.Condition);
       var result = this.gpItems.filter(item => {
         return keys.every(key => this.Condition[key].indexOf(item[key]) !== -1);
       });
-      this.newArr = result;
-      console.log(result);
+
+      console.log(this.ApplicationDate);
+      if (this.ApplicationDate != "" && this.ApplicationDate!=null) {
+        //过滤时间
+        var start = Number(this.ApplicationDate[0]);
+        var end = Number(this.ApplicationDate[1]);
+        var filterData = [];
+        result.forEach(element => {
+          if (element.Created >= start && element.Created <= end) {
+            filterData.push(element);
+          }
+        });
+        console.log("filterData");
+        console.log(filterData);
+        this.newArr = filterData;
+      } else {
+        console.log("result");
+        console.log(result);
+        this.newArr = result;
+      }
+      console.log("this.newArr");
+      console.log(this.newArr);
+
     },
     //获取公司代码
     getCompanyCode: function() {
@@ -296,9 +320,12 @@ export default {
             Currency: data.Currency,
             TrusteesEmail: data.TrusteesEmail,
             CompanyCode: data.CompanyCode,
+            Created: Number(data.Created.substring(0, data.Created.indexOf("T")).replace("-","").replace("-","")),
             Step: step,
             TaskId: taskId
           });
+          console.log(this.gpItems.Created);
+          console.log("gpItems");
           console.log(this.gpItems);
         })
         .catch(err => {

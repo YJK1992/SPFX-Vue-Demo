@@ -45,6 +45,7 @@
           <el-menu-item index="/gppaytaxbillreport2">税票清单数据导出F53</el-menu-item>
           <el-menu-item index="/gppaybillreport">Paybill</el-menu-item>
           <el-menu-item index="/gppayassetreport">资产对公付款报表</el-menu-item>
+          <el-menu-item index="/myapplication">我的申请</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
       <el-submenu index="4" disabled>
