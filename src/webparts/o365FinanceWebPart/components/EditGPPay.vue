@@ -107,7 +107,7 @@
         <td>
           <el-input
             @change="CalculateAmountInlowercase"
-            :disabled="showApprover==true"
+            :disabled="showFA==false"
             v-model="PublicPayment.InvoiceValue"
             placeholder="发票金额"
           ></el-input>
@@ -180,7 +180,7 @@
       <tr>
         <td rowspan="3" style="writing-mode:lr-tb">汇款、汇票时填写</td>
         <td align="right">开户行：</td>
-        <td colspan="3">
+        <td colspan="2">
           <el-input
             :disabled="showApprover==true"
             v-model="PublicPayment.OpeningBank"
@@ -194,7 +194,7 @@
       </tr>
       <tr>
         <td align="right">省/直辖市：</td>
-        <td colspan="3">
+        <td colspan="2">
           <el-input :disabled="showApprover==true" v-model="PublicPayment.City" placeholder="省/直辖市"></el-input>
         </td>
         <td align="right">市/县：</td>
@@ -251,8 +251,7 @@
         <td style="width:200px">内容</td>
         <td>法人代表</td>
         <td style="width:170px">总金额</td>
-        <td style="width:170px">已付款</td>
-        <td style="width:170px">未付款</td>
+        <td colspan="2" style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
@@ -286,7 +285,7 @@
       <tr>
         <td align="right">增值税/运费专用发票</td>
         <td align="left">
-          <el-checkbox :disabled="showApprover==true" v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
+          <el-checkbox :disabled="showFA==false" v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
         </td>
         <td colspan="5" align="left">
           <el-button
@@ -295,7 +294,7 @@
             @click="dialogTableVisible = true"
           >税票清单</el-button>
           <el-button
-            :disabled="showApprover==true?true:!PublicPayment.IsFreightInvoice"
+            :disabled="showFA==false?true:!PublicPayment.IsFreightInvoice"
             type="primary"
             @click="addTaxReceipt"
           >添加税票</el-button>
@@ -329,7 +328,7 @@
         <td align="right">费用类别：</td>
         <td align="left">
           <el-select
-            :disabled="showApprover==true"
+            :disabled="showFA==false"
             @change="PublicPayment.CostAccount=''"
             v-model="PublicPayment.ExpenseCategory"
             placeholder="请选择"
@@ -345,7 +344,7 @@
         <td align="right">费用科目:</td>
         <td colspan="5" align="left">
           <el-select
-            :disabled="showApprover==true"
+            :disabled="showFA==false"
             v-model="PublicPayment.CostAccount"
             placeholder="请选择"
           >
@@ -415,14 +414,14 @@
             @click="onApproval(buttonType.Approved)"
             v-show="showApprover"
           >批准</el-button>
-          <el-button type="danger" @click="UpdateMain(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
+          <el-button type="danger" @click="onEnd(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
           <el-button
-            @click="onApproval(buttonType.Reject)"
+            @click="onApproval(buttonType.Return)"
             v-show="showApprover"
             type="danger"
             plain
           >退回</el-button>
-          <el-button @click="onEnd()" v-show="requestIsReject" type="danger" plain>终止</el-button>
+          <el-button @click="onEnd(buttonType.Return)" v-show="requestIsReject" type="danger" plain>终止</el-button>
         </td>
       </tr>
     </table>
@@ -440,14 +439,10 @@
         <el-table-column property="TaxCode" label="税码"></el-table-column>
         <el-table-column label="操作" width="150">
           <template slot-scope="scope">
+            <el-button size="mini" :disabled="showFA==false" @click="onEditItem(scope.$index)">编辑</el-button>
             <el-button
               size="mini"
-              :disabled="showApprover==true"
-              @click="onEditItem(scope.$index)"
-            >编辑</el-button>
-            <el-button
-              size="mini"
-              :disabled="showApprover==true"
+              :disabled="showFA==false"
               type="danger"
               @click="del(scope.$index)"
             >删除</el-button>
@@ -571,7 +566,7 @@
         <el-form-item label="成本中心编号:" :label-width="formLabelWidth" prop>
           <el-input v-model="ExpenseAllocation.CostCenterNumber"></el-input>
         </el-form-item>
-        <el-form-item label="摊出金额:" :label-width="formLabelWidth" prop>
+        <el-form-item label="金额:" :label-width="formLabelWidth" prop>
           <el-input v-model="ExpenseAllocation.Money"></el-input>
         </el-form-item>
         <el-form-item label="项目名称:" :label-width="formLabelWidth" prop>
@@ -587,7 +582,10 @@
           <el-input v-model="ExpenseAllocation.Abstract"></el-input>
         </el-form-item>
         <el-form-item label="是否是摊入:" :label-width="formLabelWidth" prop>
-          <el-checkbox v-model="ExpenseAllocation.IsIn"></el-checkbox>
+          <el-radio-group v-model="ExpenseAllocation.IsIn">
+            <el-radio :label="true">摊入</el-radio>
+            <el-radio :label="false">摊出</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -790,38 +788,63 @@ export default {
       currentStep: "",
       currentItemId: 0,
       taskId: 0,
-      Approver: "",//打印所需要
-      ApproverArr: [],//打印需要
-      Body:"",//审批意见
-      SettlementPeopleITCode:"",//结算人邮箱@前的code
+      Approver: "", //打印所需要
+      ApproverArr: [], //打印需要
+      Body: "", //审批意见
+      SettlementPeopleITCode: "" //结算人邮箱@前的code
     };
   },
   methods: {
     UpdateMain(type) {
+      if (this.currentStep == "Approver5") {
+        if (this.PublicPayment.InvoiceValue == "") {
+          this.$message(common.message("error", "请填写发票金额"));
+        } else if (isNaN(this.PublicPayment.InvoiceValue)) {
+          this.$message(common.message("error", "发票金额不合法"));
+        } else if (
+          this.PublicPayment.IsFreightInvoice &&
+          !this.calculateMoney()
+        ) {
+          this.$message(
+            common.message("error", "税票清单和表单金额总和不一致")
+          );
+        } else {
+          this.createTaxReceipt();
+          this.checkButtonType(type)
+        }
+      } else {
+        this.onApproval(type)
+      }
+    },
+    checkButtonType: function() {
       var itemInfo = {
         __metadata: {
           type: this.mainListType
         },
-        Status: type
       };
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.mainListName,
-        itemID: this.currentItemId,
-        item: itemInfo,
-        digest: this.requestDigest
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          this.onApproval(type);
-        })
-        .catch(err => {
-          this.$message(common.message("error", "终止流程失败!"));
-          this.$router.push("/home");
-        });
+      if (type == "Rejected") {
+        itemInfo.Status = type;
+        var parm = {
+          type: "post",
+          action: "EditListItem",
+          baseUrl: this.hostUrl,
+          list: this.mainListName,
+          itemID: this.currentItemId,
+          item: itemInfo,
+          digest: this.requestDigest
+        };
+        var opt = common.queryOpt(parm);
+        $.when($.ajax(opt))
+          .done(req => {
+            this.onApproval(type);
+          })
+          .catch(err => {
+            this.$message(common.message("error", "终止流程失败!"));
+            this.$router.push("/home");
+          });
+      } else {
+        this.onApproval(type);
+      }
     },
     clearContract() {
       if (!this.PublicPayment.IsContract) {
@@ -910,13 +933,17 @@ export default {
       }
     },
 
-    onEnd: function() {
+    onEnd: function(type) {
       var itemInfo = {
         __metadata: {
           type: this.mainListType
         },
-        Status: "Dumped"
       };
+      if(type=="Rejected"){
+        itemInfo.Status=type
+      }else{
+        itemInfo.Status="Dumped"
+      }
       var parm = {
         type: "post",
         action: "EditListItem",
@@ -1483,42 +1510,43 @@ export default {
           .catch(error => {
             this.$message(common.message("error", "加载税票清单失败"));
           });
+
+        //添加附表数据
+        console.log(this.TaxReceiptList);
+        this.TaxReceiptList.forEach(item => {
+          console.log(item);
+          var itemInfo = {
+            __metadata: {
+              type: this.SubInfoListType
+            },
+            Title: this.PublicPayment.ApplicationNumber,
+            PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
+            CompanyCode: item.CompanyCode, //公司代码
+            InvoiceNumber: item.InvoiceNumber, //发票号
+            Currency: item.Currency, //币种
+            Supplier: item.Supplier, //供应商
+            InvoiceValue: item.InvoiceValue, //发票金额
+            TaxRate: item.TaxRate, //税率
+            TaxCode: item.TaxCode //税码
+          };
+          var parm = {
+            type: "post",
+            action: "AddInList",
+            baseUrl: this.hostUrl,
+            list: this.subListName,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var options = common.queryOpt(parm);
+          $.when($.ajax(options))
+            .done(req => {
+              this.$message(common.message("success", "税票清单已添加成功!"));
+            })
+            .catch(err => {
+              this.$message(common.message("error", "税票清单添加失败!"));
+            });
+        });
       }
-      //添加附表数据
-      console.log(this.TaxReceiptList);
-      this.TaxReceiptList.forEach(item => {
-        console.log(item);
-        var itemInfo = {
-          __metadata: {
-            type: this.SubInfoListType
-          },
-          Title: this.PublicPayment.ApplicationNumber,
-          PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
-          CompanyCode: item.CompanyCode, //公司代码
-          InvoiceNumber: item.InvoiceNumber, //发票号
-          Currency: item.Currency, //币种
-          Supplier: item.Supplier, //供应商
-          InvoiceValue: item.InvoiceValue, //发票金额
-          TaxRate: item.TaxRate, //税率
-          TaxCode: item.TaxCode //税码
-        };
-        var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.subListName,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "税票清单已添加成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "税票清单添加失败!"));
-          });
-      });
     },
     createExpenseAllocation() {
       if (this.IsChangeExpenseAllocation) {
@@ -1559,43 +1587,44 @@ export default {
           .catch(error => {
             this.$message(common.message("error", "加载费用清单失败"));
           });
+
+        //添加附表数
+        console.log(this.ExpenseAllocationList);
+        this.ExpenseAllocationList.forEach(item => {
+          console.log(item);
+          var itemInfo = {
+            __metadata: {
+              type: this.SubInfoListType2
+            },
+            PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
+            Title: item.Title,
+            Number: item.Number,
+            CostCenterNumber: item.CostCenterNumber,
+            Money: item.Money,
+            ProjectName: item.ProjectName,
+            ProjectNumber: item.ProjectNumber,
+            CostCenterName: item.CostCenterName,
+            Abstract: item.Abstract,
+            IsIn: item.IsIn.toString()
+          };
+          var parm = {
+            type: "post",
+            action: "AddInList",
+            baseUrl: this.hostUrl,
+            list: this.subListName2,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var options = common.queryOpt(parm);
+          $.when($.ajax(options))
+            .done(req => {
+              this.$message(common.message("success", "费用分摊已添加成功!"));
+            })
+            .catch(err => {
+              this.$message(common.message("error", "费用分摊添加失败!"));
+            });
+        });
       }
-      //添加附表数
-      console.log(this.ExpenseAllocationList);
-      this.ExpenseAllocationList.forEach(item => {
-        console.log(item);
-        var itemInfo = {
-          __metadata: {
-            type: this.SubInfoListType2
-          },
-          PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
-          Title: item.Title,
-          Number: item.Number,
-          CostCenterNumber: item.CostCenterNumber,
-          Money: item.Money,
-          ProjectName: item.ProjectName,
-          ProjectNumber: item.ProjectNumber,
-          CostCenterName: item.CostCenterName,
-          Abstract: item.Abstract,
-          IsIn: item.IsIn.toString()
-        };
-        var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.subListName2,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "费用分摊已添加成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "费用分摊添加失败!"));
-          });
-      });
     },
     indexMethod(index) {
       return index + 1;
@@ -1761,33 +1790,12 @@ export default {
       $.when($.ajax(option))
         .done(function(req) {
           var data = req.d.results;
-          var contractNumberList = [];
-
           if (data.length > 0) {
             data.forEach(item => {
-              contractNumberList.push({
-                number: item.Number,
-                money: item.Money
-              });
-            });
-            console.log(contractNumberList);
-            var obj = {};
-            contractNumberList = contractNumberList.reduce(function(
-              item,
-              next
-            ) {
-              obj[next.number]
-                ? ""
-                : (obj[next.number] = true && item.push(next));
-              return item;
-            },
-            []);
-            console.log(contractNumberList);
-            contractNumberList.forEach(item => {
               that.ContractNumbers.push({
-                label: item.number,
-                value: item.number,
-                money: item.money
+                label: item.Number,
+                value: item.Number,
+                money: item.Money
               });
             });
           }
@@ -1800,6 +1808,8 @@ export default {
     changeMoney() {
       var that = this;
       that.ContractList = []; //还原
+      that.AccountPaid = ""; //还原
+      that.UnPaid = ""; //还原
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -1814,27 +1824,13 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var accountPaid = 0;
-            data.forEach(item => {
-              //push 合同列表
-              that.ContractList.push({
-                Name: item.Name,
-                Supplier: item.Suppler,
-                Contents: item.Contents,
-                LegalPerson: item.LegalPerson,
-                Money: item.Money,
-                AccountPaid: item.AccountPaid,
-                UnPaid: item.UnPaid
-              });
-              //累加
-              accountPaid += parseFloat(item.AccountPaid);
-            });
-            //合计
-            that.AccountPaid = accountPaid;
-            that.UnPaid = parseFloat(that.ContractList[0].Money) - accountPaid;
-            that.PublicPayment.Money = that.ContractList[0].Money;
-            that.PublicPayment.IsContract = true;
-            //that.PublicPayment.ContractNumber = number;
+            var data = req.d.results;
+            console.log("changeMoney");
+            console.log(data);
+            if (data.length > 0) {
+              //这里肯定会找到合同的
+              this.GetPublicPaymentHistory(data);
+            }
           }
         })
         .catch(err => {
@@ -1851,14 +1847,27 @@ export default {
       };
       if (type == "Approved") {
         taskOutcome = "已批准"; //Approved 已批准
-      } else if (type == "Rejected") {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }
 
       if (this.currentStep == "Approver5") {
-        this.showFA = true;
+        if (this.PublicPayment.InvoiceValue == "") {
+          this.$message(common.message("error", "请填写发票金额"));
+             return
+        } else if (isNaN(this.PublicPayment.InvoiceValue)) {
+          this.$message(common.message("error", "发票金额不合法"));
+             return
+        } else if (
+          this.PublicPayment.IsFreightInvoice &&
+          !this.calculateMoney()
+        ) {
+          this.$message(
+            common.message("error", "税票清单和表单金额总和不一致")
+          );
+          return
+        }
+        this.createTaxReceipt();
         var history = JSON.parse(this.ApprovalHistory);
         history.approver5 =
           this.currentUserTitle +
@@ -1867,9 +1876,13 @@ export default {
           "," +
           this.getCurrentDate();
         mainItemInfo.ApproverHistory = JSON.stringify(history);
+        mainItemInfo.InvoiceValue=this.PublicPayment.InvoiceValue, //更新发票金额
+        mainItemInfo.ExpenseCategory=this.PublicPayment.ExpenseCategory, //更新费用类别
+        mainItemInfo.CostAccount=this.PublicPayment.CostAccount, //更新费用科目
+        mainItemInfo.IsFreightInvoice=this.PublicPayment.IsFreightInvoice.toString() //更新是否存在税票
         if (this.PublicPayment.IsSettlement) {
           mainItemInfo.AuthorizedPersonId = this.currentUserId;
-          mainItemInfo.SettlementPeopleITCode=this.currentUserITCode;
+          mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
           mainItemInfo.SettlingTime = this.getCurrentDate();
         }
         this.updateMainInfo(mainItemInfo, taskOutcome);
@@ -1922,13 +1935,13 @@ export default {
               this.getCurrentDate();
           }
           this.ApprovalHistory = JSON.stringify(history);
-
         }
         if (this.currentStep == "Approver6") {
           mainItemInfo.SettlementOfPeopleId = this.currentUserId;
-          mainItemInfo.SettlementPeopleITCode=this.currentUserITCode;
+          mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
+          mainItemInfo.SettlingTime = this.getCurrentDate();
         }
-        mainItemInfo.SettlingTime = this.getCurrentDate();
+
         mainItemInfo.ApproverHistory = this.ApprovalHistory;
         this.updateMainInfo(mainItemInfo, taskOutcome);
       }
@@ -1966,7 +1979,7 @@ export default {
         __metadata: {
           type: this.GPPPTaskListType
         },
-          Body: this.Body,
+        Body: this.Body,
         TaskOutcome: taskOutcome,
         PercentComplete: 1,
         Status: "已完成" //Completed 已完成
@@ -2027,6 +2040,54 @@ export default {
       };
       var opt = common.queryOpt(parm);
       return common.service(opt);
+    },
+    GetPublicPaymentHistory(mainItem) {
+      console.log("GetPublicPaymentHistory");
+      console.log(mainItem);
+      var that = this;
+      that.PublicPayment.Money = mainItem[0].Money;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=ContractNumber eq '" +
+          this.PublicPayment.ContractNumber +
+          "' and Status eq 'Approved'"
+      };
+      var option = common.queryOpt(parm);
+      console.log(option);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              //push 合同列表
+              that.ContractList.push({
+                Name: mainItem[0].Name,
+                Supplier: mainItem[0].Suppler,
+                Contents: mainItem[0].Contents,
+                LegalPerson: mainItem[0].LegalPerson,
+                Money: mainItem[0].Money,
+                AccountPaid: item.InvoiceValue
+              });
+              //累加
+              accountPaid += parseFloat(item.InvoiceValue);
+            });
+            //合计
+            that.AccountPaid = accountPaid;
+            that.UnPaid =
+              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              accountPaid;
+
+            that.PublicPayment.IsContract = true;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取申请单号失败!"));
+        });
     }
   },
   mounted: function() {
@@ -2049,7 +2110,7 @@ export default {
         this.showEditor = false;
         this.showApprover = true;
         if (step == "Approver5") {
-          this.showFA = false;
+          this.showFA = true;
         }
       } else if (tId == 0) {
         console.log("用户点击的是保存");

@@ -114,7 +114,7 @@
             <el-input
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="当选择MD model时，请输入code1 number"
+              placeholder="Quote 1Number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -168,7 +168,14 @@
             <el-input v-model="item.ms" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="数量：" :label-width="formLabelWidth" prop="sl">
-            <el-input-number v-model="item.sl" @change="slChange" size="medium" :min="1" label="数量"></el-input-number>
+            <el-input-number
+              v-model="item.sl"
+              @change="slChange"
+              size="medium"
+              :min="1"
+              label="数量"
+              :disabled="item.sqlx=='固定资产'"
+            ></el-input-number>
           </el-form-item>
           <el-form-item label="单价：" :label-width="formLabelWidth" prop="dj">
             <el-input v-model="item.dj" autocomplete="off" :disabled="true"></el-input>
@@ -177,7 +184,7 @@
             <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
-            <el-select v-model="item.sqlx" placeholder="请选择">
+            <el-select v-model="item.sqlx" placeholder="请选择" @change="sqlxChange">
               <el-option
                 v-for="item in subApplicationTypeOpt"
                 :key="item.value"
@@ -291,7 +298,7 @@ export default {
   methods: {
     applicantTypeChange: function() {
       this.productTypeOpts = [];
-      this.ECCTaskForm.productType=""
+      this.ECCTaskForm.productType = "";
       this.loading = true;
       var applicantType = this.ECCTaskForm.applicantType;
       var parm = {
@@ -680,7 +687,7 @@ export default {
           Price: d.dj.toString(),
           Total: d.zje.toString(),
           RequestType: d.sqlx,
-          CostItems:d.fytm
+          CostItems: d.fytm
         };
         var parm = {
           type: "post",
@@ -714,6 +721,11 @@ export default {
         this.$message(common.message("error", "请选择产品类型"));
       } else if (this.ECCTaskForm.consigneeDetail == "") {
         this.$message(common.message("error", "请输入收件人及地址"));
+      } else if (
+        this.fileList.length > 0 &&
+        this.ECCTaskForm.AttDescription == ""
+      ) {
+        this.$message(common.message("error", "请输入附件描述"));
       } else {
         isSuccess = true;
       }
@@ -752,6 +764,12 @@ export default {
       var sl = this.item.sl;
       this.item.zje = Number(sl) * Number(this.item.dj);
     }, //物料数量change事件
+    sqlxChange: function() {
+      if (this.item.sqlx == "固定资产") {
+        var sl = (this.item.sl = "1");
+        this.item.zje = Number(sl) * Number(this.item.dj);
+      }
+    }, //申请类型change事件
     uploadAttFileToItem: function(attUrl) {
       var parms = [];
       this.fileToArr.forEach(f => {
@@ -836,7 +854,7 @@ export default {
         !extension2 &&
         !extension3 &&
         !extension4 &&
-        !extension5&&
+        !extension5 &&
         !extension6 &&
         !extension7 &&
         !extension8

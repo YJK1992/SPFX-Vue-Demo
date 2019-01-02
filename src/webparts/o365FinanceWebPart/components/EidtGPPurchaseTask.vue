@@ -154,13 +154,12 @@
         </td>
       </tr>
       <tr id="create_GPPurchase">
-        <td>合同名称</td>
-        <td>供应商</td>
-        <td>内容</td>
+        <td style="width:200px">合同名称</td>
+        <td style="width:270px">供应商</td>
+        <td style="width:200px">内容</td>
         <td>法人代表</td>
-        <td>总金额</td>
-        <td>已付款</td>
-        <td colspan="2">未付款</td>
+        <td style="width:170px">总金额</td>
+        <td colspan="2" style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractHistory">
         <template v-for="(subItem,cindex) in subItems">
@@ -451,35 +450,58 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var accountPaid = 0;
-            data.forEach(item => {
-              //push 合同列表
-              that.ContractHistory.push({
-                Name: item.Name,
-                Supplier: item.Suppler,
-                Contents: item.Contents,
-                LegalPerson: item.LegalPerson,
-                Money: item.Money,
-                AccountPaid: item.AccountPaid,
-                UnPaid: item.UnPaid
-              });
-              //累加
-              accountPaid += parseFloat(
-                item.AccountPaid == "" ? 0 : item.AccountPaid
-              );
-            });
-            //合计
-            that.AccountPaid = accountPaid;
-            that.UnPaid =
-              parseFloat(
-                that.purchaseRequestData.Money == ""
-                  ? 0
-                  : that.purchaseRequestData.Money
-              ) - accountPaid;
+            //这里肯定会找到合同的
+            this.GetPublicPaymentHistory(data);
           }
         })
         .catch(err => {
           this.$message(common.message("error", "获取合同信息失败!"));
+        });
+    },
+    GetPublicPaymentHistory() {
+      console.log("GetPublicPaymentHistory");
+      console.log(mainItem);
+      var that = this;
+      that.purchaseRequestData.Money = mainItem[0].Money;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=ContractNumber eq '" +
+          this.purchaseRequestData.ContractNumber +
+          "' and Status eq 'Approved' "
+      };
+      var option = common.queryOpt(parm);
+      console.log(option);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              //push 合同列表
+              that.ContractHistory.push({
+                Name: mainItem[0].Name,
+                Supplier: mainItem[0].Suppler,
+                Contents: mainItem[0].Contents,
+                LegalPerson: mainItem[0].LegalPerson,
+                Money: mainItem[0].Money,
+                AccountPaid: item.InvoiceValue
+              });
+              //累加
+              accountPaid += parseFloat(item.InvoiceValue);
+            });
+            //合计
+            that.AccountPaid = accountPaid;
+            that.UnPaid =
+              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              accountPaid;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取合同失败!"));
         });
     },
     clearCodeOrSelect() {
@@ -1113,8 +1135,6 @@ export default {
       var taskOutcome;
       if (type == "Approved") {
         taskOutcome = "已批准"; //Approved 已批准
-      } else if (type == "Rejected") {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
       } else {
         taskOutcome = "已拒绝"; //已拒绝 Rejected
       }

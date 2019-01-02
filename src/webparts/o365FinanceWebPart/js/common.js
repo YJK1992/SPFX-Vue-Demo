@@ -33,6 +33,7 @@ var common = {
   queryOpt: function (parm) {
     var baseUrl = parm.baseUrl + "/_api/web";
     var queryUrl = ""
+    var query = ""
     var opt = {}
     if (parm.type == "get") {
       switch (parm.action) {
@@ -63,8 +64,13 @@ var common = {
           queryUrl = parm.attUrl
           break
       }
+      if (parm.action == "UserByName") {
+        query = queryUrl
+      } else {
+        query = encodeURI(queryUrl)
+      }
       opt = {
-        url: encodeURI(queryUrl),
+        url: query,
         type: 'Get',
         headers: {
           'accept': 'application/json;odata=verbose'

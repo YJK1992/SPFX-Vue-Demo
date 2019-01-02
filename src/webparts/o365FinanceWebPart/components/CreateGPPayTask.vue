@@ -156,7 +156,7 @@
       <tr>
         <td rowspan="3" style="writing-mode:lr-tb">汇款、汇票时填写</td>
         <td align="right">开户行：</td>
-        <td colspan="3">
+        <td colspan="2">
           <el-input v-model="PublicPayment.OpeningBank" placeholder="开户行"></el-input>
         </td>
         <td align="right">账号：</td>
@@ -166,7 +166,7 @@
       </tr>
       <tr>
         <td align="right">省/直辖市：</td>
-        <td colspan="3">
+        <td colspan="2">
           <el-input v-model="PublicPayment.City" placeholder="省/直辖市"></el-input>
         </td>
         <td align="right">市/县：</td>
@@ -215,8 +215,7 @@
         <td style="width:200px">内容</td>
         <td>法人代表</td>
         <td style="width:170px">总金额</td>
-        <td style="width:170px">已付款</td>
-        <td style="width:170px">未付款</td>
+        <td colspan="2" style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
@@ -476,7 +475,10 @@
           <el-input v-model="ExpenseAllocation.Abstract"></el-input>
         </el-form-item>
         <el-form-item label="是否是摊入:" :label-width="formLabelWidth" prop>
-          <el-checkbox v-model="ExpenseAllocation.IsIn"></el-checkbox>
+          <el-radio-group v-model="ExpenseAllocation.IsIn">
+            <el-radio :label="true">摊入</el-radio>
+            <el-radio :label="false">摊出</el-radio>
+          </el-radio-group>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -552,7 +554,7 @@ export default {
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
         EmployeeCode: "", //人员编号
-        BussinessScope:"" //业务范围
+        BussinessScope: "" //业务范围
       },
       TaxReceiptList: [], //税票清单
       TaxReceipt: {
@@ -824,7 +826,7 @@ export default {
                 this.companyCodeArr.push({
                   CompanyCode: d.CompanyCode
                 });
-                this.PublicPayment.BussinessScope=d.BusinessScope
+                this.PublicPayment.BussinessScope = d.BusinessScope;
                 this.PublicPayment.EmployeeCode = d.EmployeeCode;
               });
 
@@ -1226,7 +1228,7 @@ export default {
             IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
             TrusteesEmail: this.LoginName.split("@")[0],
             EmployeeCode: this.PublicPayment.EmployeeCode,
-            BussinessScope:this.PublicPayment.BussinessScope
+            BussinessScope: this.PublicPayment.BussinessScope
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;
@@ -1498,6 +1500,7 @@ export default {
             that.UnPaid = "";
           } else {
             that.PublicPayment.ContractNumber = number;
+            that.PublicPayment.IsContract = true;
             that.changeMoney();
           }
           //有没有 合同号都要填充费用类别、科目、固定资产编码
@@ -1521,33 +1524,12 @@ export default {
       $.when($.ajax(option))
         .done(function(req) {
           var data = req.d.results;
-          var contractNumberList = [];
-
           if (data.length > 0) {
             data.forEach(item => {
-              contractNumberList.push({
-                number: item.Number,
-                money: item.Money
-              });
-            });
-            console.log(contractNumberList);
-            var obj = {};
-            contractNumberList = contractNumberList.reduce(function(
-              item,
-              next
-            ) {
-              obj[next.number]
-                ? ""
-                : (obj[next.number] = true && item.push(next));
-              return item;
-            },
-            []);
-            console.log(contractNumberList);
-            contractNumberList.forEach(item => {
               that.ContractNumbers.push({
-                label: item.number,
-                value: item.number,
-                money: item.money
+                label: item.Number,
+                value: item.Number,
+                money: item.Money
               });
             });
           }
@@ -1560,6 +1542,8 @@ export default {
     changeMoney() {
       var that = this;
       that.ContractList = []; //还原
+      that.AccountPaid = ""; //还原
+      that.UnPaid = ""; //还原
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -1573,35 +1557,59 @@ export default {
       $.when($.ajax(option))
         .done(req => {
           var data = req.d.results;
+          console.log("changeMoney");
+          console.log(data);
+          if (data.length > 0) {
+            //这里肯定会找到合同的
+            this.GetPublicPaymentHistory(data);
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取申请单号失败!"));
+        });
+    },
+    GetPublicPaymentHistory(mainItem) {
+      console.log("GetPublicPaymentHistory");
+      console.log(mainItem);
+      var that = this;
+      that.PublicPayment.Money = mainItem[0].Money;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=ContractNumber eq '" +
+          this.PublicPayment.ContractNumber +
+          "' and Status eq 'Approved' "
+      };
+      var option = common.queryOpt(parm);
+      console.log(option);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
           if (data.length > 0) {
             var accountPaid = 0;
             data.forEach(item => {
               //push 合同列表
               that.ContractList.push({
-                Name: item.Name,
-                Supplier: item.Suppler,
-                Contents: item.Contents,
-                LegalPerson: item.LegalPerson,
-                Money: item.Money,
-                AccountPaid: item.AccountPaid,
-                UnPaid: item.UnPaid
+                Name: mainItem[0].Name,
+                Supplier: mainItem[0].Suppler,
+                Contents: mainItem[0].Contents,
+                LegalPerson: mainItem[0].LegalPerson,
+                Money: mainItem[0].Money,
+                AccountPaid: item.InvoiceValue
               });
               //累加
-              accountPaid += parseFloat(
-                item.AccountPaid == "" ? 0 : item.AccountPaid
-              );
+              accountPaid += parseFloat(item.InvoiceValue);
             });
             //合计
             that.AccountPaid = accountPaid;
             that.UnPaid =
-              parseFloat(
-                that.ContractList[0].Money == ""
-                  ? 0
-                  : that.ContractList[0].Money
-              ) - accountPaid;
-            that.PublicPayment.Money = that.ContractList[0].Money;
+              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              accountPaid;
+
             that.PublicPayment.IsContract = true;
-            //that.PublicPayment.ContractNumber = number;
           }
         })
         .catch(err => {

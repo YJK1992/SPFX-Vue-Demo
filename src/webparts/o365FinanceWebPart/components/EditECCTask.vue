@@ -129,7 +129,7 @@
               :disabled="showApprover==true"
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="当选择MD model时，请输入code1 number"
+              placeholder="Quote 1Number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -237,7 +237,7 @@
           </el-form-item>
           <el-form-item label="数量：" :label-width="formLabelWidth" prop="sl">
             <el-input-number
-              :disabled="showEditor==false"
+              :disabled="showEditor==false||item.sqlx=='固定资产'"
               v-model="item.sl"
               @change="slChange"
               size="medium"
@@ -252,7 +252,12 @@
             <el-input v-model="item.zje" autocomplete="off" :disabled="true"></el-input>
           </el-form-item>
           <el-form-item label="申请类型：" :label-width="formLabelWidth" prop="sqlx">
-            <el-select v-model="item.sqlx" placeholder="请选择" :disabled="showEditor==false">
+            <el-select
+              v-model="item.sqlx"
+              placeholder="请选择"
+              :disabled="showEditor==false"
+              @change="sqlxChange"
+            >
               <el-option
                 v-for="item in subApplicationTypeOpt"
                 :key="item.value"
@@ -511,9 +516,9 @@ export default {
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
-          if(type == "reject"){
-            this.onApproval(type)
-          }else{
+          if (type == "reject") {
+            this.onApproval(type);
+          } else {
             this.$message(common.message("success", "终止流程成功!"));
             this.$router.push("/home");
           }
@@ -971,6 +976,11 @@ export default {
         this.$message(common.message("error", "请选择产品类型"));
       } else if (this.ECCTaskForm.consigneeDetail == "") {
         this.$message(common.message("error", "请输入收件人及地址"));
+      } else if (
+        this.fileList.length > 0 &&
+        this.ECCTaskForm.AttDescription == ""
+      ) {
+        this.$message(common.message("error", "请输入附件描述"));
       } else {
         isSuccess = true;
       }
@@ -1009,6 +1019,12 @@ export default {
       var sl = this.item.sl;
       this.item.zje = Number(sl) * Number(this.item.dj);
     }, //物料数量change事件
+    sqlxChange: function() {
+      if (this.item.sqlx == "固定资产") {
+        var sl = (this.item.sl = "1");
+        this.item.zje = Number(sl) * Number(this.item.dj);
+      }
+    }, //申请类型change事件
     uploadAttFileToItem: function(attUrl) {
       var parms = [];
       this.fileToArr.forEach(f => {
@@ -1085,7 +1101,7 @@ export default {
         !extension2 &&
         !extension3 &&
         !extension4 &&
-        !extension5&&
+        !extension5 &&
         !extension6 &&
         !extension7 &&
         !extension8
@@ -1243,13 +1259,13 @@ export default {
     },
     deleteSubListItems: function() {
       var getSubDate = this.loadSubListData(this.ECCTaskForm.applicantNumber);
-      console.log("22222222222")
-      console.log(getSubDate)
+      console.log("22222222222");
+      console.log(getSubDate);
       getSubDate
         .done(req => {
           var data = req.d.results;
-          console.log("11111111111111111")
-          console.log(data)
+          console.log("11111111111111111");
+          console.log(data);
           if (data.length > 0) {
             data.forEach(e => {
               var subItemId = e.Id;
@@ -1266,12 +1282,14 @@ export default {
               deleteSubItem
                 .done(dt => {
                   console.log("delete success");
-                  this.createEccSubInfoItem(); //创建子表数据
                 })
                 .catch(errdt => {
                   console.log("delete err");
                 });
             });
+            if (this.subListData.length > 0) {
+                this.createEccSubInfoItem(); //创建子表数据
+            }
           } else {
             if (this.subListData.length > 0) {
               this.createEccSubInfoItem(); //创建子表数据

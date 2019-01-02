@@ -283,7 +283,7 @@
       <div style="margin-top:20px;" id="myPrintArea">
         <!--startprint1-->
         <table
-          style=" min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
+          style=" width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
         >
           <tr>
             <td
