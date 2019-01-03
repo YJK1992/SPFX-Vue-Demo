@@ -23,8 +23,8 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="经办人ID">
-        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      <el-form-item label="结算人ID">
+        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="结算人ID"></el-input>
       </el-form-item>
 
 
@@ -114,7 +114,7 @@ export default {
         Title: "", //申请单号
         CompanyCode: "", //公司代码
         Currency: "", //币种
-         TrusteesEmail: "" //经办人
+         SettlementPeopleITCode: "" //结算人
       },
       //结算方式
       SettlementType: [

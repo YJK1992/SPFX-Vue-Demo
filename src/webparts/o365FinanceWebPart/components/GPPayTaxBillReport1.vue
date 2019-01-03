@@ -11,8 +11,8 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="经办人ID：">
-        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      <el-form-item label="结算人ID：">
+        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="经办人ID"></el-input>
       </el-form-item>
       <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
@@ -162,7 +162,7 @@ export default {
       filterVal: [],
       CompanyCodeArr: [], //公司代码
       Condition: {
-        TrusteesEmail: "", //经办人ID
+        SettlementPeopleITCode: "", //经办人ID
         SettlementType: "", //结算方式
         SettlingTime: "", //申请日期
         Currency: "", //币种

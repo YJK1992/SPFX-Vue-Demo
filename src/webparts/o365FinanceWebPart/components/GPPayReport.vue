@@ -347,11 +347,14 @@ export default {
               ReimbursementType: d.ReimbursementType,
               SettlementType: d.SettlementType,
               Trustees: d.Trustees + "-" + d.TrusteesEmail,
-              Money: d.Money,
+              Money: d.InvoiceValue,
               ExpenseCategory: d.ExpenseCategory,
               Status: d.Status,
-              Created: d.Created,
-              SettlementPerson: ""
+              Created: d.Created.substring(0, d.Created.indexOf("T")),
+              SettlementPerson:
+                d.AuthorizedPersonITCode == null
+                  ? d.SettlementPeopleITCode
+                  : d.AuthorizedPersonITCode
             });
           });
         }

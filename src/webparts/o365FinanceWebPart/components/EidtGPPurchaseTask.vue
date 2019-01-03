@@ -158,12 +158,13 @@
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
         <td>法人代表</td>
-        <td style="width:170px">总金额</td>
+        <td colspan="2" style="width:170px">总金额</td>
         <td colspan="2" style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractHistory">
         <template v-for="(subItem,cindex) in subItems">
-          <td colspan="2" v-if="cindex=='UnPaid'">{{subItem}}</td>
+          <td colspan="2" v-if="cindex=='Money'">{{subItem}}</td>
+          <td colspan="2" v-else-if="cindex=='AccountPaid'">{{subItem}}</td>
           <td v-else>{{subItem}}</td>
         </template>
       </tr>
@@ -317,6 +318,7 @@ export default {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "PurchaseRequest", //采购申请列表名
       subListName: "PurchaseRequestSubInfo", //采购申请供应商列表
+      payMainListName: "PublicPayment", //付款申请
       mainListType: "SP.Data.PurchaseRequestListItem", //采购申请列表类型，用于post请求
       SubInfoListType: "SP.Data.PurchaseRequestSubInfoListItem", //采购申请供应商列表类型，用于post请求
       GPPRTaskListType: "SP.Data.PurchaseApproval_x0020_任务ListItem", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
@@ -458,7 +460,7 @@ export default {
           this.$message(common.message("error", "获取合同信息失败!"));
         });
     },
-    GetPublicPaymentHistory() {
+    GetPublicPaymentHistory(mainItem) {
       console.log("GetPublicPaymentHistory");
       console.log(mainItem);
       var that = this;
@@ -466,7 +468,7 @@ export default {
       var parm = {
         action: "ListItems",
         type: "get",
-        list: this.mainListName,
+        list: this.payMainListName,
         baseUrl: this.hostUrl,
         condition:
           "?$filter=ContractNumber eq '" +
@@ -498,6 +500,9 @@ export default {
             that.UnPaid =
               parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
               accountPaid;
+          }else{
+             that.AccountPaid =0;
+             that.UnPaid=mainItem[0].Money
           }
         })
         .catch(err => {

@@ -421,7 +421,12 @@
             type="danger"
             plain
           >退回</el-button>
-          <el-button @click="onEnd(buttonType.Return)" v-show="requestIsReject" type="danger" plain>终止</el-button>
+          <el-button
+            @click="onEnd(buttonType.Return)"
+            v-show="requestIsReject"
+            type="danger"
+            plain
+          >终止</el-button>
         </td>
       </tr>
     </table>
@@ -665,7 +670,7 @@ export default {
         CodeOfFixedAssets: "", //固定资产编码
         ApplicationNumber: "", //申请单号
         ReceiptNumber: "", //单据编号
-        IsSettlement: "", //结算
+        IsSettlement: true, //结算
         SpecialApprover: "", //特殊审批人
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "" //公司代码
@@ -810,17 +815,17 @@ export default {
           );
         } else {
           this.createTaxReceipt();
-          this.checkButtonType(type)
+          this.checkButtonType(type);
         }
       } else {
-        this.onApproval(type)
+        this.onApproval(type);
       }
     },
     checkButtonType: function() {
       var itemInfo = {
         __metadata: {
           type: this.mainListType
-        },
+        }
       };
       if (type == "Rejected") {
         itemInfo.Status = type;
@@ -937,12 +942,12 @@ export default {
       var itemInfo = {
         __metadata: {
           type: this.mainListType
-        },
+        }
       };
-      if(type=="Rejected"){
-        itemInfo.Status=type
-      }else{
-        itemInfo.Status="Dumped"
+      if (type == "Rejected") {
+        itemInfo.Status = type;
+      } else {
+        itemInfo.Status = "Dumped";
       }
       var parm = {
         type: "post",
@@ -1854,10 +1859,10 @@ export default {
       if (this.currentStep == "Approver5") {
         if (this.PublicPayment.InvoiceValue == "") {
           this.$message(common.message("error", "请填写发票金额"));
-             return
+          return;
         } else if (isNaN(this.PublicPayment.InvoiceValue)) {
           this.$message(common.message("error", "发票金额不合法"));
-             return
+          return;
         } else if (
           this.PublicPayment.IsFreightInvoice &&
           !this.calculateMoney()
@@ -1865,7 +1870,7 @@ export default {
           this.$message(
             common.message("error", "税票清单和表单金额总和不一致")
           );
-          return
+          return;
         }
         this.createTaxReceipt();
         var history = JSON.parse(this.ApprovalHistory);
@@ -1876,13 +1881,15 @@ export default {
           "," +
           this.getCurrentDate();
         mainItemInfo.ApproverHistory = JSON.stringify(history);
-        mainItemInfo.InvoiceValue=this.PublicPayment.InvoiceValue, //更新发票金额
-        mainItemInfo.ExpenseCategory=this.PublicPayment.ExpenseCategory, //更新费用类别
-        mainItemInfo.CostAccount=this.PublicPayment.CostAccount, //更新费用科目
-        mainItemInfo.IsFreightInvoice=this.PublicPayment.IsFreightInvoice.toString() //更新是否存在税票
+        (mainItemInfo.InvoiceValue = this.PublicPayment.InvoiceValue), //更新发票金额
+          (mainItemInfo.ExpenseCategory = this.PublicPayment.ExpenseCategory), //更新费用类别
+          (mainItemInfo.CostAccount = this.PublicPayment.CostAccount), //更新费用科目
+          (mainItemInfo.IsFreightInvoice = this.PublicPayment.IsFreightInvoice.toString()); //更新是否存在税票
         if (this.PublicPayment.IsSettlement) {
           mainItemInfo.AuthorizedPersonId = this.currentUserId;
+          mainItemInfo.AuthorizedPersonITCode = this.currentUserITCode;
           mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
+          mainItemInfo.IsSettlement = this.PublicPayment.IsSettlement.toString();
           mainItemInfo.SettlingTime = this.getCurrentDate();
         }
         this.updateMainInfo(mainItemInfo, taskOutcome);
@@ -2185,8 +2192,7 @@ export default {
               (this.PublicPayment.ApplicationNumber =
                 data[0].ApplicationNumber), //申请单号
               (this.PublicPayment.ReceiptNumber = data[0].ReceiptNumber), //单据编号
-              (this.PublicPayment.IsSettlement =
-                data[0].IsSettlement == "true" ? true : false), //结算
+              (this.PublicPayment.IsSettlement = true), //结算
               (this.PublicPayment.SpecialApprover = data[0].SpecialApprover); //特殊审批人
             this.PublicPayment.IsExpenseAllocation =
               data[0].IsExpenseAllocation == "true" ? true : false; //是否有费用分摊
