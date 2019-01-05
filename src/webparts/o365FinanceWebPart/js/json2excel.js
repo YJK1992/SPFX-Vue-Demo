@@ -62,7 +62,24 @@ var efn = {
     for (var i = 0; i != s.length; ++i) view[i] = s.charCodeAt(i) & 0xFF
     return buf
   },
-  
+
+  excelToJson: function (file) {
+    var workbook = XLSX.read(file, {
+      type: 'array'
+    })
+    var results = {}
+    workbook.SheetNames.forEach(function (sheetName) {
+      var arr = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], {
+        header: 1,
+        raw: true
+      })
+      if (arr.length) {
+        results[sheetName] = arr
+      }
+    });
+    return results
+  },
+
   toExcel: function (excelInfo) {
     excelInfo.excelData.unshift(excelInfo.excelColumns)
     const wb = new this.Workbook()
@@ -77,7 +94,7 @@ var efn = {
     saveAs(new Blob([this.s2ab(wbout)], {
       type: "application/octet-stream"
     }), `${excelInfo.fileName}.${excelInfo.fileType}`)
-  }
+  },
 }
 
 export default efn

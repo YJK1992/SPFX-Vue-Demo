@@ -242,18 +242,31 @@
         <td align="right">增值税/运费专用发票</td>
         <td align="left">
           <el-checkbox v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
-        </td>
-        <td colspan="5" align="left">
           <el-button
             :disabled="!PublicPayment.IsFreightInvoice"
             type="primary"
             @click="dialogTableVisible = true"
+            style="margin-left: 20px;"
           >税票清单</el-button>
           <el-button
             :disabled="!PublicPayment.IsFreightInvoice"
             type="primary"
             @click="addTaxReceipt"
           >添加税票</el-button>
+        </td>
+        <td colspan="5" align="left">
+          <el-upload
+            class="upload-demo"
+            :action="actionUrl"
+            :on-error="uploadErr"
+            :on-success="uploadSuccess"
+            :limit="1"
+            :on-exceed="fileLimit"
+            :beforeUpload="beforeUploadValidate"
+            :show-file-list="TaxFlg"
+          >
+            <el-button type="primary">导入</el-button>
+          </el-upload>
         </td>
       </tr>
       <tr>
@@ -310,13 +323,6 @@
           </el-select>
         </td>
       </tr>
-
-      <tr>
-        <td align="right">固定资产编码：</td>
-        <td colspan="7">
-          <el-input v-model="PublicPayment.CodeOfFixedAssets" placeholder="固定资产编码"></el-input>
-        </td>
-      </tr>
       <tr>
         <td align="right">特殊审批人：</td>
         <td colspan="7">
@@ -327,13 +333,6 @@
           ></el-input>
         </td>
       </tr>
-
-      <!-- <tr>
-        <td align="right">结算：</td>
-        <td colspan="7" align="left">
-          <el-checkbox display v-model="PublicPayment.IsSettlement"></el-checkbox>
-        </td>
-      </tr>-->
       <tr>
         <td colspan="8" align="right">
           <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
@@ -341,7 +340,6 @@
         </td>
       </tr>
     </table>
-
     <!-- 税票清单列表 -->
     <el-dialog show-summary title="税票清单" stripe :visible.sync="dialogTableVisible">
       <el-table :data="TaxReceiptList">
@@ -353,12 +351,13 @@
         <el-table-column property="InvoiceValue" label="发票金额"></el-table-column>
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
-        <el-table-column label="操作" width="150">
+        <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
+        <!-- <el-table-column label="操作" width="150">
           <template slot-scope="scope">
             <el-button size="mini" @click="onEditItem(scope.$index)">编辑</el-button>
             <el-button size="mini" type="danger" @click="del(scope.$index)">删除</el-button>
           </template>
-        </el-table-column>
+        </el-table-column>-->
       </el-table>
     </el-dialog>
 
@@ -385,6 +384,9 @@
         </el-form-item>
         <el-form-item label="税码:" :label-width="formLabelWidth" prop>
           <el-input v-model="TaxReceipt.TaxCode"></el-input>
+        </el-form-item>
+        <el-form-item label="固定资产编码:" :label-width="formLabelWidth" prop>
+          <el-input v-model="TaxReceipt.CodeOfFixedAssets"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -491,9 +493,11 @@
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
+      actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "PublicPayment", //对公付款
       subListName: "TaxReceipt", //税票清单
@@ -546,7 +550,7 @@ export default {
         Remark: "", //备注
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
-        CodeOfFixedAssets: "", //固定资产编码
+        // CodeOfFixedAssets: "", //固定资产编码
         ApplicationNumber: "", //申请单号
         ReceiptNumber: "", //单据编号
         IsSettlement: false, //结算
@@ -564,9 +568,15 @@ export default {
         Supplier: "", //供应商
         InvoiceValue: "", //发票金额
         TaxRate: "", //税率
-        TaxCode: "" //税码
+        TaxCode: "", //税码
+        CodeOfFixedAssets: "" //固定资产编码
       },
-
+      TaxFileId: "",
+      TaxFlg: false,
+      TaxLibrary: "TaxLibrary",
+      TaxFileJson: {},
+      TaxFileGUID: "",
+      IsTaxExcelTemplate: false,
       ExpenseAllocationList: [], //费用分摊列表
       ExpenseAllocation: {
         Title: "", //费用名称
@@ -624,36 +634,36 @@ export default {
       Currency: [
         //币种
         {
-          value: "人民币",
-          label: "人民币"
+          value: "RMB",
+          label: "RMB"
         },
         {
-          value: "美元",
-          label: "美元"
+          value: "USD",
+          label: "USD"
         },
         {
-          value: "港币",
-          label: "港币"
+          value: "HKD",
+          label: "HKD"
         },
         {
-          value: "欧元",
-          label: "欧元"
+          value: "EUR",
+          label: "EUR"
         },
         {
-          value: "日元",
-          label: "日元"
+          value: "JPY",
+          label: "JPY"
         },
         {
-          value: "英镑",
-          label: "英镑"
+          value: "GBP",
+          label: "GBP"
         },
         {
-          value: "格里夫那",
-          label: "格里夫那"
+          value: "UAH",
+          label: "UAH"
         },
         {
-          value: "其他",
-          label: "其他"
+          value: "Other",
+          label: "Other"
         }
       ],
       dialogTableVisible: false, //税票清单列表
@@ -670,6 +680,154 @@ export default {
     };
   },
   methods: {
+    beforeUploadValidate: function(file) {
+      var fileInfo = file.raw;
+      const extension = file.name.toLowerCase().endsWith(".xls");
+      if (!extension) {
+        this.$message(common.message("error", "上传的文件只能是xls"));
+      }
+      return extension;
+    }, //文件上传前对文件格式进行验证
+    uploadSuccess: function(response, file, fileList) {
+      var fileInfo = file.raw;
+      var fileName = file.name;
+      this.getfile(fileInfo, fileName);
+    },//上传成功后回调函数
+    getfile: function(fileInfo, fileName) {
+      var getFile = common.getFileBuffer(fileInfo);
+      getFile
+        .done(f => {
+          console.log(f);
+          if (f != null) {
+            var excelJson = efn.excelToJson(f);
+            console.log("fffffffffffffff");
+            console.log(excelJson);
+            if (excelJson != null && excelJson != undefined) {
+              if (excelJson.Sheet1 != null && excelJson != undefined) {
+                if (excelJson.Sheet1[2][0].indexOf("GPTAXVER") == 0) {
+                  this.IsTaxExcelTemplate = true;
+                  //var excelTemp={}
+                  for (var i = 4; i <= 33; i++) {
+                    if (
+                      excelJson.Sheet1[i][2] == undefined ||
+                      excelJson.Sheet1[i][1] == undefined
+                    ) {
+                      console.log("This row is not useful!" + i);
+                      continue;
+                    }
+                    console.log("222222222222222222222ffffffffff");
+                    console.log(excelJson.Sheet1[i]);
+                    this.TaxReceipt.InvoiceValue = excelJson.Sheet1[
+                      i
+                    ][5].toString();
+                    this.TaxReceipt.Currency = excelJson.Sheet1[
+                      i
+                    ][3].toString();
+                    this.TaxReceipt.TaxCode = excelJson.Sheet1[i][7].toString();
+                    this.TaxReceipt.CompanyCode = excelJson.Sheet1[
+                      i
+                    ][1].toString();
+                    this.TaxReceipt.InvoiceNumber = excelJson.Sheet1[
+                      i
+                    ][2].toString();
+                    if (excelJson.Sheet1[i][4] != undefined) {
+                      this.TaxReceipt.Supplier = excelJson.Sheet1[
+                        i
+                      ][4].toString();
+                    }
+                    if (excelJson.Sheet1[i][6] != undefined) {
+                      this.TaxReceipt.TaxRate = excelJson.Sheet1[
+                        i
+                      ][6].toString();
+                    }
+                    if (excelJson.Sheet1[i][8] != undefined) {
+                      this.TaxReceipt.CodeOfFixedAssets = excelJson.Sheet1[
+                        i
+                      ][8].toString();
+                    }
+
+                    this.TaxReceiptList.push(this.TaxReceipt);
+                    //excelTemp[i-4]=[this.TaxReceipt]
+                  }
+                  this.TaxFileJson = excelJson;
+                  console.log("111111111122222222222222");
+                  console.log(this.TaxFileJson);
+                  var addFile = this.addFileToFolder(f, fileName);
+                  addFile
+                    .done(fd => {
+                      this.$message(
+                        common.message(
+                          "success",
+                          "加载税票清单成功，请点击税票清单按钮进行再次校验!"
+                        )
+                      );
+                      console.log(fd);
+                      var getFile = this.getFileItem(
+                        fd.d.ListItemAllFields.__deferred.uri
+                      );
+                      getFile
+                        .done(fi => {
+                          console.log(fi);
+                          this.TaxFileId = fi.d.ID;
+                        })
+                        .catch(err => {
+                          this.$message(
+                            common.message("error", "获取文档库文档失败!")
+                          );
+                        });
+                    })
+                    .catch(err => {
+                      this.$message(
+                        common.message("error", "添加文档至文档库失败!")
+                      );
+                    });
+                } else {
+                  this.$message(
+                    common.message(
+                      "error",
+                      "请使用对应正确的Excel模板,并刷新页面"
+                    )
+                  );
+                }
+              }
+            }
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取文件失败!"));
+        });
+      return this.IsTaxExcelTemplate;
+    },
+    getFileItem: function(fileURI) {
+      return $.ajax({
+        url: fileURI,
+        type: "GET",
+        headers: { accept: "application/json;odata=verbose" }
+      });
+    },
+    addFileToFolder: function(arrayBuffer, fileName) {
+      var parm = {
+        type: "post",
+        action: "AddFile",
+        baseUrl: this.hostUrl,
+        list: this.TaxLibrary,
+        fileName: this.TaxFileGUID + "_" + fileName,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
+    fileLimit: function(files, fileList) {
+      this.$message(
+        common.message(
+          "error",
+          "最多只能加载一个文件，如若要更新加载文档，请刷新页面!"
+        )
+      );
+    }, //超出文件数量回调函数
+    uploadErr: function(err, file, fileList) {
+      this.$message(common.message("error", "上传文档出错!"));
+    }, //附件上传失败后回调函数
     clearContract() {
       if (!this.PublicPayment.IsContract) {
         this.PublicPayment.ContractNumber = ""; //合同号
@@ -734,7 +892,7 @@ export default {
         this.$message(common.message("error", "汇率不合法!"));
       } else {
         //计算
-        if (this.PublicPayment.Currency == "人民币") {
+        if (this.PublicPayment.Currency == "RMB") {
           this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
         } else {
           this.PublicPayment.AmountInlowercase =
@@ -873,8 +1031,9 @@ export default {
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
       } else if (
-        this.PublicPayment.LoanNumber == "" &&
-        this.PublicPayment.ReimbursementType == "费用借款"
+        this.PublicPayment.LoanNumber === "" &&
+        this.PublicPayment.ReimbursementType === "费用借款" &&
+        this.PublicPayment.SettlementType === "清账"
       ) {
         this.message = "请输入借款单号;";
       } else if (
@@ -1074,7 +1233,8 @@ export default {
         Supplier: "",
         InvoiceValue: "",
         TaxRate: "",
-        TaxCode: ""
+        TaxCode: "",
+        CodeOfFixedAssets: ""
       };
       this.dialogFormVisible = false;
     },
@@ -1115,7 +1275,8 @@ export default {
           Supplier: "",
           InvoiceValue: "",
           TaxRate: "",
-          TaxCode: ""
+          TaxCode: "",
+          CodeOfFixedAssets: ""
         };
         this.dialogFormVisible = false;
       }
@@ -1164,10 +1325,6 @@ export default {
     onSaveOrSubmmit(type) {
       if (!this.formVerification()) {
         //校验不通过;
-        this.$message({
-          message: this.message,
-          type: "error"
-        });
       } else {
         this.loading = true;
         this.createPublicPayment(type);
@@ -1216,7 +1373,7 @@ export default {
             ProjectNumber: this.PublicPayment.ProjectNumber,
             ExpenseCategory: this.PublicPayment.ExpenseCategory,
             CostAccount: this.PublicPayment.CostAccount,
-            CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
+            // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
             ApplicationNumber: this.PublicPayment.ApplicationNumber,
             ReceiptNumber: this.PublicPayment.ReceiptNumber,
             IsSettlement: this.PublicPayment.IsSettlement.toString(),
@@ -1228,7 +1385,9 @@ export default {
             IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
             TrusteesEmail: this.LoginName.split("@")[0],
             EmployeeCode: this.PublicPayment.EmployeeCode,
-            BussinessScope: this.PublicPayment.BussinessScope
+            BussinessScope: this.PublicPayment.BussinessScope,
+            TaxFileItemId: Number(this.TaxFileId),
+            TaxFileJsonString: JSON.stringify(this.TaxFileJson)
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;
@@ -1296,7 +1455,8 @@ export default {
           Supplier: item.Supplier, //供应商
           InvoiceValue: item.InvoiceValue, //发票金额
           TaxRate: item.TaxRate, //税率
-          TaxCode: item.TaxCode //税码
+          TaxCode: item.TaxCode, //税码
+          CodeOfFixedAssets: item.CodeOfFixedAssets //固定资产编码
         };
         var parm = {
           type: "post",
@@ -1471,8 +1631,8 @@ export default {
                 contractNumber: item.ContractNumber,
                 //最新修改逻辑统一大写
                 ExpenseCategory: item.ExpenseCategory,
-                CostAccount: item.CostAccount,
-                CodeOfFixedAssets: item.CodeOfFixedAssets
+                CostAccount: item.CostAccount
+                // CodeOfFixedAssets: item.CodeOfFixedAssets
               });
             });
           } else {
@@ -1506,7 +1666,7 @@ export default {
           //有没有 合同号都要填充费用类别、科目、固定资产编码
           that.PublicPayment.ExpenseCategory = item.ExpenseCategory;
           that.PublicPayment.CostAccount = item.CostAccount;
-          that.PublicPayment.CodeOfFixedAssets = item.CodeOfFixedAssets;
+          // that.PublicPayment.CodeOfFixedAssets = item.CodeOfFixedAssets;
         }
       });
     },
@@ -1621,6 +1781,7 @@ export default {
     //onload
     this.loading = true;
     this.PublicPayment.ApplicationNumber = common.generateUUID();
+    this.TaxFileGUID = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();

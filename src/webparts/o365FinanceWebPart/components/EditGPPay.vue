@@ -360,7 +360,7 @@
         </td>
       </tr>
 
-      <tr>
+      <!-- <tr>
         <td align="right">固定资产编码：</td>
         <td colspan="7">
           <el-input
@@ -369,7 +369,7 @@
             placeholder="固定资产编码"
           ></el-input>
         </td>
-      </tr>
+      </tr>-->
       <tr>
         <td align="right">特殊审批人：</td>
         <td colspan="7">
@@ -442,6 +442,7 @@
         <el-table-column property="InvoiceValue" label="发票金额"></el-table-column>
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
+        <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
         <el-table-column label="操作" width="150">
           <template slot-scope="scope">
             <el-button size="mini" :disabled="showFA==false" @click="onEditItem(scope.$index)">编辑</el-button>
@@ -479,6 +480,9 @@
         </el-form-item>
         <el-form-item label="税码:" :label-width="formLabelWidth" prop>
           <el-input v-model="TaxReceipt.TaxCode"></el-input>
+        </el-form-item>
+        <el-form-item label="固定资产编码:" :label-width="formLabelWidth" prop>
+          <el-input v-model="TaxReceipt.CodeOfFixedAssets"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -667,7 +671,7 @@ export default {
         Remark: "", //备注
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
-        CodeOfFixedAssets: "", //固定资产编码
+        // CodeOfFixedAssets: "", //固定资产编码
         ApplicationNumber: "", //申请单号
         ReceiptNumber: "", //单据编号
         IsSettlement: true, //结算
@@ -685,7 +689,8 @@ export default {
         Supplier: "", //供应商
         InvoiceValue: "", //发票金额
         TaxRate: "", //税率
-        TaxCode: "" //税码
+        TaxCode: "", //税码
+        CodeOfFixedAssets: "" //固定资产编码
       },
       ExpenseAllocationList: [], //费用分摊列表
       ExpenseAllocation: {
@@ -744,36 +749,36 @@ export default {
       Currency: [
         //币种
         {
-          value: "人民币",
-          label: "人民币"
+          value: "RMB",
+          label: "RMB"
         },
         {
-          value: "美元",
-          label: "美元"
+          value: "USD",
+          label: "USD"
         },
         {
-          value: "港币",
-          label: "港币"
+          value: "HKD",
+          label: "HKD"
         },
         {
-          value: "欧元",
-          label: "欧元"
+          value: "EUR",
+          label: "EUR"
         },
         {
-          value: "日元",
-          label: "日元"
+          value: "JPY",
+          label: "JPY"
         },
         {
-          value: "英镑",
-          label: "英镑"
+          value: "GBP",
+          label: "GBP"
         },
         {
-          value: "格里夫那",
-          label: "格里夫那"
+          value: "UAH",
+          label: "UAH"
         },
         {
-          value: "其他",
-          label: "其他"
+          value: "Other",
+          label: "Other"
         }
       ],
       dialogTableVisible: false, //税票清单列表
@@ -800,26 +805,53 @@ export default {
     };
   },
   methods: {
-    UpdateMain(type) {
-      if (this.currentStep == "Approver5") {
-        if (this.PublicPayment.InvoiceValue == "") {
-          this.$message(common.message("error", "请填写发票金额"));
-        } else if (isNaN(this.PublicPayment.InvoiceValue)) {
-          this.$message(common.message("error", "发票金额不合法"));
-        } else if (
-          this.PublicPayment.IsFreightInvoice &&
-          !this.calculateMoney()
-        ) {
-          this.$message(
-            common.message("error", "税票清单和表单金额总和不一致")
-          );
-        } else {
-          this.createTaxReceipt();
-          this.checkButtonType(type);
-        }
-      } else {
-        this.onApproval(type);
-      }
+    VerifyMoney() {
+      console.log("VerifyMoney");
+      console.log(this.PublicPayment.IsSettlement);
+      console.log(this.PublicPayment.IsContract);
+      var result = true;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=ContractNumber eq '" +
+          this.PublicPayment.ContractNumber +
+          "' and Status eq 'Approved'"
+      };
+      var option = common.queryOpt(parm);
+      console.log(option);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              accountPaid += parseFloat(item.InvoiceValue);
+            });
+            var UnPaid = parseFloat(this.PublicPayment.Money) - accountPaid;
+            console.log("校验发票金额是否超过合同金额1");
+            console.log(Number(this.PublicPayment.InvoiceValue) > UnPaid);
+            result = Number(this.PublicPayment.InvoiceValue) > UnPaid;
+          } else {
+            console.log("校验发票金额是否超过合同金额2");
+            console.log(
+              Number(this.PublicPayment.InvoiceValue) >
+                Number(this.PublicPayment.Money)
+            );
+            result =
+              Number(this.PublicPayment.InvoiceValue) >
+              Number(this.PublicPayment.Money);
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取已完成的合同失败!"));
+          result = true;
+        });
+      console.log("返回比较结果");
+      console.log(result);
+      return result;
     },
     checkButtonType: function() {
       var itemInfo = {
@@ -927,7 +959,7 @@ export default {
         this.$message(common.message("error", "汇率不合法!"));
       } else {
         //计算
-        if (this.PublicPayment.Currency == "人民币") {
+        if (this.PublicPayment.Currency == "RMB") {
           this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
         } else {
           this.PublicPayment.AmountInlowercase =
@@ -1087,8 +1119,9 @@ export default {
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
       } else if (
-        this.PublicPayment.LoanNumber == "" &&
-        this.PublicPayment.ReimbursementType == "费用借款"
+        this.PublicPayment.LoanNumber === "" &&
+        this.PublicPayment.ReimbursementType === "费用借款" &&
+        this.PublicPayment.SettlementType === "清账"
       ) {
         this.message = "请输入借款单号;";
       } else if (
@@ -1264,7 +1297,8 @@ export default {
         Supplier: "",
         InvoiceValue: "",
         TaxRate: "",
-        TaxCode: ""
+        TaxCode: "",
+        CodeOfFixedAssets: ""
       };
       this.dialogFormVisible = false;
     },
@@ -1306,7 +1340,8 @@ export default {
           Supplier: "",
           InvoiceValue: "",
           TaxRate: "",
-          TaxCode: ""
+          TaxCode: "",
+          CodeOfFixedAssets: ""
         };
         this.dialogFormVisible = false;
       }
@@ -1407,7 +1442,7 @@ export default {
             ProjectNumber: this.PublicPayment.ProjectNumber,
             ExpenseCategory: this.PublicPayment.ExpenseCategory,
             CostAccount: this.PublicPayment.CostAccount,
-            CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
+            // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
             ApplicationNumber: this.PublicPayment.ApplicationNumber,
             ReceiptNumber: this.PublicPayment.ReceiptNumber,
             IsSettlement: this.PublicPayment.IsSettlement.toString(),
@@ -1532,7 +1567,8 @@ export default {
             Supplier: item.Supplier, //供应商
             InvoiceValue: item.InvoiceValue, //发票金额
             TaxRate: item.TaxRate, //税率
-            TaxCode: item.TaxCode //税码
+            TaxCode: item.TaxCode, //税码
+            CodeOfFixedAssets: item.CodeOfFixedAssets //固定资产编码
           };
           var parm = {
             type: "post",
@@ -1871,6 +1907,14 @@ export default {
             common.message("error", "税票清单和表单金额总和不一致")
           );
           return;
+        } else if (
+          this.PublicPayment.IsSettlement === true &&
+          this.PublicPayment.IsContract === true &&
+          this.VerifyMoney() === true
+        ) {
+          console.log("合同金额不合法");
+            this.$message(common.message("error", "当前金额已经超过了合同未结算金额"));
+          return;
         }
         this.createTaxReceipt();
         var history = JSON.parse(this.ApprovalHistory);
@@ -1879,7 +1923,7 @@ export default {
           "-" +
           this.currentUserITCode +
           "," +
-          this.getCurrentDate();
+          common.getCurrentDate();
         mainItemInfo.ApproverHistory = JSON.stringify(history);
         (mainItemInfo.InvoiceValue = this.PublicPayment.InvoiceValue), //更新发票金额
           (mainItemInfo.ExpenseCategory = this.PublicPayment.ExpenseCategory), //更新费用类别
@@ -1890,7 +1934,7 @@ export default {
           mainItemInfo.AuthorizedPersonITCode = this.currentUserITCode;
           mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
           mainItemInfo.IsSettlement = this.PublicPayment.IsSettlement.toString();
-          mainItemInfo.SettlingTime = this.getCurrentDate();
+          mainItemInfo.SettlingTime = common.getCurrentDate();
         }
         this.updateMainInfo(mainItemInfo, taskOutcome);
       } else {
@@ -1901,7 +1945,7 @@ export default {
             "-" +
             this.currentUserITCode +
             "," +
-            this.getCurrentDate();
+            common.getCurrentDate();
           this.ApprovalHistory = JSON.stringify(history);
         } else {
           var history = JSON.parse(this.ApprovalHistory);
@@ -1911,55 +1955,63 @@ export default {
               "-" +
               this.currentUserITCode +
               "," +
-              this.getCurrentDate();
+              common.getCurrentDate();
           } else if (this.currentStep == "Approver2") {
             history.approver2 =
               this.currentUserTitle +
               "-" +
               this.currentUserITCode +
               "," +
-              this.getCurrentDate();
+              common.getCurrentDate();
           } else if (this.currentStep == "Approver3") {
             history.approver3 =
               this.currentUserTitle +
               "-" +
               this.currentUserITCode +
               "," +
-              this.getCurrentDate();
+              common.getCurrentDate();
           } else if (this.currentStep == "Approver4") {
             history.approver4 =
               this.currentUserTitle +
               "-" +
               this.currentUserITCode +
               "," +
-              this.getCurrentDate();
+              common.getCurrentDate();
           } else if (this.currentStep == "Approver6") {
+            if (
+              this.PublicPayment.IsContract === true &&
+              this.VerifyMoney() === true
+            ) {
+              console.log("合同金额不合法");
+              common.message("error", "当前金额已经超过了合同未结算金额");
+              return;
+            }
             history.approver6 =
               this.currentUserTitle +
               "-" +
               this.currentUserITCode +
               "," +
-              this.getCurrentDate();
+              common.getCurrentDate();
           }
           this.ApprovalHistory = JSON.stringify(history);
         }
         if (this.currentStep == "Approver6") {
+          if (
+            this.PublicPayment.IsContract === true &&
+            this.VerifyMoney() === true
+          ) {
+            console.log("合同金额不合法");
+            common.message("error", "当前金额已经超过了合同未结算金额");
+            return;
+          }
           mainItemInfo.SettlementOfPeopleId = this.currentUserId;
           mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
-          mainItemInfo.SettlingTime = this.getCurrentDate();
+          mainItemInfo.SettlingTime = common.getCurrentDate();
         }
 
         mainItemInfo.ApproverHistory = this.ApprovalHistory;
         this.updateMainInfo(mainItemInfo, taskOutcome);
       }
-    },
-    getCurrentDate: function() {
-      var date = new Date();
-      var year = date.getFullYear();
-      var month = date.getMonth() + 1;
-      var day = date.getDate();
-      var currentTime = year + "-" + month + "-" + day;
-      return currentTime;
     },
     updateMainInfo: function(mainItemInfo, taskOutcome) {
       var mainParm = {
@@ -2187,8 +2239,8 @@ export default {
                 data[0].ExpenseCategory == null ? "" : data[0].ExpenseCategory), //费用类别
               (this.PublicPayment.CostAccount =
                 data[0].CostAccount == null ? "" : data[0].CostAccount), //费用科目
-              (this.PublicPayment.CodeOfFixedAssets =
-                data[0].CodeOfFixedAssets), //固定资产编码
+              // (this.PublicPayment.CodeOfFixedAssets =
+              //   data[0].CodeOfFixedAssets), //固定资产编码
               (this.PublicPayment.ApplicationNumber =
                 data[0].ApplicationNumber), //申请单号
               (this.PublicPayment.ReceiptNumber = data[0].ReceiptNumber), //单据编号
@@ -2201,7 +2253,6 @@ export default {
             console.log("!22222222222222");
             console.log(this.PublicPayment);
             this.changeMoney();
-            this.Loadhistory();
           } else {
             this.$message(
               common.message("error", "对公付款列表中不存在该申请单号")
@@ -2225,7 +2276,8 @@ export default {
                 Supplier: d.Supplier, //供应商
                 InvoiceValue: d.InvoiceValue, //发票金额
                 TaxRate: d.TaxRate, //税率
-                TaxCode: d.TaxCode //税码
+                TaxCode: d.TaxCode, //税码
+                CodeOfFixedAssets: d.CodeOfFixedAssets //固定资产编码
               });
             });
           } else {

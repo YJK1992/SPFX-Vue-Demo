@@ -106,8 +106,15 @@ var common = {
             "X-RequestDigest": parm.digest
           }
           break
+        case 'AddFile':
+          queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/rootfolder/files/add(overwrite=true,url='" + parm.fileName + "')";
+          headers = {
+            "Accept": "application/json;odata=verbose",
+            "Content-Type": "application/json;odata=verbose",
+            "X-RequestDigest": parm.digest
+          }
       }
-      if (parm.action == 'Attachements') {
+      if (parm.action == 'Attachements' || parm.action == 'AddFile') {
         opt = {
           url: encodeURI(queryUrl),
           method: "post",
@@ -224,6 +231,14 @@ var common = {
   },
   removePrintArea: function (id) {
     $("iframe#" + id).remove();
-  }
+  },
+  getCurrentDate: function () {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var currentTime = year + "-" + month + "-" + day;
+    return currentTime;
+  },
 }
 export default common

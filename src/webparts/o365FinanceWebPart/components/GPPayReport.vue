@@ -1,13 +1,13 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="报销类型：">
-        <el-select v-model="Condition.ReimbursementType" placeholder="请选择">
+      <el-form-item label="公司代码：">
+        <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
-            v-for="item in ReimbursementType"
-            :key="item.value"
-            :label="item.value"
-            :value="item.value"
+            v-for="item in CompanyCodeArr"
+            :key="item.CompanyCode"
+            :label="item.CompanyCode"
+            :value="item.CompanyCode"
           ></el-option>
         </el-select>
       </el-form-item>
@@ -15,6 +15,25 @@
         <el-select v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
             v-for="item in SettlementType"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="单据编号：">
+        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
+      </el-form-item>
+      <el-form-item label="经办人ID：">
+        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
+      </el-form-item>
+      <el-form-item label="总金额">
+        <el-input v-model="Condition.InvoiceValue" placeholder="总金额"></el-input>
+      </el-form-item>
+      <el-form-item label="报销类型：">
+        <el-select v-model="Condition.ReimbursementType" placeholder="请选择">
+          <el-option
+            v-for="item in ReimbursementType"
             :key="item.value"
             :label="item.value"
             :value="item.value"
@@ -31,9 +50,7 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="单据编号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
-      </el-form-item>
+
       <el-form-item label="申请时间段：">
         <el-date-picker
           value-format="yyyy-MM-dd"
@@ -44,26 +61,18 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-      <el-form-item label="公司代码：">
-        <el-select v-model="Condition.CompanyCode" placeholder="请选择">
-          <el-option
-            v-for="item in CompanyCodeArr"
-            :key="item.CompanyCode"
-            :label="item.CompanyCode"
-            :value="item.CompanyCode"
-          ></el-option>
-        </el-select>
+
+      <el-form-item label>
+        <el-checkbox v-model="IsPrint">可打印</el-checkbox>
       </el-form-item>
-      <el-form-item label="经办人ID：">
-        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
-      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
         <el-button @click="onExcel()" type="primary">导出Excel</el-button>
       </el-form-item>
     </el-form>
-    <el-table :data="TableData" style="width: 100%" max-height="600">
+    <el-table :data="PrintData" style="width: 100%" max-height="600">
       <el-table-column fixed prop="ApplicationNumber" label="单据编号" width="300"></el-table-column>
       <el-table-column prop="ReimbursementType" label="报销类型"></el-table-column>
       <el-table-column prop="SettlementType" label="结算方式"></el-table-column>
@@ -79,41 +88,6 @@
         </template>
       </el-table-column>
     </el-table>
-    <!-- <table class="gpPayReport">
-      <tr id="gpPayReportTable">
-        <td>单据号</td>
-        <td>结算方式</td>
-        <td>经办人</td>
-        <td>人员编号</td>
-        <td>最高审批人编号</td>
-        <td>金额</td>
-        <td>成本中心编号</td>
-        <td>所属事业部</td>
-        <td>费用编号</td>
-        <td>费用名称</td>
-        <td>资产号</td>
-        <td>税码</td>
-        <td>发票号码</td>
-        <td>借款单号</td>
-        <td>借款金额</td>
-        <td>借款人编号</td>
-        <td>差额</td>
-        <td>特别总账标志</td>
-        <td>分配</td>
-        <td>定/限额</td>
-        <td>备注</td>
-        <td>PO号</td>
-        <td style="width: 100px;">操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
-        </template>
-        <td>
-          <el-button @click="viewItem(index)" size="small">查看</el-button>
-        </td>
-      </tr>
-    </table>-->
   </div>
 </template>
 
@@ -125,6 +99,7 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
+
       //列表名称
       mainListName: "PublicPayment", //ECC列表名
       userListName: "EmployeeList",
@@ -147,6 +122,14 @@ export default {
           label: "其他"
         }
       ],
+      DisplayName: {
+        Draft: "草稿",
+        Submitted: "审批中",
+        Changed: "被驳回并提交",
+        Dumped: "终止",
+        Approved: "审批完成",
+        Rejected: "已拒绝"
+      },
       Status: [
         {
           value: "Draft",
@@ -216,12 +199,15 @@ export default {
         Date: "",
         ApplicationNumber: "",
         CompanyCode: "",
-        TrusteesEmail: "" //经办人ID
+        TrusteesEmail: "", //经办人ID
+        InvoiceValue: ""
       },
+      IsPrint: false, //是否可以打印
       CompanyCodeArr: [],
       //主表数据
-      TableData: []
-      //子表数据
+      TableData: [],
+      //可以打印
+      PrintData: []
     };
   },
   methods: {
@@ -314,10 +300,13 @@ export default {
       });
     },
     onExcel: function() {
-      for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+      for (var item in this.PrintData[0]) {
+        if (item != "IsPrint") {
+          console.log(item);
+          this.filterVal.push(item);
+        }
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      var data = this.PrintData.map(v => this.filterVal.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -328,6 +317,8 @@ export default {
       efn.toExcel(excelInfo);
     },
     loadMainList: function(condition) {
+      this.PrintData = [];
+      var that = this;
       var parm = {
         type: "get",
         action: "ListItems",
@@ -343,13 +334,18 @@ export default {
         if (data.length > 0) {
           data.forEach(d => {
             this.TableData.push({
+              IsPrint:
+                d.PaymentApproval["Description"] == "Approver5" ||
+                d.PaymentApproval["Description"] == "Approver6" ||
+                (d.PaymentApproval["Description"] == "End" &&
+                  d.Status == "Approved"),
               ApplicationNumber: d.ApplicationNumber,
               ReimbursementType: d.ReimbursementType,
               SettlementType: d.SettlementType,
               Trustees: d.Trustees + "-" + d.TrusteesEmail,
               Money: d.InvoiceValue,
               ExpenseCategory: d.ExpenseCategory,
-              Status: d.Status,
+              Status: this.DisplayName[d.Status],
               Created: d.Created.substring(0, d.Created.indexOf("T")),
               SettlementPerson:
                 d.AuthorizedPersonITCode == null
@@ -357,11 +353,42 @@ export default {
                   : d.AuthorizedPersonITCode
             });
           });
+
+          if (that.IsPrint === true) {
+            console.log("勾选了打印");
+            console.log(that.x);
+            that.TableData.forEach(item => {
+              console.log(item);
+              console.log(item.IsPrint == true);
+              console.log(item.IsPrint.toString() == "true");
+              //已可以打印的数据
+              if (item.IsPrint === true) {
+                console.log("pushPrintDataTrue");
+                console.log(item);
+                that.PrintData.push(item);
+              }
+            });
+          } else {
+            console.log("没有勾选打印");
+            console.log(that.TableData);
+            that.TableData.forEach(item => {
+              console.log(item);
+              console.log(item.IsPrint == true);
+              console.log(item.IsPrint.toString() == "true");
+              //已可以打印的数据
+              if (item.IsPrint === false) {
+                console.log("pushPrintDataFalse");
+                console.log(item);
+                that.PrintData.push(item);
+              }
+            });
+          }
         }
       });
+      console.log(that.PrintData);
     },
     viewItem: function(index) {
-      var applicantNumber = this.TableData[index].ApplicationNumber;
+      var applicantNumber = this.PrintData[index].ApplicationNumber;
       this.$router.push({
         path: "/detailgppay",
         query: {

@@ -122,6 +122,12 @@
             </el-upload>
           </td>
         </tr>
+        <tr v-show="showEditor==false">
+          <td>附件 ：</td>
+          <td colspan="8" style="text-align:left;">
+            <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
+          </td>
+        </tr>
         <tr>
           <td>附件描述 ：</td>
           <td colspan="9" style="text-align:left;">
@@ -129,7 +135,7 @@
               :disabled="showApprover==true"
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="Quote 1Number"
+              placeholder="当选择MD model时，请输入Quote1 Number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -309,7 +315,10 @@ export default {
       },
       isChangeSubListData: false,
       taskId: 0,
-      OTC: "",
+      OTCMember: "",
+      currentUserITCode: "",
+      currentUserTitle: "",
+      approvalHistory: "",
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
@@ -342,6 +351,10 @@ export default {
       Comments: "",
       subListData: [], // ECC物料副表
       fileList: [], //附件列表数据
+      attrFileInfo: {
+        name: "",
+        url: ""
+      },
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       item: {
@@ -533,18 +546,110 @@ export default {
       var taskOutcome;
       if (type == "approve") {
         taskOutcome = "已批准"; //Approved 已批准
-      } else {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
-      }
-      if (this.currentStep == "Approver5") {
-        if (this.checkFixedAsset()) {
-          this.$message(common.message("error", "固定资产编码不能为空!"));
+        if (this.currentStep == "Approver5") {
+          if (this.checkFixedAsset()) {
+            this.$message(common.message("error", "固定资产编码不能为空!"));
+          } else {
+            this.updateMainList(taskOutcome);
+          }
         } else {
-          this.updateTaskStatus(taskOutcome);
+          this.updateMainList(taskOutcome);
         }
       } else {
-        this.updateTaskStatus(taskOutcome);
+        taskOutcome = "已拒绝"; //已拒绝 Rejected
+        this.updateMainList(taskOutcome);
       }
+    },
+    updateMainList: function(taskOutcome) {
+      var history;
+      if (this.approvalHistory == null || this.approverList == "") {
+        history = {};
+      } else {
+        history = JSON.parse(this.approvalHistory);
+      }
+      var itemInfo = {
+        __metadata: {
+          type: this.mainListType
+        }
+      };
+      if (this.currentStep == "AssetAudit") {
+        history.assetAudit =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      }
+      if (this.currentStep == "SpecialApprover") {
+        history.specialApprover =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      }
+      if (this.currentStep == "Approver1") {
+        history.approver1 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      } else if (this.currentStep == "Approver2") {
+        history.approver2 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      } else if (this.currentStep == "Approver3") {
+        history.approver3 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      } else if (this.currentStep == "Approver4") {
+        history.approver4 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      } else if (this.currentStep == "Approver5") {
+        history.approver5 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+      } else if (this.currentStep == "Approver6") {
+        history.approver6 =
+          this.currentUserTitle +
+          "-" +
+          this.currentUserITCode +
+          "," +
+          common.getCurrentDate();
+        itemInfo.OTCMember = this.OTCMember;
+      }
+      itemInfo.ApprovalHistory = JSON.stringify(history);
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          this.updateTaskStatus(taskOutcome);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新主表数据失败!"));
+        });
     },
     updateTaskStatus: function(taskOutcome) {
       var taskItemInfo = {
@@ -570,8 +675,10 @@ export default {
         .done(req => {
           this.loading = false;
           this.$message(common.message("success", "审批成功!"));
-          if (this.currentStep == "Approver5") {
-            this.deleteSubListItems();
+          if ((taskOutcome = "已批准")) {
+            if (this.currentStep == "Approver5") {
+              this.deleteSubListItems();
+            }
           }
           this.$router.push("/home");
         })
@@ -1087,14 +1194,14 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.toLowerCase().split(".")[1] === "xls";
-      const extension2 = file.name.toLowerCase().split(".")[1] === "xlsx";
-      const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
-      const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
-      const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
-      const extension6 = file.name.toLowerCase().split(".")[1] === "pdf";
-      const extension7 = file.name.toLowerCase().split(".")[1] === "xml";
-      const extension8 = file.name.toLowerCase().split(".")[1] === "msg";
+      const extension = file.name.toLowerCase().endsWith("xls")
+      const extension2 = file.name.toLowerCase().endsWith("xlsx")
+      const extension3 = file.name.toLowerCase().endsWith("doc")
+      const extension4 = file.name.toLowerCase().endsWith("docx")
+      const extension5 = file.name.toLowerCase().endsWith("txt")
+      const extension6 = file.name.toLowerCase().endsWith("pdf")
+      const extension7 = file.name.toLowerCase().endsWith("xml")
+      const extension8 = file.name.toLowerCase().endsWith("msg")
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
@@ -1140,7 +1247,9 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
-          this.ECCTaskForm.applicant = c.d.Title;
+          this.OTCMember = loginName.split("@")[0];
+          this.currentUserITCode = loginName.split("@")[0];
+          this.currentUserTitle = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {
@@ -1288,7 +1397,7 @@ export default {
                 });
             });
             if (this.subListData.length > 0) {
-                this.createEccSubInfoItem(); //创建子表数据
+              this.createEccSubInfoItem(); //创建子表数据
             }
           } else {
             if (this.subListData.length > 0) {
@@ -1305,6 +1414,7 @@ export default {
     this.loading = true;
     this.getCostCenter();
     this.getAppTypeAndProType();
+    this.getCurrentUser();
     this.requestDigest = common.getRequestDigest();
     var applicantNumber = common.GetParameterValues("ApplicantNumber");
     var step = common.GetParameterValues("Step");
@@ -1345,7 +1455,7 @@ export default {
             this.ECCTaskForm.specialApprover = data[0].SpecialApproverTitle;
             this.ECCTaskForm.AttDescription = data[0].AttDescription;
             this.currentItemId = data[0].Id;
-            //this.OTC=data[0].OTC;
+            this.approvalHistory = data[0].ApprovalHistory;
             if (data[0].Attachments) {
               var attUrl = data[0].AttachmentFiles.__deferred.uri;
               var getAtt = this.loadAttachment(attUrl);
@@ -1353,13 +1463,12 @@ export default {
                 .done(f => {
                   var data = f.d.results;
                   if (data.length > 0) {
-                    this.fileList.push({
-                      name: data[0].FileName,
-                      url:
-                        window.location.origin +
-                        data[0].ServerRelativeUrl +
-                        "?Web=1"
-                    });
+                    this.attrFileInfo.url =
+                      window.location.origin +
+                      data[0].ServerRelativeUrl +
+                      "?Web=1";
+                    this.attrFileInfo.name = data[0].FileName;
+                    console.log("aaaaaaaaaaaa");
                     console.log(this.fileList);
                   }
                 })

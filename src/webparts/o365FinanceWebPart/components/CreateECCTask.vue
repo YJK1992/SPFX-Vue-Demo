@@ -114,7 +114,7 @@
             <el-input
               type="textarea"
               :autosize="{ minRows: 2, maxRows: 4}"
-              placeholder="Quote 1Number"
+              placeholder="当选择MD model时，请输入Quote1 Number"
               v-model="ECCTaskForm.AttDescription"
             ></el-input>
           </td>
@@ -840,14 +840,14 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.toLowerCase().split(".")[1] === "xls";
-      const extension2 = file.name.toLowerCase().split(".")[1] === "xlsx";
-      const extension3 = file.name.toLowerCase().split(".")[1] === "doc";
-      const extension4 = file.name.toLowerCase().split(".")[1] === "docx";
-      const extension5 = file.name.toLowerCase().split(".")[1] === "txt";
-      const extension6 = file.name.toLowerCase().split(".")[1] === "pdf";
-      const extension7 = file.name.toLowerCase().split(".")[1] === "xml";
-      const extension8 = file.name.toLowerCase().split(".")[1] === "msg";
+      const extension = file.name.toLowerCase().endsWith("xls")
+      const extension2 = file.name.toLowerCase().endsWith("xlsx")
+      const extension3 = file.name.toLowerCase().endsWith("doc")
+      const extension4 = file.name.toLowerCase().endsWith("docx")
+      const extension5 = file.name.toLowerCase().endsWith("txt")
+      const extension6 = file.name.toLowerCase().endsWith("pdf")
+      const extension7 = file.name.toLowerCase().endsWith("xml")
+      const extension8 = file.name.toLowerCase().endsWith("msg")
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&

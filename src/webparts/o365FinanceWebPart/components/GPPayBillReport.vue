@@ -1,37 +1,7 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="结算时间：">
-        <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.SettlingTime"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-
-      <el-form-item label="结算方式">
-        <el-select v-model="Condition.SettlementType" placeholder="请选择">
-          <el-option
-            v-for="item in SettlementType"
-            :key="item.value"
-            :label="item.value"
-            :value="item.value"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-
-      <!-- <el-form-item label="经办人ID">
-        <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
-      </el-form-item> -->
-
-      <el-form-item label="结算人ID">
-        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="结算人"></el-input>
-      </el-form-item>
-
-      <el-form-item label="公司代码">
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -42,12 +12,36 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="币种">
-        <el-select v-model="Condition.Currency" placeholder="请选择">
+      <el-form-item label="结算日期段：">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.SettlingTime"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
+      <el-form-item label="结算人ID：">
+        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="结算人ID"></el-input>
+      </el-form-item>
+
+      <el-form-item label="结算方式：">
+        <el-select allow-create="true" v-model="Condition.SettlementType" placeholder="请选择">
+          <el-option
+            v-for="item in SettlementType"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="币种：">
+        <el-select allow-create="true" v-model="Condition.Currency" placeholder="请选择">
           <el-option
             v-for="item in Currency"
             :key="item.value"
-            :label="item.value"
+            :label="item.label"
             :value="item.value"
           ></el-option>
         </el-select>
@@ -140,36 +134,36 @@ export default {
       //币种
       Currency: [
         {
-          value: "人民币",
-          label: "人民币"
+          value: "RMB",
+          label: "RMB"
         },
         {
-          value: "美元",
-          label: "美元"
+          value: "USD",
+          label: "USD"
         },
         {
-          value: "港币",
-          label: "港币"
+          value: "HKD",
+          label: "HKD"
         },
         {
-          value: "欧元",
-          label: "欧元"
+          value: "EUR",
+          label: "EUR"
         },
         {
-          value: "日元",
-          label: "日元"
+          value: "JPY",
+          label: "JPY"
         },
         {
-          value: "英镑",
-          label: "英镑"
+          value: "GBP",
+          label: "GBP"
         },
         {
-          value: "格里夫那",
-          label: "格里夫那"
+          value: "UAH",
+          label: "UAH"
         },
         {
-          value: "其他",
-          label: "其他"
+          value: "Other",
+          label: "Other"
         }
       ],
       //其他
@@ -333,27 +327,34 @@ export default {
         list: this.subListName,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=PublicPaymentGUID eq '" + mainItem.ApplicationNumber + "'"
+          "?$filter=PublicPaymentGUID eq '" +
+          mainItem.ApplicationNumber +
+          "' and IsIn eq 'true'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
+          var money = 0.0;
           if (data.length > 0) {
             data.forEach(d => {
+              money += Number(d.Money);
+            });
+            if (Number(mainItem.InvoiceValue) - money > 0) {
+              console.log("有余额");
               this.JoinTableData.push({
                 ApplicationNumber: mainItem.ApplicationNumber, //申请单号
                 SettlementType: mainItem.SettlementType, //结算方式
                 Trustees: mainItem.Trustees + "-" + mainItem.TrusteesEmail, //经办人
                 EmployeeCode: mainItem.EmployeeCode, //人员编号
                 TheHighestPersonNumber: "", //最高审批人编号
-                Money: d.Money, //费用分摊的摊入或摊出的金额
-                ProjectNumber: d.ProjectNumber, //项目编号
-                ProjectName: d.ProjectName, //项目名称
-                CostCenterNumber: d.CostCenterNumber, //成本中心编号
+                Money: Number(mainItem.InvoiceValue) - money , //剩余的余额
+                ProjectNumber: data[0].ProjectNumber, //项目编号
+                ProjectName: data[0].ProjectName, //项目名称
+                CostCenterNumber:mainItem.CostCenter, //成本中心编号
                 BusinessDivision: "", //所属事业部编号
-                Number: d.Number, //费用号码
-                Title: d.Title, //费用名称
+                Number: data[0].Number, //费用号码
+                Title: data[0].Title, //费用名称
                 OnBusiness: "", //出差目的地
                 LoanNumber: mainItem.LoanNumber, //借款单号
                 LoanMoney: "", //借款金额,
@@ -366,33 +367,7 @@ export default {
                 Remarke: mainItem.Remark, //备注
                 PONumber: "" //PO号
               });
-            });
-          } else {
-            this.JoinTableData.push({
-              ApplicationNumber: mainItem.ApplicationNumber, //申请单号
-              SettlementType: mainItem.SettlementType, //结算方式
-              Trustees: mainItem.Trustees + "-" + mainItem.TrusteesEmail, //经办人
-              EmployeeCode: mainItem.EmployeeCode, //人员编号
-              TheHighestPersonNumber: "", //最高审批人编号
-              Money: "", //费用分摊的摊入或摊出的金额
-              ProjectNumber: "", //项目编号
-              ProjectName: "", //项目名称
-              CostCenterNumber: "", //成本中心编号
-              BusinessDivision: "", //所属事业部编号
-              Number: "", //费用号码
-              Title: "", //费用名称
-              OnBusiness: "", //出差目的地
-              LoanNumber: mainItem.LoanNumber, //借款单号
-              LoanMoney: "", //借款金额,
-              LoanPersonNumber: "", //借款人编号,
-              Balance: "", //差额
-              DeductTheTax: "", //代扣税
-              SpecialGeneralLedger: "", //特别总账
-              Allocation: "", //分配
-              Quota: "", //定/限额
-              Remarke: mainItem.Remark, //备注
-              PONumber: "" //PO号
-            });
+            }
           }
         })
         .catch(err => {

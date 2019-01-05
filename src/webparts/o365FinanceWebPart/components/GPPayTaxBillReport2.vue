@@ -1,34 +1,7 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-      <el-form-item label="日期时间段：">
-        <el-date-picker
-          value-format="yyyy-MM-dd"
-          v-model="Condition.SettlingTime"
-          type="daterange"
-          range-separator="至"
-          start-placeholder="开始日期"
-          end-placeholder="结束日期"
-        ></el-date-picker>
-      </el-form-item>
-
-      <el-form-item label="结算方式">
-        <el-select v-model="Condition.SettlementType" placeholder="请选择">
-          <el-option
-            v-for="item in SettlementType"
-            :key="item.value"
-            :label="item.value"
-            :value="item.value"
-          ></el-option>
-        </el-select>
-      </el-form-item>
-
-      <el-form-item label="结算人ID">
-        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="结算人ID"></el-input>
-      </el-form-item>
-
-
-      <el-form-item label="公司代码：">
+          <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -39,12 +12,36 @@
         </el-select>
       </el-form-item>
 
-      <el-form-item label="币种">
-        <el-select v-model="Condition.Currency" placeholder="请选择">
+      <el-form-item label="结算日期段：">
+        <el-date-picker
+          value-format="yyyy-MM-dd"
+          v-model="Condition.SettlingTime"
+          type="daterange"
+          range-separator="至"
+          start-placeholder="开始日期"
+          end-placeholder="结束日期"
+        ></el-date-picker>
+      </el-form-item>
+      <el-form-item label="结算人ID：">
+        <el-input v-model="Condition.SettlementPeopleITCode" placeholder="结算人ID"></el-input>
+      </el-form-item>
+
+      <el-form-item label="结算方式：">
+        <el-select allow-create="true" v-model="Condition.SettlementType" placeholder="请选择">
+          <el-option
+            v-for="item in SettlementType"
+            :key="item.value"
+            :label="item.value"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="币种：">
+        <el-select allow-create="true" v-model="Condition.Currency" placeholder="请选择">
           <el-option
             v-for="item in Currency"
             :key="item.value"
-            :label="item.value"
+            :label="item.label"
             :value="item.value"
           ></el-option>
         </el-select>
@@ -141,37 +138,37 @@ export default {
       ],
       //币种
       Currency: [
-        {
-          value: "人民币",
-          label: "人民币"
+             {
+          value: "RMB",
+          label: "RMB"
         },
         {
-          value: "美元",
-          label: "美元"
+          value: "USD",
+          label: "USD"
         },
         {
-          value: "港币",
-          label: "港币"
+          value: "HKD",
+          label: "HKD"
         },
         {
-          value: "欧元",
-          label: "欧元"
+          value: "EUR",
+          label: "EUR"
         },
         {
-          value: "日元",
-          label: "日元"
+          value: "JPY",
+          label: "JPY"
         },
         {
-          value: "英镑",
-          label: "英镑"
+          value: "GBP",
+          label: "GBP"
         },
         {
-          value: "格里夫那",
-          label: "格里夫那"
+          value: "UAH",
+          label: "UAH"
         },
         {
-          value: "其他",
-          label: "其他"
+          value: "Other",
+          label: "Other"
         }
       ],
       //主表数据
