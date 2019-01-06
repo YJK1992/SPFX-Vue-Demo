@@ -292,10 +292,10 @@
             style="margin-left: 20px;"
           >税票清单</el-button>
           <el-button
-            :disabled="showFA==false?true:!PublicPayment.IsFreightInvoice"
+            :disabled="!PublicPayment.IsFreightInvoice"
             type="primary"
-            @click="addTaxReceipt"
-          >添加税票</el-button>
+            @click="downloadTaxExcel"
+          >下载税票清单Excel模板</el-button>
         </td>
         <td colspan="3" align="left">
           <el-upload
@@ -323,6 +323,11 @@
             @click="dialogTableVisible2 = true"
             style="margin-left: 20px;"
           >费用分摊清单</el-button>
+          <el-button
+            :disabled="!PublicPayment.IsExpenseAllocation"
+            type="primary"
+            @click="downloadExpenseExcel"
+          >下载费用分摊Excel模板</el-button>
         </td>
         <td colspan="3" align="left">
           <el-upload
@@ -464,6 +469,7 @@
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
         <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
+        <el-table-column property="Amount" label="数量"></el-table-column>
       </el-table>
     </el-dialog>
 
@@ -516,7 +522,6 @@
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
-import { JsonUtilities } from "@microsoft/sp-core-library";
 export default {
   data() {
     return {
@@ -696,10 +701,56 @@ export default {
       ApproverArr: [], //打印需要
       Body: "", //审批意见
       SettlementPeopleITCode: "", //结算人邮箱@前的code
-      loading: false
+      loading: false,
+      GPDocumentLibrary: "GPDocument",
+      TaxExcelUrl: "",
+      ExpenseExcelUrl: ""
     };
   },
   methods: {
+    loadExcelFileUrl: function() {
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.GPDocumentLibrary,
+        baseUrl: this.hostUrl,
+        condition: ""
+      };
+      var baseFileUri = this.hostUrl + "/" + this.GPDocumentLibrary;
+      var option = common.queryOpt(parm);
+      var getFileItems = common.service(option);
+      getFileItems
+        .done(req => {
+          var data = req.d.results;
+          console.log("ffffffffff11111111");
+          console.log(data);
+          data.forEach(i => {
+            var fileUri = i.File.__deferred.uri;
+            var type = i.Type;
+            var getFileUrl = this.getFileItem(i.File.__deferred.uri);
+            getFileUrl
+              .done(f => {
+                if (i.Type == "GPTax") {
+                  this.TaxExcelUrl = baseFileUri + "/" + f.d.Name;
+                } else if (i.Type == "GPExpense") {
+                  this.ExpenseExcelUrl = baseFileUri + "/" + f.d.Name;
+                }
+              })
+              .catch(err => {
+                this.$message(common.message("error", "获取Excel模板Url失败"));
+              });
+          });
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取Excel模板失败"));
+        });
+    },
+    downloadTaxExcel: function() {
+      window.open(this.TaxExcelUrl);
+    },
+    downloadExpenseExcel: function() {
+      window.open(this.ExpenseExcelUrl);
+    },
     beforeUploadValidate: function(file) {
       var fileInfo = file.raw;
       const extension = file.name.toLowerCase().endsWith(".xls");
@@ -743,7 +794,8 @@ export default {
                       InvoiceValue: "",
                       TaxRate: "",
                       TaxCode: "",
-                      CodeOfFixedAssets: ""
+                      CodeOfFixedAssets: "",
+                      Amount:""
                     };
                     if (excelJson.Sheet1[i][2] == undefined) {
                       continue;
@@ -751,10 +803,14 @@ export default {
                     TaxColumns.InvoiceValue = excelJson.Sheet1[i][5].toString();
                     TaxColumns.Currency = excelJson.Sheet1[i][3].toString();
                     TaxColumns.TaxCode = excelJson.Sheet1[i][7].toString();
-                    TaxColumns.InvoiceNumber = excelJson.Sheet1[i][2].toString();
+                    TaxColumns.InvoiceNumber = excelJson.Sheet1[
+                      i
+                    ][2].toString();
 
                     if (excelJson.Sheet1[i][1] != undefined) {
-                      TaxColumns.CompanyCode = excelJson.Sheet1[i][1].toString();
+                      TaxColumns.CompanyCode = excelJson.Sheet1[
+                        i
+                      ][1].toString();
                     }
                     if (excelJson.Sheet1[i][4] != undefined) {
                       TaxColumns.Supplier = excelJson.Sheet1[i][4].toString();
@@ -766,6 +822,11 @@ export default {
                       TaxColumns.CodeOfFixedAssets = excelJson.Sheet1[
                         i
                       ][8].toString();
+                    }
+                    if (excelJson.Sheet1[i][9] != undefined) {
+                      TaxColumns.Amount = excelJson.Sheet1[
+                        i
+                      ][9].toString();
                     }
                     this.TaxReceiptList.push(TaxColumns);
                     excelTemp.d.push(TaxColumns);
@@ -1044,16 +1105,16 @@ export default {
             var UnPaid = parseFloat(this.PublicPayment.Money) - accountPaid;
             console.log("校验发票金额是否超过合同金额1");
             console.log(Number(this.PublicPayment.InvoiceValue) > UnPaid);
-            return result = Number(this.PublicPayment.InvoiceValue) > UnPaid;
+            return (result = Number(this.PublicPayment.InvoiceValue) > UnPaid);
           } else {
             console.log("校验发票金额是否超过合同金额2");
             console.log(
               Number(this.PublicPayment.InvoiceValue) >
                 Number(this.PublicPayment.Money)
             );
-            return result =
+            return (result =
               Number(this.PublicPayment.InvoiceValue) >
-              Number(this.PublicPayment.Money);
+              Number(this.PublicPayment.Money));
           }
         })
         .catch(err => {
@@ -2046,6 +2107,7 @@ export default {
     this.loading = true;
     this.FileGUID = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
+    this.loadExcelFileUrl();
     this.getExpenseCategory();
     this.getCostCenter();
     this.getCostAccount();

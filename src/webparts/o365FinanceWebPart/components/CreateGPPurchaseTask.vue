@@ -262,6 +262,8 @@ export default {
       SubInfoListType: "SP.Data.PurchaseRequestSubInfoListItem", //采购申请供应商列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       contractListName: "ContractList", //合同列表
+      applicantNumberListName: "ApplicantNumber",
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
       userArr: [], //用户信息数据数组
       costCenterArr: [], //成本中心数组
       companyCodeArr: [], //公司代码数组
@@ -320,7 +322,10 @@ export default {
       editIndex: -1, //是否编辑
       formLabelWidth: "150px", //dialog lable
       message: "",
-      loading: true
+      loading: true,
+      baseApplicantNumber: 0,
+      GPRBaseFormat:"GPR",
+      appliantNumberItemId:0
     };
   },
   methods: {
@@ -585,6 +590,9 @@ export default {
       this.subListData.forEach(element => {
         total += Number(element.Amount);
       });
+      var currentTime=common.getCurrentDate_NoLine()
+      var baseAppNumber=this.formatAppNumber()
+      var applicantNumber=this.GPRBaseFormat+currentTime+baseAppNumber
       var costcenter = this.purchaseRequestData.CostCenter;
       var parm = {
         action: "ListItems",
@@ -617,7 +625,7 @@ export default {
             ExpenseCategory: this.purchaseRequestData.ExpenseCategory,
             CostAccount: this.purchaseRequestData.CostAccount,
             CodeOfFixedAssets: this.purchaseRequestData.CodeOfFixedAssets,
-            ApplicationNumber: this.purchaseRequestData.ApplicationNumber,
+            ApplicationNumber: applicantNumber,
             SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
           };
           console.log("kkkkkk");
@@ -657,7 +665,8 @@ export default {
           $.when($.ajax(options))
             .done(req => {
               this.$message(common.message("success", "采购申请添加成功!"));
-              this.createSubInfoItem();
+              this.updateApplicantBaseNumber()
+              this.createSubInfoItem(applicantNumber);
               this.loading = false;
               this.$router.push("/home");
             })
@@ -669,7 +678,7 @@ export default {
         }
       });
     },
-    createSubInfoItem() {
+    createSubInfoItem(applicantNumber) {
       //添加附表数据
       this.subListData.forEach(item => {
         console.log(item);
@@ -677,8 +686,8 @@ export default {
           __metadata: {
             type: this.SubInfoListType
           },
-          Title: this.purchaseRequestData.ApplicationNumber,
-          PurchaseRequestGUID: this.purchaseRequestData.ApplicationNumber,
+          Title: applicantNumber,
+          PurchaseRequestGUID: applicantNumber,
           Supplier: item.Supplier,
           SupplierParts: item.SupplierParts,
           Number: item.Number.toString(),
@@ -964,12 +973,75 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载合同列表时出错!"));
         });
+    },
+    getApplicantNumber: function() {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.applicantNumberListName,
+        condition: "?$filter=Prefix eq 'GPR'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      var getBaseApplicantNumber = common.service(opt);
+      getBaseApplicantNumber
+        .done(req => {
+          var data = req.d.results;
+          this.baseApplicantNumber = data[0].Number;
+          this.appliantNumberItemId=data[0].ID
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取单号流水号失败!"));
+        });
+    },
+    formatAppNumber:function(){
+      var formatAppNumber=""
+      var number=this.baseApplicantNumber
+      if(number.toString().length==1){
+        formatAppNumber="00000"+number.toString()
+      }else if(number.toString().length==2){
+          formatAppNumber="0000"+number.toString()
+      }else if(number.toString().length==3){
+          formatAppNumber="000"+number.toString()
+      }else if(number.toString().length==4){
+          formatAppNumber="00"+number.toString()
+      }else if(number.toString().length==5){
+          formatAppNumber="0"+number.toString()
+      }else if(number.toString().length==6){
+          formatAppNumber=number.toString()
+      }
+      return formatAppNumber
+    },
+    updateApplicantBaseNumber:function(){
+      var baseNumber= this.baseApplicantNumber
+      var itemInfo = {
+        __metadata: {
+          type: this.applicantNumberListType
+        },
+        Number: baseNumber+1
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.applicantNumberListName,
+        itemID: this.appliantNumberItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt)).done(req=>{
+        console.log("更新流水号成功")
+      }).catch(err=>{
+        this.$message(common.message("error","更新流水号失败"))
+      })
     }
   },
   mounted: function() {
     //onload
     this.loading = true;
-    this.purchaseRequestData.ApplicationNumber = common.generateUUID();
+    this.getApplicantNumber();
+    //this.purchaseRequestData.ApplicationNumber = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();

@@ -240,5 +240,25 @@ var common = {
     var currentTime = year + "-" + month + "-" + day;
     return currentTime;
   },
+  getCurrentDate_NoLine: function () {
+    var date = new Date();
+    var year = date.getFullYear();
+    var month = date.getMonth() + 1;
+    var day = date.getDate();
+    var formatMonth = ""
+    var formatDay = ""
+    if (month.toString().length == 1) {
+      formatMonth = "0" + month.toString()
+    } else {
+      formatMonth = month.toString()
+    }
+    if (day.toString().length == 1) {
+      formatDay = "0" + day.toString()
+    } else {
+      formatDay = day.toString()
+    }
+    var currentTime = year.toString() + formatMonth + formatDay;
+    return currentTime;
+  },
 }
 export default common

@@ -225,8 +225,8 @@ export default {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
-      applicantNumberListName:"ApplicantNumber",
-      applicantNumberListType:"SP.Data.ApplicantNumberListItem", 
+      applicantNumberListName: "ApplicantNumber",
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
       eccSubInfoListType: "SP.Data.ECCSubInfoListItem", //ECC物料列表类型，用于post请求
       subListName: "ECCSubInfo", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工详细信息列表名称
@@ -294,7 +294,10 @@ export default {
       editIndex: -1, //是否编辑
       checkIsSpecAppro: false, //判断是否是特殊审批人
       SpecApproId: 0, //特殊审批人ID
-      formLabelWidth: "150px" //dialog lable
+      formLabelWidth: "150px", //dialog lable
+      baseApplicantNumber: 0,
+      ECCBaseFormat:"FAA",
+      appliantNumberItemId:0
     };
   },
   methods: {
@@ -397,6 +400,9 @@ export default {
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
+        var currentTime=common.getCurrentDate_NoLine()
+        var baseAppNumber=this.formatAppNumber()
+        var applicantNumber=this.ECCBaseFormat+currentTime+baseAppNumber
         this.subListData.forEach(e => {
           this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
         }); //循环子表数据获取总金额
@@ -419,7 +425,7 @@ export default {
                 __metadata: {
                   type: this.mainListType
                 },
-                Title: this.ECCTaskForm.applicantNumber,
+                Title: applicantNumber,
                 CostCenter: this.ECCTaskForm.costcenter,
                 CompanyCode: this.ECCTaskForm.companycode,
                 ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
@@ -468,11 +474,12 @@ export default {
                     showClose: true,
                     message:
                       "固定资产申请提交成功!" +
-                      this.ECCTaskForm.applicantNumber,
+                      applicantNumber,
                     type: "success",
                     duration: 0
                   });
-                  this.createEccSubInfoItem(this.subListData); //创建子表数据
+                  this.updateApplicantBaseNumber()
+                  this.createEccSubInfoItem(this.subListData,applicantNumber); //创建子表数据
                   this.loading = false;
                   this.$router.push("/home");
                 })
@@ -676,13 +683,13 @@ export default {
           this.$message(common.message("error", "申请类型或产品类别加载出错!"));
         });
     }, //获取申请类型,获取产品类型
-    createEccSubInfoItem: function(eccSubInfoArr) {
+    createEccSubInfoItem: function(eccSubInfoArr,applicantNumber) {
       eccSubInfoArr.forEach(d => {
         var itemInfo = {
           __metadata: {
             type: this.eccSubInfoListType
           },
-          Title: this.ECCTaskForm.applicantNumber,
+          Title: applicantNumber,
           Materiel: d.wl,
           MaterielDescription: d.ms,
           Amount: d.sl.toString(),
@@ -842,14 +849,14 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.toLowerCase().endsWith("xls")
-      const extension2 = file.name.toLowerCase().endsWith("xlsx")
-      const extension3 = file.name.toLowerCase().endsWith("doc")
-      const extension4 = file.name.toLowerCase().endsWith("docx")
-      const extension5 = file.name.toLowerCase().endsWith("txt")
-      const extension6 = file.name.toLowerCase().endsWith("pdf")
-      const extension7 = file.name.toLowerCase().endsWith("xml")
-      const extension8 = file.name.toLowerCase().endsWith("msg")
+      const extension = file.name.toLowerCase().endsWith("xls");
+      const extension2 = file.name.toLowerCase().endsWith("xlsx");
+      const extension3 = file.name.toLowerCase().endsWith("doc");
+      const extension4 = file.name.toLowerCase().endsWith("docx");
+      const extension5 = file.name.toLowerCase().endsWith("txt");
+      const extension6 = file.name.toLowerCase().endsWith("pdf");
+      const extension7 = file.name.toLowerCase().endsWith("xml");
+      const extension8 = file.name.toLowerCase().endsWith("msg");
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
@@ -976,21 +983,74 @@ export default {
         this.loading = false;
       }
     }, //绑定特殊审批人输入框change事件
-    setApplicantNumber:function(){
+    getApplicantNumber: function() {
       var parm = {
-          type: "get",
-          action: "ListItems",
-          list: this.applicantNumberListName,
-          condition: "?$filter=EmployeeID eq 'FAA'",
-          baseUrl: this.hostUrl
-        };
-        var opt = common.queryOpt(parm);
+        type: "get",
+        action: "ListItems",
+        list: this.applicantNumberListName,
+        condition: "?$filter=Prefix eq 'FAA'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      var getBaseApplicantNumber = common.service(opt);
+      getBaseApplicantNumber
+        .done(req => {
+          var data = req.d.results;
+          this.baseApplicantNumber = data[0].Number;
+          this.appliantNumberItemId=data[0].ID
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取单号流水号失败!"));
+        });
+    },
+    formatAppNumber:function(){
+      var formatAppNumber=""
+      var number=this.baseApplicantNumber
+      if(number.toString().length==1){
+        formatAppNumber="00000"+number.toString()
+      }else if(number.toString().length==2){
+          formatAppNumber="0000"+number.toString()
+      }else if(number.toString().length==3){
+          formatAppNumber="000"+number.toString()
+      }else if(number.toString().length==4){
+          formatAppNumber="00"+number.toString()
+      }else if(number.toString().length==5){
+          formatAppNumber="0"+number.toString()
+      }else if(number.toString().length==6){
+          formatAppNumber=number.toString()
+      }
+      return formatAppNumber
+    },
+    updateApplicantBaseNumber:function(){
+      var baseNumber=this.baseApplicantNumber
+      var itemInfo = {
+        __metadata: {
+          type: this.applicantNumberListType
+        },
+        Number: baseNumber+1
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.applicantNumberListName,
+        itemID: this.appliantNumberItemId,
+        item: itemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt)).done(req=>{
+        console.log("更新流水号成功")
+      }).catch(err=>{
+        this.$message(common.message("error","更新流水号失败"))
+      })
     }
   },
   mounted: function() {
     this.loading = true;
     this.requestDigest = common.getRequestDigest();
-    this.ECCTaskForm.applicantNumber = common.generateUUID();
+    this.getApplicantNumber();
+    //this.ECCTaskForm.applicantNumber = common.generateUUID();
     this.getCurrentUser();
     this.getAppTypeAndProType();
     this.getCostCenter();

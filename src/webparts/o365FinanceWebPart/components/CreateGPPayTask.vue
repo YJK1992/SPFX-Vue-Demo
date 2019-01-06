@@ -250,8 +250,8 @@
           <el-button
             :disabled="!PublicPayment.IsFreightInvoice"
             type="primary"
-            @click="addTaxReceipt"
-          >添加税票</el-button>
+            @click="downloadTaxExcel"
+          >下载税票清单Excel模板</el-button>
         </td>
         <td colspan="3" align="left">
           <el-upload
@@ -281,8 +281,8 @@
           <el-button
             :disabled="!PublicPayment.IsExpenseAllocation"
             type="primary"
-            @click=""
-          >添加费用分摊</el-button>
+            @click="downloadExpenseExcel"
+          >下载费用分摊Excel模板</el-button>
         </td>
         <td colspan="3" align="left">
           <el-upload
@@ -364,6 +364,7 @@
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
         <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
+        <el-table-column property="Amount" label="数量"></el-table-column>
       </el-table>
     </el-dialog>
 
@@ -410,46 +411,6 @@
         </template>
       </table>
     </el-dialog>
-
-    <!-- 费用清单 -->
-    <!-- <el-dialog title="新增费用清单" :visible.sync="dialogFormVisible2">
-      <el-form :model="ExpenseAllocation">
-        <el-form-item label="费用科目号:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.Title"></el-input>
-        </el-form-item>
-        <el-form-item label="费用名称:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.Number"></el-input>
-        </el-form-item>
-        <el-form-item label="成本中心编号:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.CostCenterNumber"></el-input>
-        </el-form-item>
-        <el-form-item label="摊出金额:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.Money"></el-input>
-        </el-form-item>
-        <el-form-item label="项目名称:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.ProjectName"></el-input>
-        </el-form-item>
-        <el-form-item label="项目编号:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.ProjectNumber"></el-input>
-        </el-form-item>
-        <el-form-item label="成本中心签批人姓名:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.CostCenterName"></el-input>
-        </el-form-item>
-        <el-form-item label="摘要:" :label-width="formLabelWidth" prop>
-          <el-input v-model="ExpenseAllocation.Abstract"></el-input>
-        </el-form-item>
-        <el-form-item label="是否是摊入:" :label-width="formLabelWidth" prop>
-          <el-radio-group v-model="ExpenseAllocation.IsIn">
-            <el-radio :label="true">摊入</el-radio>
-            <el-radio :label="false">摊出</el-radio>
-          </el-radio-group>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="onCancel2('item')">取 消</el-button>
-        <el-button type="primary" @click="onAddItem2()">确 定</el-button>
-      </div>
-    </el-dialog> -->
   </div>
 </template>
 <script>
@@ -465,6 +426,8 @@ export default {
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
+      applicantNumberListName: "ApplicantNumber",
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
       ContractListName: "ContractList", //合同列表pushtable
       approverList: "ApproveNode", //审批节点列表名
       userArr: [], //用户信息数据数组
@@ -616,10 +579,147 @@ export default {
       costAccountOptions: [], //费用科目
       LoginName: "", //登录名
       message: "", //消息文本
-      loading: false
+      loading: false,
+      GPDocumentLibrary: "GPDocument",
+      TaxExcelUrl: "",
+      ExpenseExcelUrl: "",
+      GPJBaseApplicantNumber: 0,
+      GPBBaseApplicantNumber: 0,
+      GPJBaseFormat: "GPJ",
+      GPBBaseFormat: "GPB",
+      GPJAppliantNumberItemId: 0,
+      GPBAppliantNumberItemId: 0
     };
   },
   methods: {
+    getApplicantNumber: function() {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.applicantNumberListName,
+        condition: "",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      var getBaseApplicantNumber = common.service(opt);
+      getBaseApplicantNumber
+        .done(req => {
+          var data = req.d.results;
+          data.forEach(i => {
+            if (i.Prefix == "GPB") {
+              this.GPBBaseApplicantNumber = i.Number;
+              this.GPBAppliantNumberItemId = i.ID;
+            } else if (i.Prefix == "GPJ") {
+              this.GPJBaseApplicantNumber = i.Number;
+              this.GPJAppliantNumberItemId = i.ID;
+            }
+          });
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取单号流水号失败!"));
+        });
+    },
+    formatAppNumber: function(AppNumber) {
+      var formatAppNumber = "";
+      var number = AppNumber;
+      if (number.toString().length == 1) {
+        formatAppNumber = "00000" + number.toString();
+      } else if (number.toString().length == 2) {
+        formatAppNumber = "0000" + number.toString();
+      } else if (number.toString().length == 3) {
+        formatAppNumber = "000" + number.toString();
+      } else if (number.toString().length == 4) {
+        formatAppNumber = "00" + number.toString();
+      } else if (number.toString().length == 5) {
+        formatAppNumber = "0" + number.toString();
+      } else if (number.toString().length == 6) {
+        formatAppNumber = number.toString();
+      }
+      return formatAppNumber;
+    },
+    updateApplicantBaseNumber: function() {
+      var GPJbaseNumber = this.GPJBaseApplicantNumber;
+      var GPBbaseNumber = this.GPBBaseApplicantNumber;
+      var itemInfo = {
+        __metadata: {
+          type: this.applicantNumberListType
+        }
+        //Number: baseNumber+1
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.applicantNumberListName,
+        //itemID: this.appliantNumberItemId,
+        //item: itemInfo,
+        digest: this.requestDigest
+      };
+      if (this.PublicPayment.ReimbursementType == "费用借款") {
+        itemInfo.Number = GPJbaseNumber + 1;
+        parm.itemID = this.GPJAppliantNumberItemId;
+        parm.item = itemInfo;
+      } else {
+        itemInfo.Number = GPBbaseNumber + 1;
+        parm.itemID = this.GPBAppliantNumberItemId;
+        parm.item = itemInfo;
+      }
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log("更新流水号成功");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新流水号失败"));
+        });
+    },
+    loadExcelFileUrl: function() {
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.GPDocumentLibrary,
+        baseUrl: this.hostUrl,
+        condition: ""
+      };
+      var baseFileUri = this.hostUrl + "/" + this.GPDocumentLibrary;
+      var option = common.queryOpt(parm);
+      var getFileItems = common.service(option);
+      getFileItems
+        .done(req => {
+          var data = req.d.results;
+          console.log("ffffffffff11111111");
+          console.log(data);
+          data.forEach(i => {
+            console.log("ffffffffff22222");
+            console.log(i);
+            var fileUri = i.File.__deferred.uri;
+            var type = i.Type;
+            var getFileUrl = this.getFileItem(i.File.__deferred.uri);
+            getFileUrl
+              .done(f => {
+                console.log("ffffffffff333");
+                console.log(f);
+                if (i.Type == "GPTax") {
+                  this.TaxExcelUrl = baseFileUri + "/" + f.d.Name;
+                } else if (i.Type == "GPExpense") {
+                  this.ExpenseExcelUrl = baseFileUri + "/" + f.d.Name;
+                }
+              })
+              .catch(err => {
+                this.$message(common.message("error", "获取Excel模板Url失败"));
+              });
+          });
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取Excel模板失败"));
+        });
+    },
+    downloadTaxExcel: function() {
+      window.open(this.TaxExcelUrl);
+    },
+    downloadExpenseExcel: function() {
+      window.open(this.ExpenseExcelUrl);
+    },
     beforeUploadValidate: function(file) {
       var fileInfo = file.raw;
       const extension = file.name.toLowerCase().endsWith(".xls");
@@ -662,7 +762,8 @@ export default {
                       InvoiceValue: "",
                       TaxRate: "",
                       TaxCode: "",
-                      CodeOfFixedAssets: ""
+                      CodeOfFixedAssets: "",
+                      Amount: ""
                     };
                     if (excelJson.Sheet1[i][2] == undefined) {
                       continue;
@@ -670,10 +771,14 @@ export default {
                     TaxColumns.InvoiceValue = excelJson.Sheet1[i][5].toString();
                     TaxColumns.Currency = excelJson.Sheet1[i][3].toString();
                     TaxColumns.TaxCode = excelJson.Sheet1[i][7].toString();
-                    TaxColumns.InvoiceNumber = excelJson.Sheet1[i][2].toString();
+                    TaxColumns.InvoiceNumber = excelJson.Sheet1[
+                      i
+                    ][2].toString();
 
                     if (excelJson.Sheet1[i][1] != undefined) {
-                      TaxColumns.CompanyCode = excelJson.Sheet1[i][1].toString();
+                      TaxColumns.CompanyCode = excelJson.Sheet1[
+                        i
+                      ][1].toString();
                     }
                     if (excelJson.Sheet1[i][4] != undefined) {
                       TaxColumns.Supplier = excelJson.Sheet1[i][4].toString();
@@ -682,7 +787,12 @@ export default {
                       TaxColumns.TaxRate = excelJson.Sheet1[i][6].toString();
                     }
                     if (excelJson.Sheet1[i][8] != undefined) {
-                      TaxColumns.CodeOfFixedAssets = excelJson.Sheet1[i][8].toString();
+                      TaxColumns.CodeOfFixedAssets = excelJson.Sheet1[
+                        i
+                      ][8].toString();
+                    }
+                    if (excelJson.Sheet1[i][9] != undefined) {
+                      TaxColumns.Amount = excelJson.Sheet1[i][9].toString();
                     }
                     this.TaxReceiptList.push(TaxColumns);
                     excelTemp.d.push(TaxColumns);
@@ -1034,7 +1144,6 @@ export default {
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
     },
-
     getCostAccount() {
       var that = this;
       var parm = {
@@ -1323,6 +1432,15 @@ export default {
       //创建主表数据
       var total = parseFloat(this.PublicPayment.InvoiceValue);
       var costcenter = this.PublicPayment.CostCenter;
+      var applicantNumber = "";
+      var currentTime = common.getCurrentDate_NoLine();
+      if (this.PublicPayment.ReimbursementType == "费用借款") {
+        var baseAppNumber = this.formatAppNumber(this.GPJBaseApplicantNumber);
+        applicantNumber = this.GPJBaseFormat + currentTime + baseAppNumber;
+      } else {
+        var baseAppNumber = this.formatAppNumber(this.GPBBaseApplicantNumber);
+        applicantNumber = this.GPBBaseFormat + currentTime + baseAppNumber;
+      }
       var parm = {
         action: "ListItems",
         type: "get",
@@ -1339,7 +1457,7 @@ export default {
             __metadata: {
               type: this.mainListType
             },
-            Title: this.ApplicationNumber,
+            Title: applicantNumber,
             ReimbursementType: this.PublicPayment.ReimbursementType,
             SettlementType: this.PublicPayment.SettlementType,
             CostCenter: this.PublicPayment.CostCenter,
@@ -1363,7 +1481,7 @@ export default {
             ExpenseCategory: this.PublicPayment.ExpenseCategory,
             CostAccount: this.PublicPayment.CostAccount,
             // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
-            ApplicationNumber: this.PublicPayment.ApplicationNumber,
+            ApplicationNumber: applicantNumber,
             ReceiptNumber: this.PublicPayment.ReceiptNumber,
             IsSettlement: this.PublicPayment.IsSettlement.toString(),
             IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
@@ -1413,6 +1531,7 @@ export default {
           $.when($.ajax(option))
             .done(req => {
               this.$message(common.message("success", "对公付款添加成功!"));
+              this.updateApplicantBaseNumber();
               this.loading = false;
               this.$router.push("/home");
             })
@@ -1422,7 +1541,6 @@ export default {
         }
       });
     },
-
     indexMethod(index) {
       return index + 1;
     },
@@ -1689,9 +1807,11 @@ export default {
   mounted: function() {
     //onload
     this.loading = true;
-    this.PublicPayment.ApplicationNumber = common.generateUUID();
+    this.getApplicantNumber();
+    //this.PublicPayment.ApplicationNumber = common.generateUUID();
     this.FileGUID = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
+    this.loadExcelFileUrl();
     this.getCostCenter();
     this.getExpenseCategory();
     this.getCostAccount();
