@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <table class="duigong" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
@@ -12,7 +12,6 @@
           <el-input disabled v-model="PublicPayment.ApplicationNumber" placeholder="申请单号"></el-input>
         </td>
       </tr>
-
       <tr>
         <td align="right">单据编号：</td>
         <td align="left">
@@ -240,7 +239,7 @@
       </tr>
       <tr>
         <td align="right">增值税/运费专用发票</td>
-        <td align="left">
+        <td align="left" colspan="2">
           <el-checkbox v-model="PublicPayment.IsFreightInvoice"></el-checkbox>
           <el-button
             :disabled="!PublicPayment.IsFreightInvoice"
@@ -254,7 +253,7 @@
             @click="addTaxReceipt"
           >添加税票</el-button>
         </td>
-        <td colspan="5" align="left">
+        <td colspan="3" align="left">
           <el-upload
             class="upload-demo"
             :action="actionUrl"
@@ -265,26 +264,39 @@
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
           >
-            <el-button type="primary">导入</el-button>
+            <el-button type="primary">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
       <tr>
         <td align="right">费用分摊</td>
-        <td align="left">
+        <td align="left" colspan="2">
           <el-checkbox v-model="PublicPayment.IsExpenseAllocation"></el-checkbox>
-        </td>
-        <td colspan="5" align="left">
           <el-button
             :disabled="!PublicPayment.IsExpenseAllocation"
             type="primary"
             @click="dialogTableVisible2 = true"
+            style="margin-left: 20px;"
           >费用分摊清单</el-button>
           <el-button
             :disabled="!PublicPayment.IsExpenseAllocation"
             type="primary"
-            @click="dialogFormVisible2=true"
+            @click=""
           >添加费用分摊</el-button>
+        </td>
+        <td colspan="3" align="left">
+          <el-upload
+            class="upload-demo"
+            :action="actionUrl"
+            :on-error="uploadErr"
+            :on-success="uploadExpenseSuccess"
+            :limit="1"
+            :on-exceed="fileLimit"
+            :beforeUpload="beforeUploadValidate"
+            :show-file-list="TaxFlg"
+          >
+            <el-button type="primary">导入费用分摊</el-button>
+          </el-upload>
         </td>
       </tr>
       <tr>
@@ -352,47 +364,7 @@
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
         <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
-        <!-- <el-table-column label="操作" width="150">
-          <template slot-scope="scope">
-            <el-button size="mini" @click="onEditItem(scope.$index)">编辑</el-button>
-            <el-button size="mini" type="danger" @click="del(scope.$index)">删除</el-button>
-          </template>
-        </el-table-column>-->
       </el-table>
-    </el-dialog>
-
-    <!-- 新增税票 -->
-    <el-dialog title="新增税票" :visible.sync="dialogFormVisible">
-      <el-form :model="TaxReceipt">
-        <el-form-item label="公司代码:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.CompanyCode"></el-input>
-        </el-form-item>
-        <el-form-item label="发票号:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.InvoiceNumber"></el-input>
-        </el-form-item>
-        <el-form-item label="币种:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.Currency"></el-input>
-        </el-form-item>
-        <el-form-item label="供应商名称:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.Supplier"></el-input>
-        </el-form-item>
-        <el-form-item label="发票金额:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.InvoiceValue"></el-input>
-        </el-form-item>
-        <el-form-item label="税率:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.TaxRate"></el-input>
-        </el-form-item>
-        <el-form-item label="税码:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.TaxCode"></el-input>
-        </el-form-item>
-        <el-form-item label="固定资产编码:" :label-width="formLabelWidth" prop>
-          <el-input v-model="TaxReceipt.CodeOfFixedAssets"></el-input>
-        </el-form-item>
-      </el-form>
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="onCancel('item')">取 消</el-button>
-        <el-button type="primary" @click="onAddItem()">确 定</el-button>
-      </div>
     </el-dialog>
 
     <!-- 费用清单列表 -->
@@ -407,7 +379,6 @@
           <td>项目编号</td>
           <td>摊出成本中心签批人姓名</td>
           <td>摘要</td>
-          <td>操作</td>
         </tr>
         <template>
           <tr v-for="(subItems,index) in  ExpenseAllocationList">
@@ -415,10 +386,6 @@
               <template v-for="(subItem,cindex) in subItems">
                 <td v-if="cindex!='IsIn'">{{subItem}}</td>
               </template>
-              <td>
-                <el-button @click="onEditItem2(index)" size="small">编辑</el-button>
-                <el-button @click="del2(index)" type="danger" size="small">删除</el-button>
-              </td>
             </template>
           </tr>
         </template>
@@ -431,7 +398,6 @@
           <td>项目编号</td>
           <td>摊入成本中心签批人姓名</td>
           <td>摘要</td>
-          <td>操作</td>
         </tr>
         <template>
           <tr v-for="(subItems,index) in  ExpenseAllocationList">
@@ -439,10 +405,6 @@
               <template v-for="(subItem,cindex) in subItems">
                 <td v-if="cindex!='IsIn'">{{subItem}}</td>
               </template>
-              <td>
-                <el-button @click="onEditItem2(index)" size="small">编辑</el-button>
-                <el-button @click="del2(index)" type="danger" size="small">删除</el-button>
-              </td>
             </template>
           </tr>
         </template>
@@ -450,7 +412,7 @@
     </el-dialog>
 
     <!-- 费用清单 -->
-    <el-dialog title="新增费用清单" :visible.sync="dialogFormVisible2">
+    <!-- <el-dialog title="新增费用清单" :visible.sync="dialogFormVisible2">
       <el-form :model="ExpenseAllocation">
         <el-form-item label="费用科目号:" :label-width="formLabelWidth" prop>
           <el-input v-model="ExpenseAllocation.Title"></el-input>
@@ -487,7 +449,7 @@
         <el-button @click="onCancel2('item')">取 消</el-button>
         <el-button type="primary" @click="onAddItem2()">确 定</el-button>
       </div>
-    </el-dialog>
+    </el-dialog> -->
   </div>
 </template>
 <script>
@@ -500,11 +462,7 @@ export default {
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "PublicPayment", //对公付款
-      subListName: "TaxReceipt", //税票清单
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
-      SubInfoListType: "SP.Data.TaxReceiptListItem", //税票清单列表类型，用于post请求
-      subListName2: "ExpenseAllocation",
-      SubInfoListType2: "SP.Data.ExpenseAllocationListItem", //费用分摊列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
       ContractListName: "ContractList", //合同列表pushtable
@@ -561,34 +519,17 @@ export default {
         BussinessScope: "" //业务范围
       },
       TaxReceiptList: [], //税票清单
-      TaxReceipt: {
-        CompanyCode: "", //公司代码
-        InvoiceNumber: "", //发票号
-        Currency: "", //币种
-        Supplier: "", //供应商
-        InvoiceValue: "", //发票金额
-        TaxRate: "", //税率
-        TaxCode: "", //税码
-        CodeOfFixedAssets: "" //固定资产编码
-      },
       TaxFileId: "",
+      ExpenseFileId: "",
       TaxFlg: false,
       TaxLibrary: "TaxLibrary",
+      ExpenseLibrary: "ExpenseLibrary",
+      ExpenseFileJson: {},
       TaxFileJson: {},
-      TaxFileGUID: "",
+      FileGUID: "",
       IsTaxExcelTemplate: false,
+      IsExpenseTemplate: false,
       ExpenseAllocationList: [], //费用分摊列表
-      ExpenseAllocation: {
-        Title: "", //费用名称
-        Number: "", //费用号码
-        CostCenterNumber: "", //成本中心号码
-        Money: "", //摊出/入金额
-        ProjectName: "", //项目名称
-        ProjectNumber: "", //项目号码
-        CostCenterName: "", //摊出成本中心签批人姓名
-        Abstract: "", //摘要
-        IsIn: false //是否摊入
-      }, //费用分摊
       ReimbursementType: [
         //报销类型
         {
@@ -611,8 +552,8 @@ export default {
       SettlementType: [
         //结算方式
         {
-          value: "清帐",
-          label: "清帐"
+          value: "清账",
+          label: "清账"
         },
         {
           value: "支票",
@@ -668,15 +609,14 @@ export default {
       ],
       dialogTableVisible: false, //税票清单列表
       dialogTableVisible2: false, //费用分摊列表
-      dialogFormVisible: false, //添加税票清单
-      dialogFormVisible2: false, //添加费用分摊
       editIndex: -1, //是否编辑
       editIndex2: -1, //是否编辑费用分摊
       formLabelWidth: "150px", //添加税票清单中的宽度
       expenseCategoryOptions: [], //费用类别
       costAccountOptions: [], //费用科目
       LoginName: "", //登录名
-      message: "" //消息文本
+      message: "", //消息文本
+      loading: false
     };
   },
   methods: {
@@ -689,99 +629,261 @@ export default {
       return extension;
     }, //文件上传前对文件格式进行验证
     uploadSuccess: function(response, file, fileList) {
+      this.loading = true;
       var fileInfo = file.raw;
       var fileName = file.name;
-      this.getfile(fileInfo, fileName);
-    },//上传成功后回调函数
-    getfile: function(fileInfo, fileName) {
-      var getFile = common.getFileBuffer(fileInfo);
-      getFile
+      this.getfile(fileInfo, fileName, "Tax");
+    }, //上传成功后回调函数
+    uploadExpenseSuccess: function(response, file, fileList) {
+      this.loading = true;
+      var fileInfo = file.raw;
+      var fileName = file.name;
+      this.getfile(fileInfo, fileName, "Expense");
+    },
+    getfile: function(fileInfo, fileName, type) {
+      var fileToArr = common.getFileBuffer(fileInfo);
+      fileToArr
         .done(f => {
           console.log(f);
           if (f != null) {
             var excelJson = efn.excelToJson(f);
-            console.log("fffffffffffffff");
-            console.log(excelJson);
             if (excelJson != null && excelJson != undefined) {
-              if (excelJson.Sheet1 != null && excelJson != undefined) {
+              if (type == "Tax") {
+                console.log("Tax part");
                 if (excelJson.Sheet1[2][0].indexOf("GPTAXVER") == 0) {
                   this.IsTaxExcelTemplate = true;
-                  //var excelTemp={}
+                  var excelTemp = { d: [] };
                   for (var i = 4; i <= 33; i++) {
-                    if (
-                      excelJson.Sheet1[i][2] == undefined ||
-                      excelJson.Sheet1[i][1] == undefined
-                    ) {
-                      console.log("This row is not useful!" + i);
+                    var TaxColumns = {
+                      CompanyCode: "",
+                      InvoiceNumber: "",
+                      Currency: "",
+                      Supplier: "",
+                      InvoiceValue: "",
+                      TaxRate: "",
+                      TaxCode: "",
+                      CodeOfFixedAssets: ""
+                    };
+                    if (excelJson.Sheet1[i][2] == undefined) {
                       continue;
                     }
-                    console.log("222222222222222222222ffffffffff");
-                    console.log(excelJson.Sheet1[i]);
-                    this.TaxReceipt.InvoiceValue = excelJson.Sheet1[
-                      i
-                    ][5].toString();
-                    this.TaxReceipt.Currency = excelJson.Sheet1[
-                      i
-                    ][3].toString();
-                    this.TaxReceipt.TaxCode = excelJson.Sheet1[i][7].toString();
-                    this.TaxReceipt.CompanyCode = excelJson.Sheet1[
-                      i
-                    ][1].toString();
-                    this.TaxReceipt.InvoiceNumber = excelJson.Sheet1[
-                      i
-                    ][2].toString();
+                    TaxColumns.InvoiceValue = excelJson.Sheet1[i][5].toString();
+                    TaxColumns.Currency = excelJson.Sheet1[i][3].toString();
+                    TaxColumns.TaxCode = excelJson.Sheet1[i][7].toString();
+                    TaxColumns.InvoiceNumber = excelJson.Sheet1[i][2].toString();
+
+                    if (excelJson.Sheet1[i][1] != undefined) {
+                      TaxColumns.CompanyCode = excelJson.Sheet1[i][1].toString();
+                    }
                     if (excelJson.Sheet1[i][4] != undefined) {
-                      this.TaxReceipt.Supplier = excelJson.Sheet1[
-                        i
-                      ][4].toString();
+                      TaxColumns.Supplier = excelJson.Sheet1[i][4].toString();
                     }
                     if (excelJson.Sheet1[i][6] != undefined) {
-                      this.TaxReceipt.TaxRate = excelJson.Sheet1[
-                        i
-                      ][6].toString();
+                      TaxColumns.TaxRate = excelJson.Sheet1[i][6].toString();
                     }
                     if (excelJson.Sheet1[i][8] != undefined) {
-                      this.TaxReceipt.CodeOfFixedAssets = excelJson.Sheet1[
-                        i
-                      ][8].toString();
+                      TaxColumns.CodeOfFixedAssets = excelJson.Sheet1[i][8].toString();
                     }
-
-                    this.TaxReceiptList.push(this.TaxReceipt);
-                    //excelTemp[i-4]=[this.TaxReceipt]
+                    this.TaxReceiptList.push(TaxColumns);
+                    excelTemp.d.push(TaxColumns);
                   }
-                  this.TaxFileJson = excelJson;
-                  console.log("111111111122222222222222");
-                  console.log(this.TaxFileJson);
-                  var addFile = this.addFileToFolder(f, fileName);
+                  this.TaxFileJson = excelTemp;
+                  var addFile = this.addFileToFolder(
+                    f,
+                    fileName,
+                    this.TaxLibrary
+                  );
                   addFile
                     .done(fd => {
-                      this.$message(
-                        common.message(
-                          "success",
-                          "加载税票清单成功，请点击税票清单按钮进行再次校验!"
-                        )
+                      console.log(
+                        "加载税票清单成功，请点击税票清单按钮进行再次校验!"
                       );
-                      console.log(fd);
                       var getFile = this.getFileItem(
                         fd.d.ListItemAllFields.__deferred.uri
                       );
                       getFile
                         .done(fi => {
+                          this.loading = false;
                           console.log(fi);
                           this.TaxFileId = fi.d.ID;
+                          this.$message(
+                            common.message(
+                              "success",
+                              "加载税票清单成功，请点击税票清单按钮进行再次校验!"
+                            )
+                          );
                         })
                         .catch(err => {
+                          this.loading = false;
                           this.$message(
                             common.message("error", "获取文档库文档失败!")
                           );
                         });
                     })
                     .catch(err => {
+                      this.loading = false;
                       this.$message(
                         common.message("error", "添加文档至文档库失败!")
                       );
                     });
                 } else {
+                  this.loading = false;
+                  this.$message(
+                    common.message(
+                      "error",
+                      "请使用对应正确的Excel模板,并刷新页面"
+                    )
+                  );
+                }
+              } else {
+                console.log("Expense part");
+                var excelTemp = { d1: [], d2: [] };
+                if (
+                  excelJson.Sheet1[1][0].indexOf("GPFTOUTVER") == 0 &&
+                  excelJson.Sheet2[1][0].indexOf("GPFTINVER") == 0
+                ) {
+                  this.IsExpenseTemplate = true;
+                  for (var i = 3; i <= 102; i++) {
+                    var expense1 = {
+                      Title: "", //费用名称
+                      Number: "", //费用号码
+                      CostCenterNumber: "", //成本中心号码
+                      Money: "", //摊出/入金额
+                      ProjectName: "", //项目名称
+                      ProjectNumber: "", //项目号码
+                      CostCenterName: "", //摊出成本中心签批人姓名
+                      Abstract: "", //摘要
+                      IsIn: false //是否摊入
+                    };
+                    var expense2 = {
+                      Title: "", //费用名称
+                      Number: "", //费用号码
+                      CostCenterNumber: "", //成本中心号码
+                      Money: "", //摊出/入金额
+                      ProjectName: "", //项目名称
+                      ProjectNumber: "", //项目号码
+                      CostCenterName: "", //摊出成本中心签批人姓名
+                      Abstract: "", //摘要
+                      IsIn: true //是否摊入
+                    };
+                    //摊出部分
+                    excelJson.Sheet1[i][0] == undefined
+                      ? ""
+                      : (expense1.Title = excelJson.Sheet1[i][0].toString());
+                    excelJson.Sheet1[i][1] == undefined
+                      ? ""
+                      : (expense1.Number = excelJson.Sheet1[i][1].toString());
+                    excelJson.Sheet1[i][2] == undefined
+                      ? ""
+                      : (expense1.CostCenterNumber = excelJson.Sheet1[
+                          i
+                        ][2].toString());
+                    excelJson.Sheet1[i][3] == undefined
+                      ? ""
+                      : (expense1.Money = excelJson.Sheet1[i][3].toString());
+                    excelJson.Sheet1[i][4] == undefined
+                      ? ""
+                      : (expense1.ProjectName = excelJson.Sheet1[
+                          i
+                        ][4].toString());
+                    excelJson.Sheet1[i][5] == undefined
+                      ? ""
+                      : (expense1.ProjectNumber = excelJson.Sheet1[
+                          i
+                        ][5].toString());
+                    excelJson.Sheet1[i][6] == undefined
+                      ? ""
+                      : (expense1.CostCenterName = excelJson.Sheet1[
+                          i
+                        ][6].toString());
+                    excelJson.Sheet1[i][7] == undefined
+                      ? ""
+                      : (expense1.Abstract = excelJson.Sheet1[i][7].toString());
+                    //摊入部分
+                    excelJson.Sheet2[i][0] == undefined
+                      ? ""
+                      : (expense2.Title = excelJson.Sheet2[i][0].toString());
+                    excelJson.Sheet2[i][1] == undefined
+                      ? ""
+                      : (expense2.Number = excelJson.Sheet2[i][1].toString());
+                    excelJson.Sheet2[i][2] == undefined
+                      ? ""
+                      : (expense2.CostCenterNumber = excelJson.Sheet2[
+                          i
+                        ][2].toString());
+                    excelJson.Sheet2[i][3] == undefined
+                      ? ""
+                      : (expense2.Money = excelJson.Sheet2[i][3].toString());
+                    excelJson.Sheet2[i][4] == undefined
+                      ? ""
+                      : (expense2.ProjectName = excelJson.Sheet2[
+                          i
+                        ][4].toString());
+                    excelJson.Sheet2[i][5] == undefined
+                      ? ""
+                      : (expense2.ProjectNumber = excelJson.Sheet2[
+                          i
+                        ][5].toString());
+                    excelJson.Sheet2[i][6] == undefined
+                      ? ""
+                      : (expense2.CostCenterName = excelJson.Sheet2[
+                          i
+                        ][6].toString());
+                    excelJson.Sheet2[i][7] == undefined
+                      ? ""
+                      : (expense2.Abstract = excelJson.Sheet2[i][7].toString());
+                    if (expense1.Title != "") {
+                      this.ExpenseAllocationList.push(expense1);
+                      excelTemp.d1.push(expense1);
+                    }
+                    if (expense2.Title != "") {
+                      this.ExpenseAllocationList.push(expense2);
+                      excelTemp.d2.push(expense2);
+                    }
+                  }
+                  this.ExpenseFileJson = excelTemp;
+                  console.log("eeeeeeeeeeee");
+                  console.log(this.ExpenseFileJson);
+                  var addFile = this.addFileToFolder(
+                    f,
+                    fileName,
+                    this.ExpenseLibrary
+                  );
+                  addFile
+                    .done(fd => {
+                      console.log(
+                        "加载费用分摊清单成功，请点击费用分摊清单按钮进行再次校验!"
+                      );
+                      var getFile = this.getFileItem(
+                        fd.d.ListItemAllFields.__deferred.uri
+                      );
+                      getFile
+                        .done(fi => {
+                          this.loading = false;
+                          console.log(fi);
+                          this.ExpenseFileId = fi.d.ID;
+                          this.$message(
+                            common.message(
+                              "success",
+                              "加载费用分摊清单成功，请点击费用分摊清单按钮进行再次校验!"
+                            )
+                          );
+                        })
+                        .catch(err => {
+                          this.loading = false;
+                          this.$message(
+                            common.message("error", "获取文档库文档失败!")
+                          );
+                        });
+                    })
+                    .catch(err => {
+                      this.loading = false;
+                      this.$message(
+                        common.message("error", "添加文档至文档库失败!")
+                      );
+                    });
+                } else {
+                  this.loading = false;
                   this.$message(
                     common.message(
                       "error",
@@ -790,13 +892,15 @@ export default {
                   );
                 }
               }
+            } else {
+              this.loading = false;
             }
           }
         })
         .catch(err => {
+          this.loading = false;
           this.$message(common.message("error", "获取文件失败!"));
         });
-      return this.IsTaxExcelTemplate;
     },
     getFileItem: function(fileURI) {
       return $.ajax({
@@ -805,13 +909,13 @@ export default {
         headers: { accept: "application/json;odata=verbose" }
       });
     },
-    addFileToFolder: function(arrayBuffer, fileName) {
+    addFileToFolder: function(arrayBuffer, fileName, listName) {
       var parm = {
         type: "post",
         action: "AddFile",
         baseUrl: this.hostUrl,
-        list: this.TaxLibrary,
-        fileName: this.TaxFileGUID + "_" + fileName,
+        list: listName,
+        fileName: this.FileGUID + "_" + fileName,
         digest: this.requestDigest
       };
       var opt = common.queryOpt(parm);
@@ -1197,122 +1301,6 @@ export default {
           .replace(/^整$/, "零元整")
       );
     },
-    addTaxReceipt() {
-      //新增税票的按钮校验
-      if (this.TaxReceiptList.length == 30) {
-        this.$message({
-          message: "已有30项税票数据",
-          type: "error"
-        });
-      } else {
-        this.dialogFormVisible = true;
-      }
-    },
-    del(index) {
-      this.TaxReceiptList.splice(index, 1);
-    },
-    del2(index) {
-      this.ExpenseAllocationList.splice(index, 1);
-    },
-    onEditItem(index) {
-      this.TaxReceipt = this.TaxReceiptList[index];
-      this.editIndex = index;
-      this.dialogFormVisible = true;
-    },
-    onEditItem2(index) {
-      this.ExpenseAllocation = this.ExpenseAllocationList[index];
-      this.editIndex2 = index;
-      this.dialogFormVisible2 = true;
-    },
-    onCancel: function() {
-      this.editIndex = -1;
-      this.TaxReceipt = {
-        CompanyCode: "",
-        InvoiceNumber: "",
-        Currency: "",
-        Supplier: "",
-        InvoiceValue: "",
-        TaxRate: "",
-        TaxCode: "",
-        CodeOfFixedAssets: ""
-      };
-      this.dialogFormVisible = false;
-    },
-    onCancel2: function() {
-      this.editIndex2 = -1;
-      this.ExpenseAllocation = {
-        Title: "", //费用名称
-        Number: "", //费用号码
-        CostCenterNumber: "", //成本中心号码
-        Money: "", //摊出/入金额
-        ProjectName: "", //项目名称
-        ProjectNumber: "", //项目号码
-        CostCenterName: "", //摊出成本中心签批人姓名
-        Abstract: "", //摘要
-        IsIn: false //是否摊入
-      };
-      this.dialogFormVisible2 = false;
-    },
-    onAddItem() {
-      if (!this.itemVerification()) {
-        //校验不通过
-        this.$message({
-          message: this.message,
-          type: "error"
-        });
-      } else {
-        if (this.editIndex != -1) {
-          //编辑
-          this.TaxReceiptList[this.editIndex] = this.TaxReceipt;
-        } else {
-          //新增
-          this.TaxReceiptList.push(this.TaxReceipt);
-        }
-        this.TaxReceipt = {
-          CompanyCode: "",
-          InvoiceNumber: "",
-          Currency: "",
-          Supplier: "",
-          InvoiceValue: "",
-          TaxRate: "",
-          TaxCode: "",
-          CodeOfFixedAssets: ""
-        };
-        this.dialogFormVisible = false;
-      }
-    },
-    onAddItem2() {
-      if (!this.item2Verification()) {
-        //校验不通过
-        this.$message({
-          message: this.message,
-          type: "error"
-        });
-      } else {
-        debugger;
-        if (this.editIndex2 != -1) {
-          //编辑
-          this.ExpenseAllocationList[this.editIndex2] = this.ExpenseAllocation;
-        } else {
-          //新增
-          this.ExpenseAllocationList.push(this.ExpenseAllocation);
-        }
-        console.log(this.ExpenseAllocation);
-        this.ExpenseAllocation = {
-          Title: "", //费用名称
-          Number: "", //费用号码
-          CostCenterNumber: "", //成本中心号码
-          Money: "", //摊出/入金额
-          ProjectName: "", //项目名称
-          ProjectNumber: "", //项目号码
-          CostCenterName: "", //摊出成本中心签批人姓名
-          Abstract: "", //摘要
-          IsIn: false //是否摊入
-        };
-        this.dialogFormVisible2 = false;
-        console.log(this.ExpenseAllocationList);
-      }
-    },
     calculateMoney() {
       //计算金额
       var itemAmount = 0.0;
@@ -1325,6 +1313,7 @@ export default {
     onSaveOrSubmmit(type) {
       if (!this.formVerification()) {
         //校验不通过;
+        this.$message(common.message("error", this.message));
       } else {
         this.loading = true;
         this.createPublicPayment(type);
@@ -1387,7 +1376,9 @@ export default {
             EmployeeCode: this.PublicPayment.EmployeeCode,
             BussinessScope: this.PublicPayment.BussinessScope,
             TaxFileItemId: Number(this.TaxFileId),
-            TaxFileJsonString: JSON.stringify(this.TaxFileJson)
+            ExpenseFileId: Number(this.ExpenseFileId),
+            TaxFileJsonString: JSON.stringify(this.TaxFileJson),
+            ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
           };
           if (total > 0 && total < 1000) {
             itemInfo.Approver1Id = data1.Approver1Id;
@@ -1421,13 +1412,6 @@ export default {
           option = common.queryOpt(parm);
           $.when($.ajax(option))
             .done(req => {
-              if (this.PublicPayment.IsFreightInvoice) {
-                console.log("调用新增税票清单");
-                this.createTaxReceipt();
-              }
-              if (this.PublicPayment.IsExpenseAllocation) {
-                this.createExpenseAllocation();
-              }
               this.$message(common.message("success", "对公付款添加成功!"));
               this.loading = false;
               this.$router.push("/home");
@@ -1438,82 +1422,7 @@ export default {
         }
       });
     },
-    createTaxReceipt() {
-      //添加附表数据
-      console.log(this.TaxReceiptList);
-      this.TaxReceiptList.forEach(item => {
-        console.log(item);
-        var itemInfo = {
-          __metadata: {
-            type: this.SubInfoListType
-          },
-          Title: this.PublicPayment.ApplicationNumber,
-          PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
-          CompanyCode: item.CompanyCode, //公司代码
-          InvoiceNumber: item.InvoiceNumber, //发票号
-          Currency: item.Currency, //币种
-          Supplier: item.Supplier, //供应商
-          InvoiceValue: item.InvoiceValue, //发票金额
-          TaxRate: item.TaxRate, //税率
-          TaxCode: item.TaxCode, //税码
-          CodeOfFixedAssets: item.CodeOfFixedAssets //固定资产编码
-        };
-        var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.subListName,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "税票清单已添加成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "税票清单添加失败!"));
-          });
-      });
-    },
-    createExpenseAllocation() {
-      //添加附表数
-      console.log(this.ExpenseAllocationList);
-      this.ExpenseAllocationList.forEach(item => {
-        console.log(item);
-        var itemInfo = {
-          __metadata: {
-            type: this.SubInfoListType2
-          },
-          PublicPaymentGUID: this.PublicPayment.ApplicationNumber,
-          Title: item.Title,
-          Number: item.Number,
-          CostCenterNumber: item.CostCenterNumber,
-          Money: item.Money,
-          ProjectName: item.ProjectName,
-          ProjectNumber: item.ProjectNumber,
-          CostCenterName: item.CostCenterName,
-          Abstract: item.Abstract,
-          IsIn: item.IsIn.toString()
-        };
-        var parm = {
-          type: "post",
-          action: "AddInList",
-          baseUrl: this.hostUrl,
-          list: this.subListName2,
-          item: itemInfo,
-          digest: this.requestDigest
-        };
-        var options = common.queryOpt(parm);
-        $.when($.ajax(options))
-          .done(req => {
-            this.$message(common.message("success", "费用分摊已添加成功!"));
-          })
-          .catch(err => {
-            this.$message(common.message("error", "费用分摊添加失败!"));
-          });
-      });
-    },
+
     indexMethod(index) {
       return index + 1;
     },
@@ -1781,7 +1690,7 @@ export default {
     //onload
     this.loading = true;
     this.PublicPayment.ApplicationNumber = common.generateUUID();
-    this.TaxFileGUID = common.generateUUID();
+    this.FileGUID = common.generateUUID();
     this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();

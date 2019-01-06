@@ -223,7 +223,6 @@
     <!-- 税票清单列表 -->
     <el-dialog show-summary title="税票清单" stripe :visible.sync="dialogTableVisible">
       <el-table :data="TaxReceiptList">
-        <el-table-column type="index" :index="indexMethod" label="序号" width="50"></el-table-column>
         <el-table-column property="CompanyCode" label="公司代码" width="100"></el-table-column>
         <el-table-column property="InvoiceNumber" label="发票号" width="150"></el-table-column>
         <el-table-column property="Currency" label="币种"></el-table-column>
@@ -524,7 +523,6 @@ export default {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "PublicPayment", //对公付款
-      subListName: "TaxReceipt", //税票清单
       subListName2: "ExpenseAllocation",
       ContractListName: "ContractList", //合同列表pushtable
       ContractList: [], //合同列表
@@ -634,17 +632,6 @@ export default {
       var opt = common.queryOpt(parm);
       return common.service(opt);
     },
-    loadTaxReceiptData: function(guid) {
-      var parm = {
-        type: "get",
-        action: "ListItems",
-        list: this.subListName,
-        baseUrl: this.hostUrl,
-        condition: "?$filter=PublicPaymentGUID  eq '" + guid + "'"
-      };
-      var opt = common.queryOpt(parm);
-      return common.service(opt);
-    },
     loadExpenseAllocationData: function(guid) {
       var parm = {
         type: "get",
@@ -721,7 +708,6 @@ export default {
   mounted: function() {
     var applicantNumber = common.GetParameterValues("ApplicantNumber");
     var getMainListData = this.loadMainListData(applicantNumber);
-    var getTaxReceiptData = this.loadTaxReceiptData(applicantNumber);
     var getExpenseAllocationData = this.loadExpenseAllocationData(
       applicantNumber
     );
@@ -793,6 +779,65 @@ export default {
           console.log("!22222222222222");
           console.log(this.IsDisable);
           console.log(this.PublicPayment);
+          console.log("解析税票子表");
+          var subItems =
+            data[0].TaxFileJsonString == "{}"
+              ? { d: [] }
+              : JSON.parse(data[0].TaxFileJsonString);
+
+          if (subItems.d.length > 0) {
+            subItems.d.forEach(element => {
+              this.TaxReceiptList.push({
+                CompanyCode: element.CompanyCode,
+                InvoiceNumber: element.InvoiceNumber, //发票号
+                Currency: element.Currency, //币种
+                Supplier: element.Supplier, //供应商
+                InvoiceValue: element.InvoiceValue, //发票金额
+                TaxRate: element.TaxRate, //税率
+                TaxCode: element.TaxCode //税码
+              });
+            });
+          }
+          console.log("解析费用分摊");
+          var subExpenseItems =
+            data[0].ExpenseFileJsonString == "{}"
+              ? {
+                    d2: [],
+                    d1: []
+                }
+              : JSON.parse(data[0].ExpenseFileJsonString);
+          console.log("加载摊入");
+          if (subExpenseItems.d2.length > 0) {
+            subExpenseItems.d2.forEach(element => {
+              this.ExpenseAllocationList.push({
+                Title: element.Title, //费用名称
+                Number: element.Number, //费用号码
+                CostCenterNumber: element.CostCenterNumber, //成本中心号码
+                Money: element.Money, //摊出/入金额
+                ProjectName: element.ProjectName, //项目名称
+                ProjectNumber: element.ProjectNumber, //项目号码
+                CostCenterName: element.CostCenterName, //摊出成本中心签批人姓名
+                Abstract: element.Abstract, //摘要
+                IsIn: element.IsIn
+              });
+            });
+          }
+          console.log("加载摊出");
+          if (subExpenseItems.d1.length > 0) {
+            subExpenseItems.d1.forEach(element => {
+              this.ExpenseAllocationList.push({
+                Title: element.Title, //费用名称
+                Number: element.Number, //费用号码
+                CostCenterNumber: element.CostCenterNumber, //成本中心号码
+                Money: element.Money, //摊出/入金额
+                ProjectName: element.ProjectName, //项目名称
+                ProjectNumber: element.ProjectNumber, //项目号码
+                CostCenterName: element.CostCenterName, //摊出成本中心签批人姓名
+                Abstract: element.Abstract, //摘要
+                IsIn: element.IsIn
+              });
+            });
+          }
           this.Loadhistory();
         } else {
           this.$message(
@@ -802,54 +847,6 @@ export default {
       })
       .catch(err => {
         this.$message(common.message("error", "加载对公付款列表数据失败"));
-      });
-
-    getTaxReceiptData
-      .done(req2 => {
-        console.log(req2);
-        var data = req2.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.TaxReceiptList.push({
-              CompanyCode: d.CompanyCode,
-              InvoiceNumber: d.InvoiceNumber, //发票号
-              Currency: d.Currency, //币种
-              Supplier: d.Supplier, //供应商
-              InvoiceValue: d.InvoiceValue, //发票金额
-              TaxRate: d.TaxRate, //税率
-              TaxCode: d.TaxCode //税码
-            });
-          });
-        } else {
-        }
-      })
-      .catch(error => {
-        this.$message(common.message("error", "加载税票清单失败"));
-      });
-
-    getExpenseAllocationData
-      .done(req2 => {
-        console.log(req2);
-        var data = req2.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.ExpenseAllocationList.push({
-              Title: d.Title, //费用名称
-              Number: d.Number, //费用号码
-              CostCenterNumber: d.CostCenterNumber, //成本中心号码
-              Money: d.Money, //摊出/入金额
-              ProjectName: d.ProjectName, //项目名称
-              ProjectNumber: d.ProjectNumber, //项目号码
-              CostCenterName: d.CostCenterName, //摊出成本中心签批人姓名
-              Abstract: d.Abstract, //摘要
-              IsIn: d.IsIn == "true" ? true : false //是否摊入
-            });
-          });
-        } else {
-        }
-      })
-      .catch(error => {
-        this.$message(common.message("error", "加载费用分摊失败"));
       });
 
     this.loading = false;

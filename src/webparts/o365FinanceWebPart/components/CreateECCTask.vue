@@ -225,6 +225,8 @@ export default {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
+      applicantNumberListName:"ApplicantNumber",
+      applicantNumberListType:"SP.Data.ApplicantNumberListItem", 
       eccSubInfoListType: "SP.Data.ECCSubInfoListItem", //ECC物料列表类型，用于post请求
       subListName: "ECCSubInfo", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工详细信息列表名称
@@ -973,7 +975,17 @@ export default {
       } else {
         this.loading = false;
       }
-    } //绑定特殊审批人输入框change事件
+    }, //绑定特殊审批人输入框change事件
+    setApplicantNumber:function(){
+      var parm = {
+          type: "get",
+          action: "ListItems",
+          list: this.applicantNumberListName,
+          condition: "?$filter=EmployeeID eq 'FAA'",
+          baseUrl: this.hostUrl
+        };
+        var opt = common.queryOpt(parm);
+    }
   },
   mounted: function() {
     this.loading = true;

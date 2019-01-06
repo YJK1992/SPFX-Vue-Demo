@@ -217,7 +217,59 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.getSubList(d);
+            //修改读取子表逻辑
+            var subItems =
+              d.TaxFileJsonString == "{}"
+                ? {d:[]}
+                : JSON.parse(d.TaxFileJsonString);
+            console.log(subItems);
+            if (subItems.d.length > 0) {
+              subItems.d.forEach(sub => {
+                this.TableData.push({
+                  ApplicationNumber: d.applicationNumber,
+                  CompanyCode: sub.CompanyCode,
+                  InvoiceNumber: sub.InvoiceNumber,
+                  Currency: d.Currency,
+                  SupplierCode: "",
+                  Money: d.Money,
+                  TaxCode: sub.TaxCode,
+                  BussinessScope: d.BussinessScope,
+                  Tex:
+                    d.Trustees +
+                    "-" +
+                    d.TrusteesEmail +
+                    "报" +
+                    d.ExpenseCategory,
+                  CostAccount: d.CostAccount,
+                  CostCenter: d.CostCenter,
+                  InternalOrder: "",
+                  Distribution: "",
+                  PONumber: ""
+                });
+              });
+            } else {
+              this.TableData.push({
+                ApplicationNumber: d.applicationNumber,
+                CompanyCode: "",
+                InvoiceNumber: "",
+                Currency: d.Currency,
+                SupplierCode: "",
+                Money: d.Money,
+                TaxCode: "",
+                BussinessScope: d.BussinessScope,
+                Tex:
+                  d.Trustees +
+                  "-" +
+                  d.TrusteesEmail +
+                  d.ReimbursementType +
+                  d.ExpenseCategory,
+                CostAccount: d.CostAccount,
+                CostCenter: d.CostCenter,
+                InternalOrder: "",
+                Distribution: "",
+                PONumber: ""
+              });
+            }
           });
         }
       });
@@ -257,71 +309,7 @@ export default {
         }
       });
     },
-    getSubList(mainItem) {
-      var applicationNumber = mainItem.ApplicationNumber;
-      var parm = {
-        type: "get",
-        action: "ListItems",
-        list: this.subListName,
-        baseUrl: this.hostUrl,
-        condition: "?$filter=Title eq '" + applicationNumber + "'"
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          var data = req.d.results;
-          if (data.length > 0) {
-            data.forEach(d => {
-              this.TableData.push({
-                ApplicationNumber: applicationNumber,
-                CompanyCode: d.CompanyCode,
-                InvoiceNumber: d.InvoiceNumber,
-                Currency: mainItem.Currency,
-                SupplierCode: "",
-                Money: mainItem.Money,
-                TaxCode: d.TaxCode,
-                BussinessScope: mainItem.BussinessScope,
-                Tex:
-                  mainItem.Trustees +
-                  "-" +
-                  mainItem.TrusteesEmail +
-                  "报" +
-                  mainItem.ExpenseCategory,
-                CostAccount: mainItem.CostAccount,
-                CostCenter: mainItem.CostCenter,
-                InternalOrder: "",
-                Distribution: "",
-                PONumber: ""
-              });
-            });
-          } else {
-            this.TableData.push({
-              ApplicationNumber: applicationNumber,
-              CompanyCode: "",
-              InvoiceNumber: "",
-              Currency: mainItem.Currency,
-              SupplierCode: "",
-              Money: mainItem.Money,
-              TaxCode: "",
-              BussinessScope: mainItem.BussinessScope,
-              Tex:
-                mainItem.Trustees +
-                "-" +
-                mainItem.TrusteesEmail +
-                mainItem.ReimbursementType +
-                mainItem.ExpenseCategory,
-              CostAccount: mainItem.CostAccount,
-              CostCenter: mainItem.CostCenter,
-              InternalOrder: "",
-              Distribution: "",
-              PONumber: ""
-            });
-          }
-        })
-        .catch(err => {
-          this.$message(common.message("error", "获取物料数据失败!"));
-        });
-    },
+
     onExcel: function() {
       for (var item in this.TableData[0]) {
         this.filterVal.push(item);

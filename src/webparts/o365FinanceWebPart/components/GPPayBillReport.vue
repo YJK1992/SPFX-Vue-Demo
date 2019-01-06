@@ -313,66 +313,49 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            //查询子报表
-            this.getSubList(d);
+            var money = 0.0;
+            var subItems =
+              d.ExpenseFileJsonString == "{}"
+                ? {
+                      d2: []
+                  }
+                : JSON.parse(d.ExpenseFileJsonString);
+            if (subItems.d2.length > 0) {
+              subItems.d2.forEach(element => {
+                money += Number(element.Money);
+              });
+              if (Number(d.InvoiceValue) - money > 0) {
+                console.log("有余额");
+                this.JoinTableData.push({
+                  ApplicationNumber: d.ApplicationNumber, //申请单号
+                  SettlementType: d.SettlementType, //结算方式
+                  Trustees: d.Trustees + "-" + d.TrusteesEmail, //经办人
+                  EmployeeCode: d.EmployeeCode, //人员编号
+                  TheHighestPersonNumber: "", //最高审批人编号
+                  Money: Number(d.InvoiceValue) - money, //剩余的余额
+                  ProjectNumber: subItems.d2[0].ProjectNumber, //项目编号
+                  ProjectName: subItems.d2[0].ProjectName, //项目名称
+                  CostCenterNumber: d.CostCenter, //成本中心编号
+                  BusinessDivision: "", //所属事业部编号
+                  Number: subItems.d2[0].Number, //费用号码
+                  Title: subItems.d2[0].Title, //费用名称
+                  OnBusiness: "", //出差目的地
+                  LoanNumber: d.LoanNumber, //借款单号
+                  LoanMoney: "", //借款金额,
+                  LoanPersonNumber: "", //借款人编号,
+                  Balance: "", //差额
+                  DeductTheTax: "", //代扣税
+                  SpecialGeneralLedger: "", //特别总账
+                  Allocation: "", //分配
+                  Quota: "", //定/限额
+                  Remarke: d.Remark, //备注
+                  PONumber: "" //PO号
+                });
+              }
+            }
           });
         }
       });
-    },
-    //查询自报表
-    getSubList(mainItem) {
-      var parm = {
-        type: "get",
-        action: "ListItems",
-        list: this.subListName,
-        baseUrl: this.hostUrl,
-        condition:
-          "?$filter=PublicPaymentGUID eq '" +
-          mainItem.ApplicationNumber +
-          "' and IsIn eq 'true'"
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          var data = req.d.results;
-          var money = 0.0;
-          if (data.length > 0) {
-            data.forEach(d => {
-              money += Number(d.Money);
-            });
-            if (Number(mainItem.InvoiceValue) - money > 0) {
-              console.log("有余额");
-              this.JoinTableData.push({
-                ApplicationNumber: mainItem.ApplicationNumber, //申请单号
-                SettlementType: mainItem.SettlementType, //结算方式
-                Trustees: mainItem.Trustees + "-" + mainItem.TrusteesEmail, //经办人
-                EmployeeCode: mainItem.EmployeeCode, //人员编号
-                TheHighestPersonNumber: "", //最高审批人编号
-                Money: Number(mainItem.InvoiceValue) - money , //剩余的余额
-                ProjectNumber: data[0].ProjectNumber, //项目编号
-                ProjectName: data[0].ProjectName, //项目名称
-                CostCenterNumber:mainItem.CostCenter, //成本中心编号
-                BusinessDivision: "", //所属事业部编号
-                Number: data[0].Number, //费用号码
-                Title: data[0].Title, //费用名称
-                OnBusiness: "", //出差目的地
-                LoanNumber: mainItem.LoanNumber, //借款单号
-                LoanMoney: "", //借款金额,
-                LoanPersonNumber: "", //借款人编号,
-                Balance: "", //差额
-                DeductTheTax: "", //代扣税
-                SpecialGeneralLedger: "", //特别总账
-                Allocation: "", //分配
-                Quota: "", //定/限额
-                Remarke: mainItem.Remark, //备注
-                PONumber: "" //PO号
-              });
-            }
-          }
-        })
-        .catch(err => {
-          this.$message(common.message("error", "查询费用分摊时错误!"));
-        });
     }
   },
   mounted() {
