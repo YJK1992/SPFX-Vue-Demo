@@ -13,14 +13,21 @@ var common = {
     );
     return uuid;
   }, //生产GUID
-  getRequestDigest: function () {
-    var digest = ""
-    if (document.getElementById("__REQUESTDIGEST") != null) {
-      digest = document.getElementById("__REQUESTDIGEST").value
-    } else {
-      alert("Current Request Digest Is Empty, Please Try Again!")
-    }
-    return digest
+  getRequestDigest: function (baseUrl) {
+    //var digest = ""
+    // if (document.getElementById("__REQUESTDIGEST") != null) {
+    //   digest = document.getElementById("__REQUESTDIGEST").value
+    // } else {
+    //   alert("Current Request Digest Is Empty, Please Try Again!")
+    // }
+    return $.ajax({
+      url: baseUrl + "/_api/contextinfo",
+      method: "POST",
+      headers: {
+        "Accept": "application/json; odata=verbose"
+      },
+    })
+    //return digest
   }, //获取post请需要的RequestDigest
   message: function (type, message) {
     var mes = {

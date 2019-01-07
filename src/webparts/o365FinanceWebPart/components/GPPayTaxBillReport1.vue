@@ -226,7 +226,7 @@ export default {
             if (subItems.d.length > 0) {
               subItems.d.forEach(sub => {
                 this.TableData.push({
-                  ApplicationNumber: d.applicationNumber,
+                  ApplicationNumber: d.ApplicationNumber,
                   CompanyCode: sub.CompanyCode,
                   InvoiceNumber: sub.InvoiceNumber,
                   Currency: d.Currency,
@@ -249,7 +249,7 @@ export default {
               });
             } else {
               this.TableData.push({
-                ApplicationNumber: d.applicationNumber,
+                ApplicationNumber: d.ApplicationNumber,
                 CompanyCode: "",
                 InvoiceNumber: "",
                 Currency: d.Currency,

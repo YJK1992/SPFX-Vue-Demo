@@ -399,7 +399,10 @@ export default {
   },
   methods: {
     UpdateMain(type) {
-      var itemInfo = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var itemInfo = {
         __metadata: {
           type: this.mainListType
         },
@@ -423,6 +426,10 @@ export default {
           this.$message(common.message("error", "终止流程失败!"));
           this.$router.push("/home");
         });
+        }).catch(err=>{
+          this.$message(common.message("error", "获取Digest失败"));
+          this.loading = false;
+        })
     },
     clearContract() {
       if (!this.purchaseRequestData.IsContract) {
@@ -554,7 +561,10 @@ export default {
       });
     },
     onEnd: function() {
-      var itemInfo = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var itemInfo = {
         __metadata: {
           type: this.mainListType
         },
@@ -579,6 +589,10 @@ export default {
           this.$message(common.message("error", "终止流程失败!"));
           this.$router.push("/home");
         });
+        }).catch(err=>{
+          this.$message(common.message("error", "获取Digest失败"));
+          this.loading = false;
+        })
     },
     getExpenseCategory() {
       //获取费用类别
@@ -698,7 +712,14 @@ export default {
         this.$message(common.message("error", this.message));
       } else {
         this.loading = true;
-        this.createPurchaseRequestData(type);
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.createPurchaseRequestData(type);
+        }).catch(err=>{
+          this.$message(common.message("error", "获取Digest失败"));
+          this.loading = false;
+        })
       }
     },
     createPurchaseRequestData(type) {
@@ -1132,7 +1153,10 @@ export default {
     },
     onApproval: function(type) {
       this.loading = true;
-      var mainItemInfo = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var mainItemInfo = {
         __metadata: {
           type: this.mainListType
         }
@@ -1177,6 +1201,10 @@ export default {
           this.$message(common.message("error", "审批失败!"));
           this.$router.push("/home");
         });
+        }).catch(err=>{
+          this.$message(common.message("error", "获取Digest失败"));
+          this.loading = false;
+        })
     },
     updateTaskStatus(mainItemInfo, taskOutcome) {
       var mainParm = {
@@ -1224,7 +1252,7 @@ export default {
   mounted: function() {
     //onload
     this.loading = true;
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();
     this.getCostAccount();

@@ -221,12 +221,12 @@ export default {
       buttonType: {
         Submit: "submit",
         Save: "save"
-      },
+      }, //按钮操作类型
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "ECC", //ECC列表名
       mainListType: "SP.Data.ECCListItem", //ECC列表类型，用于post请求
-      applicantNumberListName: "ApplicantNumber",
-      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      applicantNumberListName: "ApplicantNumber", //申请单号管理列表
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem", //申请单号管理列表类型，用于post请求
       eccSubInfoListType: "SP.Data.ECCSubInfoListItem", //ECC物料列表类型，用于post请求
       subListName: "ECCSubInfo", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工详细信息列表名称
@@ -295,9 +295,9 @@ export default {
       checkIsSpecAppro: false, //判断是否是特殊审批人
       SpecApproId: 0, //特殊审批人ID
       formLabelWidth: "150px", //dialog lable
-      baseApplicantNumber: 0,
-      ECCBaseFormat:"FAA",
-      appliantNumberItemId:0
+      baseApplicantNumber: 0, //ECC流水号，由申请单号列表获取
+      ECCBaseFormat: "FAA", //ECC申请号前缀规则
+      appliantNumberItemId: 0 //ECC申请单号在申请单号列表中item的ID
     };
   },
   methods: {
@@ -333,7 +333,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "获取产品类型失败!"));
         });
-    },
+    }, //申请类型change事件
     costCenterChange: function() {
       this.loading = true;
       var costCenter = this.ECCTaskForm.costcenter;
@@ -359,7 +359,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "校验成本中心出错!"));
         });
-    },
+    }, //成本中心change事件
     getCostCenter() {
       var parm = {
         type: "get",
@@ -395,110 +395,121 @@ export default {
           console.log(this.costCenterArr);
         }
       });
-    },
+    }, //获取成本中心，并去重
     onSaveOrSubmmit: function(type) {
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
-        var currentTime=common.getCurrentDate_NoLine()
-        var baseAppNumber=this.formatAppNumber()
-        var applicantNumber=this.ECCBaseFormat+currentTime+baseAppNumber
-        this.subListData.forEach(e => {
-          this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
-        }); //循环子表数据获取总金额
-        var total = this.ECCTaskForm.total;
-        var costcenter = this.ECCTaskForm.costcenter;
-        var parm = {
-          action: "ListItems",
-          type: "get",
-          list: this.approverList,
-          baseUrl: this.hostUrl,
-          condition:
-            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
-        };
-        var option = common.queryOpt(parm); //获取审批节点请求
-        $.when($.ajax(option))
-          .done(r => {
-            if (r.d.results.length > 0) {
-              var data1 = r.d.results[0];
-              var itemInfo = {
-                __metadata: {
-                  type: this.mainListType
-                },
-                Title: applicantNumber,
-                CostCenter: this.ECCTaskForm.costcenter,
-                CompanyCode: this.ECCTaskForm.companycode,
-                ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
-                ApplicationType: this.ECCTaskForm.applicantType,
-                ProductType: this.ECCTaskForm.productType,
-                Applicant: this.ECCTaskForm.applicant,
-                Total: this.ECCTaskForm.total,
-                AttDescription: this.ECCTaskForm.AttDescription,
-                SpecialApproverTitle: this.ECCTaskForm.specialApprover
-              };
-              if (total > 0 && total < 1000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-              } else if (total >= 1000 && total < 20000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-              } else if (total >= 20000 && total < 50000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-                itemInfo.Approver3Id = data1.Approver3Id;
-              } else {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-                itemInfo.Approver3Id = data1.Approver3Id;
-                itemInfo.Approver4Id = data1.Approver4Id;
-              }
-              if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
-                itemInfo.SpecialApproverId = this.SpecApproId;
-              }
-              if (type == "submit") {
-                itemInfo.Status = "Submitted";
-              }
-              var parm = {
-                type: "post",
-                action: "AddInList",
-                baseUrl: this.hostUrl,
-                list: this.mainListName,
-                item: itemInfo,
-                digest: this.requestDigest
-              };
-              var options = common.queryOpt(parm); //在ECC列表中创建item
-              $.when($.ajax(options))
-                .done(req => {
-                  var attUrl = req.d.AttachmentFiles.__deferred.uri;
-                  this.uploadAttFileToItem(attUrl);
-                  this.$message({
-                    showClose: true,
-                    message:
-                      "固定资产申请提交成功!" +
-                      applicantNumber,
-                    type: "success",
-                    duration: 0
-                  });
-                  this.updateApplicantBaseNumber()
-                  this.createEccSubInfoItem(this.subListData,applicantNumber); //创建子表数据
-                  this.loading = false;
-                  this.$router.push("/home");
-                })
-                .catch(err => {
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst
+          .done(di => {
+            this.requestDigest = di.d.GetContextWebInformation.FormDigestValue;
+            var currentTime = common.getCurrentDate_NoLine();
+            var baseAppNumber = this.formatAppNumber();
+            var applicantNumber =
+              this.ECCBaseFormat + currentTime + baseAppNumber;
+            this.subListData.forEach(e => {
+              this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
+            }); //循环子表数据获取总金额
+            var total = this.ECCTaskForm.total;
+            var costcenter = this.ECCTaskForm.costcenter;
+            var parm = {
+              action: "ListItems",
+              type: "get",
+              list: this.approverList,
+              baseUrl: this.hostUrl,
+              condition:
+                "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
+            };
+            var option = common.queryOpt(parm); //获取审批节点请求
+            $.when($.ajax(option))
+              .done(r => {
+                if (r.d.results.length > 0) {
+                  var data1 = r.d.results[0];
+                  var itemInfo = {
+                    __metadata: {
+                      type: this.mainListType
+                    },
+                    Title: applicantNumber,
+                    CostCenter: this.ECCTaskForm.costcenter,
+                    CompanyCode: this.ECCTaskForm.companycode,
+                    ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
+                    ApplicationType: this.ECCTaskForm.applicantType,
+                    ProductType: this.ECCTaskForm.productType,
+                    Applicant: this.ECCTaskForm.applicant,
+                    Total: this.ECCTaskForm.total,
+                    AttDescription: this.ECCTaskForm.AttDescription,
+                    SpecialApproverTitle: this.ECCTaskForm.specialApprover
+                  };
+                  if (total > 0 && total < 1000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                  } else if (total >= 1000 && total < 20000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                  } else if (total >= 20000 && total < 50000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                    itemInfo.Approver3Id = data1.Approver3Id;
+                  } else {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                    itemInfo.Approver3Id = data1.Approver3Id;
+                    itemInfo.Approver4Id = data1.Approver4Id;
+                  }
+                  if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+                    itemInfo.SpecialApproverId = this.SpecApproId;
+                  }
+                  if (type == "submit") {
+                    itemInfo.Status = "Submitted";
+                  }
+                  var parm = {
+                    type: "post",
+                    action: "AddInList",
+                    baseUrl: this.hostUrl,
+                    list: this.mainListName,
+                    item: itemInfo,
+                    digest: this.requestDigest
+                  };
+                  var options = common.queryOpt(parm); //在ECC列表中创建item
+                  $.when($.ajax(options))
+                    .done(req => {
+                      var attUrl = req.d.AttachmentFiles.__deferred.uri;
+                      this.uploadAttFileToItem(attUrl);
+                      this.$message({
+                        showClose: true,
+                        message: "固定资产申请提交成功!" + applicantNumber,
+                        type: "success",
+                        duration: 0
+                      });
+                      this.updateApplicantBaseNumber();
+                      this.createEccSubInfoItem(
+                        this.subListData,
+                        applicantNumber
+                      ); //创建子表数据
+                      this.loading = false;
+                      this.$router.push("/home");
+                    })
+                    .catch(err => {
+                      this.loading = false;
+                      this.$message(
+                        common.message("error", "提交固资数据时出现了错误!")
+                      );
+                    });
+                } else {
                   this.loading = false;
                   this.$message(
-                    common.message("error", "提交固资数据时出现了错误!")
+                    common.message("error", "未找到对应成本中心的审批节点!")
                   );
-                });
-            } else {
-              this.loading = false;
-              this.$message(
-                common.message("error", "未找到对应成本中心的审批节点!")
-              );
-            }
+                }
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "获取审批人出错!"));
+              });
           })
           .catch(err => {
             this.loading = false;
-            this.$message(common.message("error", "获取审批人出错!"));
+            this.$message(common.message("error", "获取Digest失败"));
           });
       }
     }, //提交并在对应的列表创建对应的数据
@@ -650,19 +661,10 @@ export default {
         baseUrl: this.hostUrl,
         condition: ""
       };
-      // var parm2 = {
-      //   action: "ListItems",
-      //   type: "get",
-      //   list: this.productTypeListName,
-      //   baseUrl: this.hostUrl,
-      //   condition: ""
-      // };
       var option1 = common.queryOpt(parm1);
-      // var option2 = common.queryOpt(parm2);
       $.when($.ajax(option1))
         .done(req1 => {
           var data1 = req1.d.results;
-          // var data2 = req2[0].d.results;
           if (data1.length > 0) {
             data1.forEach(d1 => {
               this.applicantTypeOpts.push({
@@ -670,20 +672,13 @@ export default {
               });
             });
           }
-          // if (data2.length > 0) {
-          //   data2.forEach(d2 => {
-          //     that.productTypeOpts.push({
-          //       Title: d2.Title
-          //     });
-          //   });
-          // }
         })
         .catch(err => {
           this.loading = false;
           this.$message(common.message("error", "申请类型或产品类别加载出错!"));
         });
     }, //获取申请类型,获取产品类型
-    createEccSubInfoItem: function(eccSubInfoArr,applicantNumber) {
+    createEccSubInfoItem: function(eccSubInfoArr, applicantNumber) {
       eccSubInfoArr.forEach(d => {
         var itemInfo = {
           __metadata: {
@@ -997,37 +992,37 @@ export default {
         .done(req => {
           var data = req.d.results;
           this.baseApplicantNumber = data[0].Number;
-          this.appliantNumberItemId=data[0].ID
+          this.appliantNumberItemId = data[0].ID;
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
-    },
-    formatAppNumber:function(){
-      var formatAppNumber=""
-      var number=this.baseApplicantNumber
-      if(number.toString().length==1){
-        formatAppNumber="00000"+number.toString()
-      }else if(number.toString().length==2){
-          formatAppNumber="0000"+number.toString()
-      }else if(number.toString().length==3){
-          formatAppNumber="000"+number.toString()
-      }else if(number.toString().length==4){
-          formatAppNumber="00"+number.toString()
-      }else if(number.toString().length==5){
-          formatAppNumber="0"+number.toString()
-      }else if(number.toString().length==6){
-          formatAppNumber=number.toString()
+    }, //从申请单号列表中获取流水号
+    formatAppNumber: function() {
+      var formatAppNumber = "";
+      var number = this.baseApplicantNumber;
+      if (number.toString().length == 1) {
+        formatAppNumber = "00000" + number.toString();
+      } else if (number.toString().length == 2) {
+        formatAppNumber = "0000" + number.toString();
+      } else if (number.toString().length == 3) {
+        formatAppNumber = "000" + number.toString();
+      } else if (number.toString().length == 4) {
+        formatAppNumber = "00" + number.toString();
+      } else if (number.toString().length == 5) {
+        formatAppNumber = "0" + number.toString();
+      } else if (number.toString().length == 6) {
+        formatAppNumber = number.toString();
       }
-      return formatAppNumber
-    },
-    updateApplicantBaseNumber:function(){
-      var baseNumber=this.baseApplicantNumber
+      return formatAppNumber;
+    }, //格式化基本流水单号
+    updateApplicantBaseNumber: function() {
+      var baseNumber = this.baseApplicantNumber;
       var itemInfo = {
         __metadata: {
           type: this.applicantNumberListType
         },
-        Number: baseNumber+1
+        Number: baseNumber + 1
       };
       var parm = {
         type: "post",
@@ -1039,16 +1034,18 @@ export default {
         digest: this.requestDigest
       };
       var opt = common.queryOpt(parm);
-      $.when($.ajax(opt)).done(req=>{
-        console.log("更新流水号成功")
-      }).catch(err=>{
-        this.$message(common.message("error","更新流水号失败"))
-      })
-    }
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log("更新流水号成功");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新流水号失败"));
+        });
+    } //更新申请单号列表FAA流水号（当用户提交单据时）
   },
   mounted: function() {
     this.loading = true;
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     this.getApplicantNumber();
     //this.ECCTaskForm.applicantNumber = common.generateUUID();
     this.getCurrentUser();

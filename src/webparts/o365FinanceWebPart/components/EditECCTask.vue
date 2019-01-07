@@ -506,59 +506,76 @@ export default {
     },
     onEnd: function(type) {
       var status = "";
-      if (type == "reject") {
-        status = "Rejected";
-      } else {
-        status = "Dumped";
-      }
-      var itemInfo = {
-        __metadata: {
-          type: this.mainListType
-        },
-        Status: status
-      };
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.mainListName,
-        itemID: this.currentItemId,
-        item: itemInfo,
-        digest: this.requestDigest
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           if (type == "reject") {
-            this.onApproval(type);
+            status = "Rejected";
           } else {
-            this.$message(common.message("success", "终止流程成功!"));
-            this.$router.push("/home");
+            status = "Dumped";
           }
+          var itemInfo = {
+            __metadata: {
+              type: this.mainListType
+            },
+            Status: status
+          };
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          $.when($.ajax(opt))
+            .done(req => {
+              if (type == "reject") {
+                this.onApproval(type);
+              } else {
+                this.$message(common.message("success", "终止流程成功!"));
+                this.$router.push("/home");
+              }
+            })
+            .catch(err => {
+              this.$message(common.message("error", "终止流程失败!"));
+              this.$router.push("/home");
+            });
         })
         .catch(err => {
-          this.$message(common.message("error", "终止流程失败!"));
-          this.$router.push("/home");
+          this.$message(common.message("error", "获取Digest失败"));
         });
     },
     onApproval: function(type) {
       this.loading = true;
       var taskOutcome;
-      if (type == "approve") {
-        taskOutcome = "已批准"; //Approved 已批准
-        if (this.currentStep == "Approver5") {
-          if (this.checkFixedAsset()) {
-            this.$message(common.message("error", "固定资产编码不能为空!"));
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          if (type == "approve") {
+            taskOutcome = "已批准"; //Approved 已批准
+            if (this.currentStep == "Approver5") {
+              if (this.checkFixedAsset()) {
+                this.$message(common.message("error", "固定资产编码不能为空!"));
+              } else {
+                this.updateMainList(taskOutcome);
+              }
+            } else {
+              this.updateMainList(taskOutcome);
+            }
           } else {
+            taskOutcome = "已拒绝"; //已拒绝 Rejected
             this.updateMainList(taskOutcome);
           }
-        } else {
-          this.updateMainList(taskOutcome);
-        }
-      } else {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
-        this.updateMainList(taskOutcome);
-      }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
     },
     updateMainList: function(taskOutcome) {
       var history;
@@ -704,165 +721,177 @@ export default {
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
-        this.subListData.forEach(e => {
-          this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
-        }); //循环子表数据获取总金额
-        var total = this.ECCTaskForm.total;
-        var costcenter = this.ECCTaskForm.costcenter;
-        var parm = {
-          action: "ListItems",
-          type: "get",
-          list: this.approverList,
-          baseUrl: this.hostUrl,
-          condition:
-            "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
-        };
-        var option = common.queryOpt(parm); //获取审批节点请求
-        $.when($.ajax(option))
-          .done(r => {
-            if (r.d.results.length > 0) {
-              var data1 = r.d.results[0];
-              var itemInfo = {
-                __metadata: {
-                  type: this.mainListType
-                },
-                Title: this.ECCTaskForm.applicantNumber,
-                CostCenter: this.ECCTaskForm.costcenter,
-                CompanyCode: this.ECCTaskForm.companycode,
-                ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
-                ApplicationType: this.ECCTaskForm.applicantType,
-                ProductType: this.ECCTaskForm.productType,
-                Applicant: this.ECCTaskForm.applicant,
-                Total: this.ECCTaskForm.total,
-                AttDescription: this.ECCTaskForm.AttDescription
-              };
-              if (total > 0 && total < 1000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-              } else if (total >= 1000 && total < 20000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-              } else if (total >= 20000 && total < 50000) {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-                itemInfo.Approver3Id = data1.Approver3Id;
-              } else {
-                itemInfo.Approver1Id = data1.Approver1Id;
-                itemInfo.Approver2Id = data1.Approver2Id;
-                itemInfo.Approver3Id = data1.Approver3Id;
-                itemInfo.Approver4Id = data1.Approver4Id;
-              }
-              if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
-                itemInfo.SpecialApproverId = this.SpecApproId;
-              }
-              if (type == "submit") {
-                if (this.currentStep == "Application" && this.taskId != 0) {
-                  itemInfo.Status = "Changed";
-                } else {
-                  itemInfo.Status = "Submitted";
-                }
-              } else {
-                itemInfo.Status = "Draft";
-              }
-              var parm2 = {
-                type: "post",
-                action: "EditListItem",
-                baseUrl: this.hostUrl,
-                list: this.mainListName,
-                itemID: this.currentItemId,
-                item: itemInfo,
-                digest: this.requestDigest
-              };
-              var options = common.queryOpt(parm2);
-              $.when($.ajax(options))
-                .done(req => {
-                  if (type == "submit") {
-                    console.log("Is submit");
-                    if (this.currentStep == "Application" && this.taskId != 0) {
-                      this.onApproval("approve");
-                    }
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst
+          .done(di => {
+            this.requestDigest = di.d.GetContextWebInformation.FormDigestValue;
+            this.subListData.forEach(e => {
+              this.ECCTaskForm.total = this.ECCTaskForm.total + Number(e.zje);
+            }); //循环子表数据获取总金额
+            var total = this.ECCTaskForm.total;
+            var costcenter = this.ECCTaskForm.costcenter;
+            var parm = {
+              action: "ListItems",
+              type: "get",
+              list: this.approverList,
+              baseUrl: this.hostUrl,
+              condition:
+                "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
+            };
+            var option = common.queryOpt(parm); //获取审批节点请求
+            $.when($.ajax(option))
+              .done(r => {
+                if (r.d.results.length > 0) {
+                  var data1 = r.d.results[0];
+                  var itemInfo = {
+                    __metadata: {
+                      type: this.mainListType
+                    },
+                    Title: this.ECCTaskForm.applicantNumber,
+                    CostCenter: this.ECCTaskForm.costcenter,
+                    CompanyCode: this.ECCTaskForm.companycode,
+                    ConsigneeDetails: this.ECCTaskForm.consigneeDetail,
+                    ApplicationType: this.ECCTaskForm.applicantType,
+                    ProductType: this.ECCTaskForm.productType,
+                    Applicant: this.ECCTaskForm.applicant,
+                    Total: this.ECCTaskForm.total,
+                    AttDescription: this.ECCTaskForm.AttDescription
+                  };
+                  if (total > 0 && total < 1000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                  } else if (total >= 1000 && total < 20000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                  } else if (total >= 20000 && total < 50000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                    itemInfo.Approver3Id = data1.Approver3Id;
+                  } else {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                    itemInfo.Approver3Id = data1.Approver3Id;
+                    itemInfo.Approver4Id = data1.Approver4Id;
                   }
-                  if (this.startNoAttr) {
-                    console.log("Start No attachment");
-                    if (this.fileList.length > 0) {
-                      var attUrl =
-                        this.hostUrl +
-                        "/_api/web/lists/getbytitle('" +
-                        this.mainListName +
-                        "')/items(" +
-                        this.currentItemId +
-                        ")/AttachmentFiles";
-                      this.uploadAttFileToItem(attUrl);
+                  if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+                    itemInfo.SpecialApproverId = this.SpecApproId;
+                  }
+                  if (type == "submit") {
+                    if (this.currentStep == "Application" && this.taskId != 0) {
+                      itemInfo.Status = "Changed";
+                    } else {
+                      itemInfo.Status = "Submitted";
                     }
                   } else {
-                    console.log("Start have attachment");
-                    if (this.deleteAttName != "") {
-                      console.log("have change attachment");
-                      var parm = {
-                        type: "delete",
-                        action: "DeleteAttachment",
-                        baseUrl: this.hostUrl,
-                        digest: this.requestDigest,
-                        list: this.mainListName,
-                        itemID: this.currentItemId,
-                        fileName: this.deleteAttName
-                      };
-                      var opt = common.queryOpt(parm);
-                      var deleteFile = common.service(opt);
-                      deleteFile
-                        .done(reqf => {
-                          if (this.fileList.length > 0) {
-                            var attUrl =
-                              this.hostUrl +
-                              "/_api/web/lists/getbytitle('" +
-                              this.mainListName +
-                              "')/items(" +
-                              this.currentItemId +
-                              ")/AttachmentFiles";
-                            this.uploadAttFileToItem(attUrl);
-                          }
-                        })
-                        .catch(errf => {
-                          this.$message(
-                            common.message("error", "删除附件错误")
-                          );
-                        });
-                    }
+                    itemInfo.Status = "Draft";
                   }
-                  this.$message({
-                    showClose: true,
-                    message:
-                      "固定资产申请提交成功!" +
-                      this.ECCTaskForm.applicantNumber,
-                    type: "success",
-                    duration: 0
-                  });
-                  console.log(this.isChangeSubListData);
-                  if (this.isChangeSubListData) {
-                    console.log("change sub data");
-                    this.deleteSubListItems();
-                  }
+                  var parm2 = {
+                    type: "post",
+                    action: "EditListItem",
+                    baseUrl: this.hostUrl,
+                    list: this.mainListName,
+                    itemID: this.currentItemId,
+                    item: itemInfo,
+                    digest: this.requestDigest
+                  };
+                  var options = common.queryOpt(parm2);
+                  $.when($.ajax(options))
+                    .done(req => {
+                      if (type == "submit") {
+                        console.log("Is submit");
+                        if (
+                          this.currentStep == "Application" &&
+                          this.taskId != 0
+                        ) {
+                          this.onApproval("approve");
+                        }
+                      }
+                      if (this.startNoAttr) {
+                        console.log("Start No attachment");
+                        if (this.fileList.length > 0) {
+                          var attUrl =
+                            this.hostUrl +
+                            "/_api/web/lists/getbytitle('" +
+                            this.mainListName +
+                            "')/items(" +
+                            this.currentItemId +
+                            ")/AttachmentFiles";
+                          this.uploadAttFileToItem(attUrl);
+                        }
+                      } else {
+                        console.log("Start have attachment");
+                        if (this.deleteAttName != "") {
+                          console.log("have change attachment");
+                          var parm = {
+                            type: "delete",
+                            action: "DeleteAttachment",
+                            baseUrl: this.hostUrl,
+                            digest: this.requestDigest,
+                            list: this.mainListName,
+                            itemID: this.currentItemId,
+                            fileName: this.deleteAttName
+                          };
+                          var opt = common.queryOpt(parm);
+                          var deleteFile = common.service(opt);
+                          deleteFile
+                            .done(reqf => {
+                              if (this.fileList.length > 0) {
+                                var attUrl =
+                                  this.hostUrl +
+                                  "/_api/web/lists/getbytitle('" +
+                                  this.mainListName +
+                                  "')/items(" +
+                                  this.currentItemId +
+                                  ")/AttachmentFiles";
+                                this.uploadAttFileToItem(attUrl);
+                              }
+                            })
+                            .catch(errf => {
+                              this.$message(
+                                common.message("error", "删除附件错误")
+                              );
+                            });
+                        }
+                      }
+                      this.$message({
+                        showClose: true,
+                        message:
+                          "固定资产申请提交成功!" +
+                          this.ECCTaskForm.applicantNumber,
+                        type: "success",
+                        duration: 0
+                      });
+                      console.log(this.isChangeSubListData);
+                      if (this.isChangeSubListData) {
+                        console.log("change sub data");
+                        this.deleteSubListItems();
+                      }
 
-                  this.loading = false;
-                  this.$router.push("/home");
-                })
-                .catch(err => {
+                      this.loading = false;
+                      this.$router.push("/home");
+                    })
+                    .catch(err => {
+                      this.loading = false;
+                      this.$message(
+                        common.message("error", "提交固定资产数据时出现了错误!")
+                      );
+                      this.$router.push("/home");
+                    });
+                } else {
                   this.loading = false;
                   this.$message(
-                    common.message("error", "提交固定资产数据时出现了错误!")
+                    common.message("error", "未能获取到对应的审批节点!")
                   );
-                  this.$router.push("/home");
-                });
-            } else {
-              this.loading = false;
-              this.$message(
-                common.message("error", "未能获取到对应的审批节点!")
-              );
-            }
+                }
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "获取审批人出错!"));
+                this.$router.push("/home");
+              });
           })
           .catch(err => {
             this.loading = false;
-            this.$message(common.message("error", "获取审批人出错!"));
-            this.$router.push("/home");
+            this.$message(common.message("error", "获取Digest失败"));
           });
       }
     }, //提交并在对应的列表创建对应的数据
@@ -1194,14 +1223,14 @@ export default {
       this.$message(common.message("error", "上传附件出错!"));
     }, //附件上传失败后回调函数
     beforeUploadValidate: function(file) {
-      const extension = file.name.toLowerCase().endsWith("xls")
-      const extension2 = file.name.toLowerCase().endsWith("xlsx")
-      const extension3 = file.name.toLowerCase().endsWith("doc")
-      const extension4 = file.name.toLowerCase().endsWith("docx")
-      const extension5 = file.name.toLowerCase().endsWith("txt")
-      const extension6 = file.name.toLowerCase().endsWith("pdf")
-      const extension7 = file.name.toLowerCase().endsWith("xml")
-      const extension8 = file.name.toLowerCase().endsWith("msg")
+      const extension = file.name.toLowerCase().endsWith("xls");
+      const extension2 = file.name.toLowerCase().endsWith("xlsx");
+      const extension3 = file.name.toLowerCase().endsWith("doc");
+      const extension4 = file.name.toLowerCase().endsWith("docx");
+      const extension5 = file.name.toLowerCase().endsWith("txt");
+      const extension6 = file.name.toLowerCase().endsWith("pdf");
+      const extension7 = file.name.toLowerCase().endsWith("xml");
+      const extension8 = file.name.toLowerCase().endsWith("msg");
       const size = file.size / 1024 / 1024 < 10;
       if (
         !extension &&
@@ -1415,7 +1444,7 @@ export default {
     this.getCostCenter();
     this.getAppTypeAndProType();
     this.getCurrentUser();
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     var applicantNumber = common.GetParameterValues("ApplicantNumber");
     var step = common.GetParameterValues("Step");
     this.currentStep = step;

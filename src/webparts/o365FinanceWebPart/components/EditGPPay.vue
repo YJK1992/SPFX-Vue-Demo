@@ -157,7 +157,7 @@
         <td align="right">借款单号：</td>
         <td colspan="4">
           <el-input
-            :disabled="showApprover==true?true:PublicPayment.ReimbursementType!='费用借款'"
+            :disabled="showApprover==true"
             v-model="PublicPayment.LoanNumber"
             placeholder="借款单号"
           ></el-input>
@@ -355,6 +355,7 @@
         <td align="right">费用类别：</td>
         <td align="left">
           <el-select
+            filterable
             :disabled="showFA==false"
             @change="PublicPayment.CostAccount=''"
             v-model="PublicPayment.ExpenseCategory"
@@ -795,7 +796,7 @@ export default {
                       TaxRate: "",
                       TaxCode: "",
                       CodeOfFixedAssets: "",
-                      Amount:""
+                      Amount: ""
                     };
                     if (excelJson.Sheet1[i][2] == undefined) {
                       continue;
@@ -824,9 +825,7 @@ export default {
                       ][8].toString();
                     }
                     if (excelJson.Sheet1[i][9] != undefined) {
-                      TaxColumns.Amount = excelJson.Sheet1[
-                        i
-                      ][9].toString();
+                      TaxColumns.Amount = excelJson.Sheet1[i][9].toString();
                     }
                     this.TaxReceiptList.push(TaxColumns);
                     excelTemp.d.push(TaxColumns);
@@ -1055,7 +1054,11 @@ export default {
       });
     },
     addFileToFolder: function(arrayBuffer, fileName, listName) {
-      var parm = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      var opt=""
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var parm = {
         type: "post",
         action: "AddFile",
         baseUrl: this.hostUrl,
@@ -1063,7 +1066,11 @@ export default {
         fileName: this.FileGUID + "_" + fileName,
         digest: this.requestDigest
       };
-      var opt = common.queryOpt(parm);
+      opt = common.queryOpt(parm);
+        }).catch(error=>{
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        })
       return common.service(opt);
     },
     fileLimit: function(files, fileList) {
@@ -1240,7 +1247,10 @@ export default {
     },
 
     onEnd: function(type) {
-      var itemInfo = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var itemInfo = {
         __metadata: {
           type: this.mainListType
         }
@@ -1269,16 +1279,21 @@ export default {
           this.$message(common.message("error", "终止流程失败!"));
           this.$router.push("/home");
         });
+        }).catch(error=>{
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        })
     },
     getExpenseCategory() {
       //获取费用类别
+
       var that = this;
       var parm = {
         action: "ListItems",
         type: "get",
         list: this.expenseCategoryListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1373,6 +1388,8 @@ export default {
         this.message = "请选择报销类型;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
+      } else if (this.PublicPayment.CompanyCode == "") {
+        this.message = "请选择公司代码";
       } else if (this.PublicPayment.InvoiceValue == "") {
         this.message = "请填写发票金额;";
       } else if (isNaN(this.PublicPayment.InvoiceValue)) {
@@ -1387,12 +1404,6 @@ export default {
         this.message = "请输入小写金额;";
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
-      } else if (
-        this.PublicPayment.LoanNumber === "" &&
-        this.PublicPayment.ReimbursementType === "费用借款" &&
-        this.PublicPayment.SettlementType === "清账"
-      ) {
-        this.message = "请输入借款单号;";
       } else if (
         (this.PublicPayment.SettlementType == "4-汇款" ||
           this.PublicPayment.SettlementType == "3-支票") &&
@@ -1524,7 +1535,14 @@ export default {
         });
       } else {
         this.loading = true;
-        this.createPublicPayment(type);
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.createPublicPayment(type);
+        }).catch(error=>{
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        })
       }
     },
     createPublicPayment(type) {
@@ -1633,9 +1651,13 @@ export default {
               this.$router.push("/home");
             })
             .catch(err => {
+              this.loading = false;
               this.$message(common.message("error", "对公付款添加失败!"));
             });
         }
+      }).catch(err=>{
+        this.loading = false;
+        this.$message(common.message("error", "操作数据失败"));
       });
     },
     indexMethod(index) {
@@ -1852,7 +1874,10 @@ export default {
     onApproval: function(type) {
       this.loading = true;
       var taskOutcome;
-      var mainItemInfo = {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var mainItemInfo = {
         __metadata: {
           type: this.mainListType
         }
@@ -1976,6 +2001,10 @@ export default {
         mainItemInfo.ApproverHistory = this.ApprovalHistory;
         this.updateMainInfo(mainItemInfo, taskOutcome);
       }
+        }).catch(error=>{
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        })
     },
     updateMainInfo: function(mainItemInfo, taskOutcome) {
       var mainParm = {
@@ -2106,7 +2135,7 @@ export default {
   mounted: function() {
     this.loading = true;
     this.FileGUID = common.generateUUID();
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     this.loadExcelFileUrl();
     this.getExpenseCategory();
     this.getCostCenter();

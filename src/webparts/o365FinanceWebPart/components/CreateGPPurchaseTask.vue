@@ -581,7 +581,14 @@ export default {
         this.$message(common.message("error", this.message));
       } else {
         this.loading = true;
-        this.createPurchaseRequestData(type);
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst.done(data=>{
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.createPurchaseRequestData(type);
+        }).catch(err=>{
+          this.$message(common.message("error", "获取Digest失败"));
+          this.loading = false;
+        })
       }
     },
     createPurchaseRequestData(type) {
@@ -671,11 +678,16 @@ export default {
               this.$router.push("/home");
             })
             .catch(err => {
+              this.loading = false;
               this.$message(common.message("error", "提交数据时出现了错误!"));
             });
         } else {
+          this.loading = false;
           this.$message(common.message("warning", "未找到审批用户!"));
         }
+      }).catch(err=>{
+        this.loading = false;
+        this.$message(common.message("error","创建主表数据失败"))
       });
     },
     createSubInfoItem(applicantNumber) {
@@ -1042,7 +1054,7 @@ export default {
     this.loading = true;
     this.getApplicantNumber();
     //this.purchaseRequestData.ApplicationNumber = common.generateUUID();
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();
     this.getCostAccount();

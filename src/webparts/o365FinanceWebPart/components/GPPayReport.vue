@@ -372,17 +372,24 @@ export default {
             console.log("没有勾选打印");
             console.log(that.TableData);
             that.TableData.forEach(item => {
-              console.log(item);
-              console.log(item.IsPrint == true);
-              console.log(item.IsPrint.toString() == "true");
-              //已可以打印的数据
-              if (item.IsPrint === false) {
-                console.log("pushPrintDataFalse");
-                console.log(item);
-                that.PrintData.push(item);
-              }
+              that.PrintData.push(item);
             });
           }
+          // } else {
+          //   console.log("没有勾选打印");
+          //   console.log(that.TableData);
+          //   that.TableData.forEach(item => {
+          //     console.log(item);
+          //     console.log(item.IsPrint == true);
+          //     console.log(item.IsPrint.toString() == "true");
+          //     //已可以打印的数据
+          //     if (item.IsPrint === false) {
+          //       console.log("pushPrintDataFalse");
+          //       console.log(item);
+          //       that.PrintData.push(item);
+          //     }
+          //   });
+          // }
         }
       });
       console.log(that.PrintData);

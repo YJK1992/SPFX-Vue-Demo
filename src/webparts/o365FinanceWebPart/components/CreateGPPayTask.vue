@@ -136,11 +136,7 @@
         <td colspan="3" style="color:#409eff">此项报销有借款时必须要填写借款单号</td>
         <td align="right">借款单号：</td>
         <td colspan="4">
-          <el-input
-            :disabled="PublicPayment.ReimbursementType!='费用借款'"
-            v-model="PublicPayment.LoanNumber"
-            placeholder="借款单号"
-          ></el-input>
+          <el-input v-model="PublicPayment.LoanNumber" placeholder="借款单号"></el-input>
         </td>
       </tr>
       <tr>
@@ -309,6 +305,7 @@
         <td align="right">费用类别：</td>
         <td align="left">
           <el-select
+            filterable
             @change="PublicPayment.CostAccount=''"
             v-model="PublicPayment.ExpenseCategory"
             placeholder="请选择"
@@ -644,15 +641,12 @@ export default {
         __metadata: {
           type: this.applicantNumberListType
         }
-        //Number: baseNumber+1
       };
       var parm = {
         type: "post",
         action: "EditListItem",
         baseUrl: this.hostUrl,
         list: this.applicantNumberListName,
-        //itemID: this.appliantNumberItemId,
-        //item: itemInfo,
         digest: this.requestDigest
       };
       if (this.PublicPayment.ReimbursementType == "费用借款") {
@@ -732,13 +726,31 @@ export default {
       this.loading = true;
       var fileInfo = file.raw;
       var fileName = file.name;
-      this.getfile(fileInfo, fileName, "Tax");
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.getfile(fileInfo, fileName, "Tax");
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
     }, //上传成功后回调函数
     uploadExpenseSuccess: function(response, file, fileList) {
       this.loading = true;
       var fileInfo = file.raw;
       var fileName = file.name;
-      this.getfile(fileInfo, fileName, "Expense");
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.getfile(fileInfo, fileName, "Expense");
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
     },
     getfile: function(fileInfo, fileName, type) {
       var fileToArr = common.getFileBuffer(fileInfo);
@@ -808,6 +820,7 @@ export default {
                       console.log(
                         "加载税票清单成功，请点击税票清单按钮进行再次校验!"
                       );
+                      console.log(fd);
                       var getFile = this.getFileItem(
                         fd.d.ListItemAllFields.__deferred.uri
                       );
@@ -1124,12 +1137,14 @@ export default {
         type: "get",
         list: this.expenseCategoryListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(function(req) {
           var data = req.d.results;
+          console.log("费用类别");
+          console.log(data);
           if (data.length > 0) {
             data.forEach(item => {
               that.expenseCategoryOptions.push({
@@ -1229,6 +1244,8 @@ export default {
         this.message = "请选择报销类型;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
+      } else if (this.PublicPayment.CompanyCode == "") {
+        this.message = "请选择公司代码";
       } else if (this.PublicPayment.InvoiceValue == "") {
         this.message = "请填写发票金额;";
       } else if (isNaN(this.PublicPayment.InvoiceValue)) {
@@ -1243,12 +1260,6 @@ export default {
         this.message = "请输入小写金额;";
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
-      } else if (
-        this.PublicPayment.LoanNumber === "" &&
-        this.PublicPayment.ReimbursementType === "费用借款" &&
-        this.PublicPayment.SettlementType === "清账"
-      ) {
-        this.message = "请输入借款单号;";
       } else if (
         (this.PublicPayment.SettlementType == "汇款" ||
           this.PublicPayment.SettlementType == "支票") &&
@@ -1425,7 +1436,17 @@ export default {
         this.$message(common.message("error", this.message));
       } else {
         this.loading = true;
-        this.createPublicPayment(type);
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst
+          .done(data => {
+            this.requestDigest =
+              data.d.GetContextWebInformation.FormDigestValue;
+            this.createPublicPayment(type);
+          })
+          .catch(error => {
+            this.loading = false;
+            this.$message(common.message("error", "获取Digest失败"));
+          });
       }
     },
     createPublicPayment(type) {
@@ -1450,96 +1471,102 @@ export default {
           "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
       };
       var option = common.queryOpt(parm);
-      $.when($.ajax(option)).done(r => {
-        if (r.d.results.length > 0) {
-          var data1 = r.d.results[0];
-          var itemInfo = {
-            __metadata: {
-              type: this.mainListType
-            },
-            Title: applicantNumber,
-            ReimbursementType: this.PublicPayment.ReimbursementType,
-            SettlementType: this.PublicPayment.SettlementType,
-            CostCenter: this.PublicPayment.CostCenter,
-            Currency: this.PublicPayment.Currency,
-            InvoiceValue: this.PublicPayment.InvoiceValue,
-            ExchangeRate: this.PublicPayment.ExchangeRate,
-            CapitalizationAmount: this.PublicPayment.CapitalizationAmount,
-            AmountInlowercase: this.PublicPayment.AmountInlowercase,
-            LoanNumber: this.PublicPayment.LoanNumber,
-            CollectionUnit: this.PublicPayment.CollectionUnit,
-            OpeningBank: this.PublicPayment.OpeningBank,
-            Account: this.PublicPayment.Account,
-            City: this.PublicPayment.City,
-            County: this.PublicPayment.County,
-            DetailsOfPayment: this.PublicPayment.DetailsOfPayment,
-            IsContract: this.PublicPayment.IsContract.toString(),
-            ContractNumber: this.PublicPayment.ContractNumber,
-            Money: this.PublicPayment.Money,
-            ProjectName: this.PublicPayment.ProjectName,
-            ProjectNumber: this.PublicPayment.ProjectNumber,
-            ExpenseCategory: this.PublicPayment.ExpenseCategory,
-            CostAccount: this.PublicPayment.CostAccount,
-            // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
-            ApplicationNumber: applicantNumber,
-            ReceiptNumber: this.PublicPayment.ReceiptNumber,
-            IsSettlement: this.PublicPayment.IsSettlement.toString(),
-            IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
-            Remark: this.PublicPayment.Remark,
-            SpecialApproverTitle: this.PublicPayment.SpecialApprover,
-            Trustees: this.PublicPayment.Trustees,
-            CompanyCode: this.PublicPayment.CompanyCode,
-            IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
-            TrusteesEmail: this.LoginName.split("@")[0],
-            EmployeeCode: this.PublicPayment.EmployeeCode,
-            BussinessScope: this.PublicPayment.BussinessScope,
-            TaxFileItemId: Number(this.TaxFileId),
-            ExpenseFileId: Number(this.ExpenseFileId),
-            TaxFileJsonString: JSON.stringify(this.TaxFileJson),
-            ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
-          };
-          if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-          } else if (total >= 1000 && total < 20000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-          } else if (total >= 20000 && total < 50000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-          } else {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-            itemInfo.Approver4Id = data1.Approver4Id;
+      $.when($.ajax(option))
+        .done(r => {
+          if (r.d.results.length > 0) {
+            var data1 = r.d.results[0];
+            var itemInfo = {
+              __metadata: {
+                type: this.mainListType
+              },
+              Title: applicantNumber,
+              ReimbursementType: this.PublicPayment.ReimbursementType,
+              SettlementType: this.PublicPayment.SettlementType,
+              CostCenter: this.PublicPayment.CostCenter,
+              Currency: this.PublicPayment.Currency,
+              InvoiceValue: this.PublicPayment.InvoiceValue,
+              ExchangeRate: this.PublicPayment.ExchangeRate,
+              CapitalizationAmount: this.PublicPayment.CapitalizationAmount,
+              AmountInlowercase: this.PublicPayment.AmountInlowercase,
+              LoanNumber: this.PublicPayment.LoanNumber,
+              CollectionUnit: this.PublicPayment.CollectionUnit,
+              OpeningBank: this.PublicPayment.OpeningBank,
+              Account: this.PublicPayment.Account,
+              City: this.PublicPayment.City,
+              County: this.PublicPayment.County,
+              DetailsOfPayment: this.PublicPayment.DetailsOfPayment,
+              IsContract: this.PublicPayment.IsContract.toString(),
+              ContractNumber: this.PublicPayment.ContractNumber,
+              Money: this.PublicPayment.Money,
+              ProjectName: this.PublicPayment.ProjectName,
+              ProjectNumber: this.PublicPayment.ProjectNumber,
+              ExpenseCategory: this.PublicPayment.ExpenseCategory,
+              CostAccount: this.PublicPayment.CostAccount,
+              // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
+              ApplicationNumber: applicantNumber,
+              ReceiptNumber: this.PublicPayment.ReceiptNumber,
+              IsSettlement: this.PublicPayment.IsSettlement.toString(),
+              IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
+              Remark: this.PublicPayment.Remark,
+              SpecialApproverTitle: this.PublicPayment.SpecialApprover,
+              Trustees: this.PublicPayment.Trustees,
+              CompanyCode: this.PublicPayment.CompanyCode,
+              IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
+              TrusteesEmail: this.LoginName.split("@")[0],
+              EmployeeCode: this.PublicPayment.EmployeeCode,
+              BussinessScope: this.PublicPayment.BussinessScope,
+              TaxFileItemId: Number(this.TaxFileId),
+              ExpenseFileId: Number(this.ExpenseFileId),
+              TaxFileJsonString: JSON.stringify(this.TaxFileJson),
+              ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
+            };
+            if (total > 0 && total < 1000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+            } else if (total >= 1000 && total < 20000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+            } else if (total >= 20000 && total < 50000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+            } else {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+              itemInfo.Approver4Id = data1.Approver4Id;
+            }
+            if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+              itemInfo.SpecialApproverId = this.SpecApproId;
+            }
+            if (type == "submit") {
+              itemInfo.Status = "Submitted";
+            }
+            parm = {
+              type: "post",
+              action: "AddInList",
+              baseUrl: this.hostUrl,
+              list: this.mainListName,
+              item: itemInfo,
+              digest: this.requestDigest
+            };
+            option = common.queryOpt(parm);
+            $.when($.ajax(option))
+              .done(req => {
+                this.$message(common.message("success", "对公付款添加成功!"));
+                this.updateApplicantBaseNumber();
+                this.loading = false;
+                this.$router.push("/home");
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "对公付款添加失败!"));
+              });
           }
-          if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
-            itemInfo.SpecialApproverId = this.SpecApproId;
-          }
-          if (type == "submit") {
-            itemInfo.Status = "Submitted";
-          }
-          parm = {
-            type: "post",
-            action: "AddInList",
-            baseUrl: this.hostUrl,
-            list: this.mainListName,
-            item: itemInfo,
-            digest: this.requestDigest
-          };
-          option = common.queryOpt(parm);
-          $.when($.ajax(option))
-            .done(req => {
-              this.$message(common.message("success", "对公付款添加成功!"));
-              this.updateApplicantBaseNumber();
-              this.loading = false;
-              this.$router.push("/home");
-            })
-            .catch(err => {
-              this.$message(common.message("error", "对公付款添加失败!"));
-            });
-        }
-      });
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "创建数据失败"));
+        });
     },
     indexMethod(index) {
       return index + 1;
@@ -1810,7 +1837,7 @@ export default {
     this.getApplicantNumber();
     //this.PublicPayment.ApplicationNumber = common.generateUUID();
     this.FileGUID = common.generateUUID();
-    this.requestDigest = common.getRequestDigest();
+    //this.requestDigest = common.getRequestDigest();
     this.loadExcelFileUrl();
     this.getCostCenter();
     this.getExpenseCategory();
