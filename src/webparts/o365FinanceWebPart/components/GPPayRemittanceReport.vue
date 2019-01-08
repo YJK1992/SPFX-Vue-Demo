@@ -63,7 +63,6 @@
     </el-table>
   </div>
 </template>
-
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -72,7 +71,6 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PublicPayment", //对公付款列表名
       userListName: "EmployeeList", //员工详细信息列表名称
       CurrencyArr: [
@@ -118,7 +116,6 @@ export default {
         SettlementPeopleITCode: "" //结算人ID
       }, //筛选条件
       TableData: [], //主表数据
-      filterVal: [],
       excelColumns: [
         "收款单位",
         "银行名称",
@@ -226,12 +223,14 @@ export default {
         }
       });
     },
-
     onExcel: function() {
+      var temp = [];
+      var tempColumns=[]
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumns.push(item);
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      temp = this.TableData;
+      var data = temp.map(v => tempColumns.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -247,27 +246,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.GPPayRemittanceReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.GPPayRemittanceReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-#report_GPPayRemittanceReport {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

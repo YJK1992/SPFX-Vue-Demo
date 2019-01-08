@@ -259,8 +259,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
+            :disabled="!PublicPayment.IsFreightInvoice"
           >
-            <el-button type="primary">导入税票清单</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsFreightInvoice">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
@@ -290,8 +291,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
+            :disabled="!PublicPayment.IsExpenseAllocation"
           >
-            <el-button type="primary">导入费用分摊</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsExpenseAllocation">导入费用分摊</el-button>
           </el-upload>
         </td>
       </tr>
@@ -1320,6 +1322,8 @@ export default {
         !this.IsMoneyConsistent()
       ) {
         this.message = "摊入摊出金额不一致;";
+      }else if(this.PublicPayment.CostAccount==""){
+        this.message = "费用科目不可为空;";
       } else {
         isSuccess = true;
       }

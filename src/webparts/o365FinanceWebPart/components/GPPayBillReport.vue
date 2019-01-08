@@ -81,24 +81,18 @@
     </el-table>
   </div>
 </template>
-
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
-
 export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PublicPayment", //ECC列表名
       subListName: "ExpenseAllocation", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工表
-      //初始化筛选数据
       CompanyCodeArr: [], //公司代码
-      //筛选条件
       Condition: {
         SettlementType: "", //结算方式
         SettlingTime: "", //结算时间
@@ -107,8 +101,7 @@ export default {
         Currency: "", //币种
         SettlementPeopleITCode: "", //结算人
         Trustees: "" //经办人
-      },
-      //结算方式
+      },//筛选条件
       SettlementType: [
         {
           value: "清帐",
@@ -130,8 +123,7 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],
-      //币种
+      ],//结算方式
       Currency: [
         {
           value: "RMB",
@@ -165,12 +157,8 @@ export default {
           value: "Other",
           label: "Other"
         }
-      ],
-      //其他
+      ],//币种
       dialogTableVisible: false,
-      //导出属性列
-      filterVal: [],
-      //Excdltitle
       excelColumns: [
         "单据号",
         "结算方式",
@@ -195,18 +183,19 @@ export default {
         "定/限额",
         "备注",
         "PO号"
-      ],
-      //合并数据行
-      JoinTableData: []
+      ],//Excdltitle
+      JoinTableData: []//合并数据行
     };
   },
   methods: {
-    //导出Excel
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.JoinTableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      var data = this.JoinTableData.map(v => this.filterVal.map(k => v[k]));
+      temp=this.JoinTableData
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -215,8 +204,7 @@ export default {
         sheetName: "PayBill"
       };
       efn.toExcel(excelInfo);
-    },
-    //获取公司代码
+    },//导出Excel
     getCompanyCode: function() {
       //获取公司代码和成本中心
       var parm = {
@@ -251,8 +239,7 @@ export default {
           });
         }
       });
-    },
-    //查询主表
+    },//获取公司代码
     onSubmit() {
       this.JoinTableData = [];
       console.log("筛选条件");
@@ -356,34 +343,10 @@ export default {
           });
         }
       });
-    }
+    }//查询主表
   },
   mounted() {
     this.getCompanyCode();
   }
 };
 </script>
-
-<style>
-.GPPayBillReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.GPPayBillReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-.GPPayBillReport tr:nth-child(1) {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

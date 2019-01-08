@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
-          <el-form-item label="公司代码：">
+      <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
@@ -71,24 +71,18 @@
     </el-table>
   </div>
 </template>
-
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
-
 export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PublicPayment", //ECC列表名
       subListName: "ExpenseAllocation", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工表
-      //初始化筛选数据
       CompanyCodeArr: [], //公司代码
-      //Excel导出列
       excelColumns: [
         "单据编号",
         "公司代码",
@@ -103,17 +97,15 @@ export default {
         "特别总账",
         "分配",
         "PO号"
-      ],
-      //筛选条件
+      ], //Excel导出列
       Condition: {
         SettlementType: "", //结算方式
         SettlingTime: "", //申请日期
         Title: "", //申请单号
         CompanyCode: "", //公司代码
         Currency: "", //币种
-         SettlementPeopleITCode: "" //结算人
-      },
-      //结算方式
+        SettlementPeopleITCode: "" //结算人
+      }, //筛选条件
       SettlementType: [
         {
           value: "清帐",
@@ -135,10 +127,9 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],
-      //币种
+      ], //结算方式
       Currency: [
-             {
+        {
           value: "RMB",
           label: "RMB"
         },
@@ -170,24 +161,21 @@ export default {
           value: "Other",
           label: "Other"
         }
-      ],
-      //主表数据
-      TableData: [],
-      //子表数据
-      SubTableData: [],
-      //其他
-      dialogTableVisible: false,
-      //导出属性列
-      filterVal: []
+      ], //币种
+      TableData: [], //主表数据
+      SubTableData: [], //子表数据
+      dialogTableVisible: false
     };
   },
   methods: {
-    //导出Excel
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      temp = this.TableData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -196,8 +184,7 @@ export default {
         sheetName: "税票清单数据导出F53"
       };
       efn.toExcel(excelInfo);
-    },
-    //获取公司代码
+    }, //导出Excel
     getCompanyCode: function() {
       //获取公司代码和成本中心
       var parm = {
@@ -232,8 +219,7 @@ export default {
           });
         }
       });
-    },
-    //查询主表
+    }, //获取公司代码
     onSubmit() {
       this.TableData = [];
       console.log("筛选条件");
@@ -282,10 +268,12 @@ export default {
               // Trustees: d.Trustees, //经办人
               Currency: d.Currency, //币种
               BankSubject: "", //银行科目,
-              TXT: d.Trustees + "-" + d.TrusteesEmail+'报'+d.ExpenseCategory, //文本
+              TXT:
+                d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               ScopeOfService: "", //业务范围
               InvoiceValue: d.InvoiceValue, //金额
-              TXT1: d.Trustees + "-" + d.TrusteesEmail+'报'+d.ExpenseCategory, //文本
+              TXT1:
+                d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               BankSubjectAllocation: "", //银行科目分配,
               SupplierNumber: "", //供应商编号,
               SpecialGeneralLedger: "", //特别总账
@@ -295,34 +283,10 @@ export default {
           });
         }
       });
-    }
+    } //查询主表
   },
   mounted() {
     this.getCompanyCode();
   }
 };
 </script>
-
-<style>
-.GPPayTaxBillReport2 tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.GPPayTaxBillReport2 {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-.GPPayTaxBillReport2 tr:nth-child(1) {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

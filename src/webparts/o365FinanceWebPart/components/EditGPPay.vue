@@ -307,9 +307,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true"
           >
-            <el-button type="primary" :disabled="showApprover==true">导入税票清单</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
@@ -339,9 +339,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true"
           >
-            <el-button type="primary" :disabled="showApprover==true">导入费用分摊</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true">导入费用分摊</el-button>
           </el-upload>
         </td>
       </tr>
@@ -1245,7 +1245,6 @@ export default {
         this.convertMoney();
       }
     },
-
     onEnd: function(type) {
       var getDigst = common.getRequestDigest(this.hostUrl);
         getDigst.done(data=>{
@@ -1464,6 +1463,8 @@ export default {
         !this.IsMoneyConsistent()
       ) {
         this.message = "摊入摊出金额不一致;";
+      }else if(this.PublicPayment.CostAccount==""){
+        this.message = "费用科目不可为空;";
       } else {
         isSuccess = true;
       }
@@ -2071,7 +2072,6 @@ export default {
       var opt = common.queryOpt(parm);
       return common.service(opt);
     },
-
     loadExpenseAllocationData: function(guid) {
       var parm = {
         type: "get",
@@ -2324,7 +2324,6 @@ export default {
   components: {}
 };
 </script>
-
 <style>
 .duigongEdit {
   min-height: 25px;

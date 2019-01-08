@@ -86,8 +86,6 @@
     </el-table>
   </div>
 </template>
-
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -137,7 +135,7 @@ export default {
         "固定资产编码",
         "费用类别"
       ],
-      filterVal: [],
+      //filterVal: [],
       //筛选条件
       Condition: {
         CostCenter: "", //成本中心
@@ -349,17 +347,13 @@ export default {
       });
     },
     onExcel: function() {
-      console.log(this.TableData);
-      console.log("222222222222");
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      console.log(this.filterVal);
-      console.log("33333333333333");
-      console.log(this.TableData);
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
-      console.log("44444444444444");
-      console.log(data);
+      temp=this.TableData
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -376,27 +370,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.ECCReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.ECCReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-.ECCReport tr:nth-child(1) {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

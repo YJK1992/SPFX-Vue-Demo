@@ -77,7 +77,6 @@
     </el-table>
   </div>
 </template>
-
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -86,7 +85,6 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PublicPayment", //对公付款列表名
       subListName: "TaxReceipt",
       userListName: "EmployeeList", //员工详细信息列表名称
@@ -162,7 +160,6 @@ export default {
         "分配",
         "PO号"
       ],
-      filterVal: [],
       CompanyCodeArr: [], //公司代码
       Condition: {
         SettlementPeopleITCode: "", //经办人ID
@@ -309,12 +306,14 @@ export default {
         }
       });
     },
-
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      temp=this.TableData
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -330,27 +329,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.GPPayTaxBillReport1 tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.GPPayTaxBillReport1 {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-#report_GPPayTaxBillReport1 {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

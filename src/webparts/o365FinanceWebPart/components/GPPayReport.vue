@@ -21,8 +21,8 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <el-form-item label="单据编号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="单据编号"></el-input>
+      <el-form-item label="申请单号：">
+        <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
       </el-form-item>
       <el-form-item label="经办人ID：">
         <el-input v-model="Condition.TrusteesEmail" placeholder="经办人ID"></el-input>
@@ -73,7 +73,7 @@
       </el-form-item>
     </el-form>
     <el-table :data="PrintData" style="width: 100%" max-height="600">
-      <el-table-column fixed prop="ApplicationNumber" label="单据编号" width="300"></el-table-column>
+      <el-table-column fixed prop="ApplicationNumber" label="申请单号" width="300"></el-table-column>
       <el-table-column prop="ReimbursementType" label="报销类型"></el-table-column>
       <el-table-column prop="SettlementType" label="结算方式"></el-table-column>
       <el-table-column prop="Trustees" label="经办人"></el-table-column>
@@ -90,7 +90,6 @@
     </el-table>
   </div>
 </template>
-
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -99,8 +98,6 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-
-      //列表名称
       mainListName: "PublicPayment", //ECC列表名
       userListName: "EmployeeList",
       ReimbursementType: [
@@ -179,9 +176,8 @@ export default {
           label: "汇票"
         }
       ],
-      filterVal: [],
       excelColumns: [
-        "单据编号",
+        "申请单号",
         "报销类型",
         "结算方式",
         "经办人",
@@ -191,7 +187,6 @@ export default {
         "申请日期",
         "签批/结算人"
       ], //excel字段名
-      //筛选条件
       Condition: {
         ReimbursementType: "",
         SettlementType: "",
@@ -201,13 +196,11 @@ export default {
         CompanyCode: "",
         TrusteesEmail: "", //经办人ID
         InvoiceValue: ""
-      },
+      }, //筛选条件
       IsPrint: false, //是否可以打印
       CompanyCodeArr: [],
-      //主表数据
-      TableData: [],
-      //可以打印
-      PrintData: []
+      TableData: [], //主表数据
+      PrintData: [] //可以打印
     };
   },
   methods: {
@@ -300,13 +293,16 @@ export default {
       });
     },
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.PrintData[0]) {
         if (item != "IsPrint") {
           console.log(item);
-          this.filterVal.push(item);
+          tempColumn.push(item);
         }
       }
-      var data = this.PrintData.map(v => this.filterVal.map(k => v[k]));
+      temp = this.PrintData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -409,25 +405,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.gpPayReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-#gpPayReportTable td {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-.gpPayReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-</style>

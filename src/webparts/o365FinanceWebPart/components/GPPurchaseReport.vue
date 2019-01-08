@@ -62,7 +62,6 @@
     </el-table>
   </div>
 </template>
-
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
@@ -71,17 +70,14 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PurchaseRequest", //ECC列表名
       subListName: "PurchaseRequestSubInfo", //ECC物料信息列表名称
       userListName: "EmployeeList", //员工详细信息列表名称
-      //   appliantTypeListName: "ApplicantType", //申请类型列表名称
-      //初始化筛选数据
       CostCenterArr: [], //成本中心
       ApplicationTypeArr: [], //申请类别
       CompanyCodeArr: [], //公司代码
       SettlementType: [
-        //结算方式
+        
         {
           value: "清帐",
           label: "清帐"
@@ -102,18 +98,15 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],
-      //筛选条件
+      ],//结算方式
       Condition: {
         ApplicationDate: "", //申请日期
         ApplicationNumber: "", //申请单号
         CompanyCode: "", //公司代码
         SettlementType: "", //结算类型
         Consignor: "" //经办人
-      },
-      //主表数据
-      TableData: [],
-      //子表数据
+      },//筛选条件
+      TableData: [],//主表数据
       excelColumns: [
         "申请单号",
         "标题",
@@ -122,16 +115,18 @@ export default {
         "供应商部件",
         "总金额",
         "税金"
-      ],
-      filterVal: []
+      ],//excle字段名
     };
   },
   methods: {
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      temp=this.TableData
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
@@ -295,27 +290,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.gpPurchaseReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.gpPurchaseReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-.gpPurchaseReport tr:nth-child(1) {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>

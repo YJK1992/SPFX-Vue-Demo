@@ -11,7 +11,6 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
-
       <el-form-item label="结算方式">
         <el-select v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
@@ -22,7 +21,6 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
       <!-- <el-form-item label="结算人：">
         <el-input v-model="Condition.Title" placeholder="结算人"></el-input>
       </el-form-item>-->
@@ -35,8 +33,7 @@
             :value="item.CompanyCode"
           ></el-option>
         </el-select>
-      </el-form-item> -->
-
+      </el-form-item>-->
       <el-form-item label="币种">
         <el-select v-model="Condition.Currency" placeholder="请选择">
           <el-option
@@ -47,85 +44,53 @@
           ></el-option>
         </el-select>
       </el-form-item>
-
       <el-form-item>
+        <el-button type="primary" @click="Condition={}">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
+        <el-button type="primary" @click="onExcel">导出Excel</el-button>
       </el-form-item>
     </el-form>
-
-    <table class="GPPayAssetReport">
-      <tr id="report_GPPayAssetReport">
-        <td style="width: 300px;">申请单号</td>
-        <td>结算方式</td>
-        <td>经办人</td>
-        <td>人员编号</td>
-        <td>最高级审批人编号</td>
-        <td>金额</td>
-        <td>所属事业部</td>
-        <td>资产号</td>
-        <td>借款单号</td>
-        <td>借款金额</td>
-        <td>借款人编号</td>
-        <td>差额</td>
-        <td>特别总账标志</td>
-        <td>分配</td>
-        <td>定/限额</td>
-        <td>备注</td>
-        <td>PO号</td>
-        <td>操作</td>
-      </tr>
-      <tr v-for="(subItems,index) in TableData">
-        <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
-        </template>
-        <td>
-          <el-button @click="getSubList(index,1)" size="small">查看税票</el-button>
-          <el-button @click="getSubList(index,2)" size="small">查看费用</el-button>
-        </td>
-      </tr>
-    </table>
-
-    <el-dialog title="税票清单" :visible.sync="dialogTableVisible1">
-      <el-table style="width:100%" :data="SubTableData1">
-        <el-table-column property="InvoiceNumber" label="发票号码" width="150"></el-table-column>
-        <el-table-column property="TaxCode" label="税码" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
-
-    <el-dialog title="费用分摊" :visible.sync="dialogTableVisible2">
-      <el-table style="width:100%" :data="SubTableData2">
-        <el-table-column property="Number" label="费用编号" width="150"></el-table-column>
-        <el-table-column property="Title" label="费用名称" width="150"></el-table-column>
-      </el-table>
-    </el-dialog>
+    <el-table :data="TableData" style="width: 100%" max-height="400">
+      <el-table-column fixed prop="ApplicationNumber" label="申请单号" width="300"></el-table-column>
+      <el-table-column prop="SettlementType" label="结算方式"></el-table-column>
+      <el-table-column prop="Trustees" label="经办人"></el-table-column>
+      <el-table-column prop="PersonCode" label="人员编号"></el-table-column>
+      <el-table-column prop="TheHighestPersonNumber" label="最高级审批人编号"></el-table-column>
+      <el-table-column prop="InvoiceValue" label="金额"></el-table-column>
+      <el-table-column prop="BusinessDivision" label="所属事业部"></el-table-column>
+      <el-table-column prop="CodeOfFixedAssets" label="资产号"></el-table-column>
+      <el-table-column prop="LoanNumber" label="借款单号"></el-table-column>
+      <el-table-column prop="LoanMoney" label="借款金额"></el-table-column>
+      <el-table-column prop="LoanPersonNumber" label="借款人编号"></el-table-column>
+      <el-table-column prop="Balance" label="差额"></el-table-column>
+      <el-table-column prop="SpecialGeneralLedger" label="特别总账标志"></el-table-column>
+      <el-table-column prop="Allocation" label="分配"></el-table-column>
+      <el-table-column prop="Quota" label="定/限额"></el-table-column>
+      <el-table-column prop="Remarke" label="备注"></el-table-column>
+      <el-table-column fixed="right" prop="PONumber" label="PO号"></el-table-column>
+    </el-table>
   </div>
 </template>
-
- 
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
-
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      //列表名称
       mainListName: "PublicPayment", //对公付款主表
       subListName1: "TaxReceipt", //税票清单主表
       subListName2: "ExpenseAllocation", //费用分摊数据主表
       userListName: "EmployeeList", //员工表
-      //初始化筛选数据
       CompanyCodeArr: [], //公司代码
-      //筛选条件
       Condition: {
         SettlementType: "", //结算方式
         ApplicationDate: "", //申请日期
         Title: "", //申请单号
         CompanyCode: "", //公司代码
         Currency: "" //币种
-      },
-      //结算方式
+      }, //筛选条件
       SettlementType: [
         {
           value: "清帐",
@@ -147,8 +112,7 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],
-      //币种
+      ], //结算方式
       Currency: [
         {
           value: "人民币",
@@ -182,16 +146,27 @@ export default {
           value: "其他",
           label: "其他"
         }
-      ],
-      //主表数据
-      TableData: [],
-      //子表数据
-      SubTableData1: [],
-      //子表数据2
-      SubTableData2: [],
-      //其他
-      dialogTableVisible1: false,
-      dialogTableVisible2: false
+      ], //币种
+      TableData: [], //主表数据
+      excelColumns: [
+        "申请单号",
+        "结算方式",
+        "经办人",
+        "人员编号",
+        "最高级审批人编号",
+        "金额",
+        "所属事业部",
+        "资产号",
+        "借款单号",
+        "借款金额",
+        "借款人编号",
+        "差额",
+        "特别总账标志",
+        "分配",
+        "定/限额",
+        "备注",
+        "PO号"
+      ] //excel字段名
     };
   },
   methods: {
@@ -233,67 +208,67 @@ export default {
     },
     //查询子列表
     getSubList(index, type) {
-      if (type == 1) {
-        //查询税票清单
-        this.dialogTableVisible1 = true;
-        this.SubTableData1 = [];
-        var applicationNumber = this.TableData[index].ApplicationNumber;
-        var parm = {
-          type: "get",
-          action: "ListItems",
-          list: this.subListName1,
-          baseUrl: this.hostUrl,
-          condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
-        };
-        var opt = common.queryOpt(parm);
-        $.when($.ajax(opt))
-          .done(req => {
-            var data = req.d.results;
-            if (data.length > 0) {
-              data.forEach(d => {
-                this.SubTableData1.push({
-                  InvoiceNumber: d.InvoiceNumber, //发票号码
-                  TaxCode: d.TaxCode //税码
-                });
-              });
-            } else {
-              this.$message(common.message("warning", "没有税票清单数据!"));
-            }
-          })
-          .catch(err => {
-            this.$message(common.message("error", "没有税票清单数据!"));
-          });
-      } else {
-        //查询费用分摊
-        this.dialogTableVisible2 = true;
-        this.SubTableData2 = [];
-        var applicationNumber = this.TableData[index].ApplicationNumber;
-        var parm = {
-          type: "get",
-          action: "ListItems",
-          list: this.subListName2,
-          baseUrl: this.hostUrl,
-          condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
-        };
-        var opt = common.queryOpt(parm);
-        $.when($.ajax(opt))
-          .done(req => {
-            var data = req.d.results;
-            if (data.length > 0) {
-              data.forEach(d => {
-                this.SubTableData1.push({
-                  Title: d.Title, //费用名称
-                  Number: d.Number //费用号码
-                });
-              });
-            } else {
-              this.$message(common.message("warning", "没有税票清单数据!"));
-            }
-          })
-          .catch(err => {
-            this.$message(common.message("error", "没有税票清单数据!"));
-          });
-      }
+      // if (type == 1) {
+      //   //查询税票清单
+      //   this.dialogTableVisible1 = true;
+      //   this.SubTableData1 = [];
+      //   var applicationNumber = this.TableData[index].ApplicationNumber;
+      //   var parm = {
+      //     type: "get",
+      //     action: "ListItems",
+      //     list: this.subListName1,
+      //     baseUrl: this.hostUrl,
+      //     condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
+      //   };
+      //   var opt = common.queryOpt(parm);
+      //   $.when($.ajax(opt))
+      //     .done(req => {
+      //       var data = req.d.results;
+      //       if (data.length > 0) {
+      //         data.forEach(d => {
+      //           this.SubTableData1.push({
+      //             InvoiceNumber: d.InvoiceNumber, //发票号码
+      //             TaxCode: d.TaxCode //税码
+      //           });
+      //         });
+      //       } else {
+      //         this.$message(common.message("warning", "没有税票清单数据!"));
+      //       }
+      //     })
+      //     .catch(err => {
+      //       this.$message(common.message("error", "没有税票清单数据!"));
+      //     });
+      // } else {
+      //   //查询费用分摊
+      //   this.dialogTableVisible2 = true;
+      //   this.SubTableData2 = [];
+      //   var applicationNumber = this.TableData[index].ApplicationNumber;
+      //   var parm = {
+      //     type: "get",
+      //     action: "ListItems",
+      //     list: this.subListName2,
+      //     baseUrl: this.hostUrl,
+      //     condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
+      //   };
+      //   var opt = common.queryOpt(parm);
+      //   $.when($.ajax(opt))
+      //     .done(req => {
+      //       var data = req.d.results;
+      //       if (data.length > 0) {
+      //         data.forEach(d => {
+      //           this.SubTableData1.push({
+      //             Title: d.Title, //费用名称
+      //             Number: d.Number //费用号码
+      //           });
+      //         });
+      //       } else {
+      //         this.$message(common.message("warning", "没有税票清单数据!"));
+      //       }
+      //     })
+      //     .catch(err => {
+      //       this.$message(common.message("error", "没有税票清单数据!"));
+      //     });
+      // }
     },
     //查询主表
     onSubmit() {
@@ -302,7 +277,6 @@ export default {
       console.log(this.Condition);
       //默认对公付款
       var condition = "?$filter=ReimbursementType eq '对公付款'";
-
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件
@@ -331,7 +305,6 @@ export default {
         baseUrl: this.hostUrl,
         condition: condition
       };
-
       var option = common.queryOpt(parm);
       $.when($.ajax(option)).done(req => {
         var data = req.d.results;
@@ -359,6 +332,23 @@ export default {
           });
         }
       });
+    },
+    onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
+      for (var item in this.TableData[0]) {
+        tempColumn.push(item);
+      }
+      temp = this.TableData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "资产对公付款报表",
+        fileType: "xls",
+        sheetName: "资产对公付款报表"
+      };
+      efn.toExcel(excelInfo);
     }
   },
   mounted() {
@@ -366,27 +356,3 @@ export default {
   }
 };
 </script>
-
-<style>
-.GPPayAssetReport tr td {
-  border: 1px solid #cfcfcf;
-  padding: 5px;
-  width: 140px;
-}
-
-.GPPayAssetReport {
-  min-height: 25px;
-  line-height: 25px;
-  text-align: center;
-  border-collapse: collapse;
-  color: gray;
-  padding: 2px;
-}
-
-.GPPayAssetReport tr:nth-child(1) {
-  background-color: #409eff;
-  font-weight: bold;
-  color: white;
-  border: 0px;
-}
-</style>
