@@ -55,7 +55,7 @@
     </el-form>
 
     <el-table :data="TableData" style="width: 100%" height="600">
-      <el-table-column prop="ApplicationNumber" label="单据号" width="150"></el-table-column>
+      <el-table-column prop="ApplicationNumber" label="单据号" width="200"></el-table-column>
       <el-table-column prop="CopmanyCode" label="公司代码" width="150"></el-table-column>
       <el-table-column prop="Currency" label="币种" width="100"></el-table-column>
       <el-table-column prop="BankSubject" label="银行科目" width="150"></el-table-column>
@@ -226,7 +226,7 @@ export default {
       console.log(this.Condition);
       //默认对公付款
       var condition =
-        "?$filter=ReimbursementType eq '对公付款' and IsFreightInvoice eq 'true' ";
+        "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' and Status eq 'Approved'";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {

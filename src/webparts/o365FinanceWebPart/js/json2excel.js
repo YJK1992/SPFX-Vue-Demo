@@ -1,7 +1,6 @@
 import {
   saveAs
 } from 'file-saver'
-//import shim from 'xlsx/dist/shim.min'
 import XLSX from 'xlsx/dist/xlsx.full.min'
 var efn = {
   datenum: function (v, date1904) {

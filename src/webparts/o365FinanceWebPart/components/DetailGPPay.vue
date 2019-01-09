@@ -140,12 +140,12 @@
         <td style="width:200px">内容</td>
         <td>法人代表</td>
         <td style="width:170px">总金额</td>
-        <td style="width:170px">已付款</td>
-        <td style="width:170px">未付款</td>
+        <td colspan="2" style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
-          <td>{{subItem}}</td>
+         <td v-if="cindex =='AccountPaid'" colspan="2">{{subItem}}</td>
+          <td v-else>{{subItem}}</td>
         </template>
       </tr>
       <tr>
@@ -580,6 +580,8 @@ export default {
     changeMoney() {
       var that = this;
       that.ContractList = []; //还原
+      that.AccountPaid = ""; //还原
+      that.UnPaid = ""; //还原
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -594,27 +596,13 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var accountPaid = 0;
-            data.forEach(item => {
-              //push 合同列表
-              that.ContractList.push({
-                Name: item.Name,
-                Supplier: item.Suppler,
-                Contents: item.Contents,
-                LegalPerson: item.LegalPerson,
-                Money: item.Money,
-                AccountPaid: item.AccountPaid,
-                UnPaid: item.UnPaid
-              });
-              //累加
-              accountPaid += parseFloat(item.AccountPaid);
-            });
-            //合计
-            that.AccountPaid = accountPaid;
-            that.UnPaid = parseFloat(that.ContractList[0].Money) - accountPaid;
-            that.PublicPayment.Money = that.ContractList[0].Money;
-            that.PublicPayment.IsContract = true;
-            //that.PublicPayment.ContractNumber = number;
+            var data = req.d.results;
+            console.log("changeMoney");
+            console.log(data);
+            if (data.length > 0) {
+              //这里肯定会找到合同的
+              this.GetPublicPaymentHistory(data);
+            }
           }
         })
         .catch(err => {
@@ -703,6 +691,54 @@ export default {
       console.log(historyString);
       this.Approver = historyString;
       this.ApproverArr = history;
+    },
+    GetPublicPaymentHistory(mainItem) {
+      console.log("GetPublicPaymentHistory");
+      console.log(mainItem);
+      var that = this;
+      that.PublicPayment.Money = mainItem[0].Money;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=ContractNumber eq '" +
+          this.PublicPayment.ContractNumber +
+          "' and Status eq 'Approved'"
+      };
+      var option = common.queryOpt(parm);
+      console.log(option);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            var accountPaid = 0;
+            data.forEach(item => {
+              //push 合同列表
+              that.ContractList.push({
+                Name: mainItem[0].Name,
+                Supplier: mainItem[0].Suppler,
+                Contents: mainItem[0].Contents,
+                LegalPerson: mainItem[0].LegalPerson,
+                Money: mainItem[0].Money,
+                AccountPaid: item.InvoiceValue
+              });
+              //累加
+              accountPaid += parseFloat(item.InvoiceValue);
+            });
+            //合计
+            that.AccountPaid = accountPaid;
+            that.UnPaid =
+              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              accountPaid;
+
+            that.PublicPayment.IsContract = true;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取申请单号失败!"));
+        });
     }
   },
   mounted: function() {
@@ -802,8 +838,8 @@ export default {
           var subExpenseItems =
             data[0].ExpenseFileJsonString == "{}"
               ? {
-                    d2: [],
-                    d1: []
+                  d2: [],
+                  d1: []
                 }
               : JSON.parse(data[0].ExpenseFileJsonString);
           console.log("加载摊入");
@@ -839,6 +875,7 @@ export default {
             });
           }
           this.Loadhistory();
+          this.changeMoney();
         } else {
           this.$message(
             common.message("error", "对公付款列表中不存在该申请单号")
@@ -851,7 +888,6 @@ export default {
 
     this.loading = false;
     this.convertMoney();
-    this.changeMoney();
   }
 };
 </script>

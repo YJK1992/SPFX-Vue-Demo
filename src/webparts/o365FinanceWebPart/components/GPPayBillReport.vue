@@ -55,7 +55,7 @@
     </el-form>
 
     <el-table :data="JoinTableData" style="width: 100%" height="600">
-      <el-table-column prop="ApplicationNumber" label="单据号" width="150"></el-table-column>
+      <el-table-column prop="ApplicationNumber" label="单据号" width="200"></el-table-column>
       <el-table-column prop="SettlementType" label="结算方式" width="150"></el-table-column>
       <el-table-column prop="Trustees" label="经办人" width="150"></el-table-column>
       <el-table-column prop="EmployeeCode" label="人员编号" width="150"></el-table-column>
@@ -101,7 +101,7 @@ export default {
         Currency: "", //币种
         SettlementPeopleITCode: "", //结算人
         Trustees: "" //经办人
-      },//筛选条件
+      }, //筛选条件
       SettlementType: [
         {
           value: "清帐",
@@ -123,7 +123,7 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],//结算方式
+      ], //结算方式
       Currency: [
         {
           value: "RMB",
@@ -157,7 +157,7 @@ export default {
           value: "Other",
           label: "Other"
         }
-      ],//币种
+      ], //币种
       dialogTableVisible: false,
       excelColumns: [
         "单据号",
@@ -183,8 +183,8 @@ export default {
         "定/限额",
         "备注",
         "PO号"
-      ],//Excdltitle
-      JoinTableData: []//合并数据行
+      ], //Excdltitle
+      JoinTableData: [] //合并数据行
     };
   },
   methods: {
@@ -194,7 +194,7 @@ export default {
       for (var item in this.JoinTableData[0]) {
         tempColumn.push(item);
       }
-      temp=this.JoinTableData
+      temp = this.JoinTableData;
       var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
@@ -204,7 +204,7 @@ export default {
         sheetName: "PayBill"
       };
       efn.toExcel(excelInfo);
-    },//导出Excel
+    }, //导出Excel
     getCompanyCode: function() {
       //获取公司代码和成本中心
       var parm = {
@@ -239,51 +239,30 @@ export default {
           });
         }
       });
-    },//获取公司代码
+    }, //获取公司代码
     onSubmit() {
       this.JoinTableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
       var conditionCount = 0;
-      var condition = "";
+      var condition = "?$filter=Status eq 'Approved'";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          conditionCount++;
-          if (conditionCount == 1) {
-            if (item == "ApplicationDate") {
-              condition +=
-                "?$filter=Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
-            }
+          if (item == "ApplicationDate") {
+            condition +=
+              " and Created gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Created lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
           } else {
-            if (item == "ApplicationDate") {
-              condition +=
-                " and Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                " and " + item + " eq '" + this.Condition[item] + "'";
-            }
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
           }
         }
       }
@@ -304,28 +283,25 @@ export default {
             var subItems =
               d.ExpenseFileJsonString == "{}"
                 ? {
-                      d2: []
+                    d2: []
                   }
                 : JSON.parse(d.ExpenseFileJsonString);
             if (subItems.d2.length > 0) {
               subItems.d2.forEach(element => {
                 money += Number(element.Money);
-              });
-              if (Number(d.InvoiceValue) - money > 0) {
-                console.log("有余额");
                 this.JoinTableData.push({
                   ApplicationNumber: d.ApplicationNumber, //申请单号
                   SettlementType: d.SettlementType, //结算方式
                   Trustees: d.Trustees + "-" + d.TrusteesEmail, //经办人
                   EmployeeCode: d.EmployeeCode, //人员编号
                   TheHighestPersonNumber: "", //最高审批人编号
-                  Money: Number(d.InvoiceValue) - money, //剩余的余额
-                  ProjectNumber: subItems.d2[0].ProjectNumber, //项目编号
-                  ProjectName: subItems.d2[0].ProjectName, //项目名称
+                  Money: element.Money, //剩余的余额
+                  ProjectNumber: d.ProjectNumber, //项目编号
+                  ProjectName: d.ProjectName, //项目名称
                   CostCenterNumber: d.CostCenter, //成本中心编号
                   BusinessDivision: "", //所属事业部编号
-                  Number: subItems.d2[0].Number, //费用号码
-                  Title: subItems.d2[0].Title, //费用名称
+                  Number: element.Number, //费用号码
+                  Title: element.Title + "(分摊)", //费用名称
                   OnBusiness: "", //出差目的地
                   LoanNumber: d.LoanNumber, //借款单号
                   LoanMoney: "", //借款金额,
@@ -338,12 +314,38 @@ export default {
                   Remarke: d.Remark, //备注
                   PONumber: "" //PO号
                 });
-              }
+              });
+              console.log("有余额");
+              this.JoinTableData.push({
+                ApplicationNumber: d.ApplicationNumber, //申请单号
+                SettlementType: d.SettlementType, //结算方式
+                Trustees: d.Trustees + "-" + d.TrusteesEmail, //经办人
+                EmployeeCode: d.EmployeeCode, //人员编号
+                TheHighestPersonNumber: "", //最高审批人编号
+                Money: Number(d.InvoiceValue) - money, //剩余的余额
+                ProjectNumber: d.ProjectNumber, //项目编号
+                ProjectName: d.ProjectName, //项目名称
+                CostCenterNumber: d.CostCenter, //成本中心编号
+                BusinessDivision: "", //所属事业部编号
+                Number: subItems.d2[0].Number, //费用号码
+                Title: subItems.d2[0].Title, //费用名称
+                OnBusiness: "", //出差目的地
+                LoanNumber: d.LoanNumber, //借款单号
+                LoanMoney: "", //借款金额,
+                LoanPersonNumber: "", //借款人编号,
+                Balance: "", //差额
+                DeductTheTax: "", //代扣税
+                SpecialGeneralLedger: "", //特别总账
+                Allocation: "", //分配
+                Quota: "", //定/限额
+                Remarke: d.Remark, //备注
+                PONumber: "" //PO号
+              });
             }
           });
         }
       });
-    }//查询主表
+    } //查询主表
   },
   mounted() {
     this.getCompanyCode();

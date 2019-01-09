@@ -416,6 +416,7 @@
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
+import sprestlib from 'sprestlib/dist/sprestlib'
 export default {
   data() {
     return {
@@ -895,10 +896,10 @@ export default {
                     //摊出部分
                     excelJson.Sheet1[i][0] == undefined
                       ? ""
-                      : (expense1.Title = excelJson.Sheet1[i][0].toString());
+                      : (expense1.Title = excelJson.Sheet1[i][1].toString());
                     excelJson.Sheet1[i][1] == undefined
                       ? ""
-                      : (expense1.Number = excelJson.Sheet1[i][1].toString());
+                      : (expense1.Number = excelJson.Sheet1[i][0].toString());
                     excelJson.Sheet1[i][2] == undefined
                       ? ""
                       : (expense1.CostCenterNumber = excelJson.Sheet1[
@@ -928,10 +929,10 @@ export default {
                     //摊入部分
                     excelJson.Sheet2[i][0] == undefined
                       ? ""
-                      : (expense2.Title = excelJson.Sheet2[i][0].toString());
+                      : (expense2.Title = excelJson.Sheet2[i][1].toString());
                     excelJson.Sheet2[i][1] == undefined
                       ? ""
-                      : (expense2.Number = excelJson.Sheet2[i][1].toString());
+                      : (expense2.Number = excelJson.Sheet2[i][0].toString());
                     excelJson.Sheet2[i][2] == undefined
                       ? ""
                       : (expense2.CostCenterNumber = excelJson.Sheet2[

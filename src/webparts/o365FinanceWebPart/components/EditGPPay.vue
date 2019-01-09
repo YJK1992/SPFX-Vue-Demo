@@ -292,7 +292,7 @@
             style="margin-left: 20px;"
           >税票清单</el-button>
           <el-button
-            :disabled="!PublicPayment.IsFreightInvoice"
+            :disabled="showApprover==true"
             type="primary"
             @click="downloadTaxExcel"
           >下载税票清单Excel模板</el-button>
@@ -307,9 +307,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true"
+            :disabled="showApprover==true"
           >
-            <el-button type="primary" :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true">导入税票清单</el-button>
+            <el-button type="primary" :disabled="showApprover==true">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
@@ -324,7 +324,7 @@
             style="margin-left: 20px;"
           >费用分摊清单</el-button>
           <el-button
-            :disabled="!PublicPayment.IsExpenseAllocation"
+            :disabled="showApprover==true"
             type="primary"
             @click="downloadExpenseExcel"
           >下载费用分摊Excel模板</el-button>
@@ -339,9 +339,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true"
+            :disabled="showApprover==true"
           >
-            <el-button type="primary" :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true">导入费用分摊</el-button>
+            <el-button type="primary" :disabled="showApprover==true">导入费用分摊</el-button>
           </el-upload>
         </td>
       </tr>
@@ -913,10 +913,10 @@ export default {
                     //摊出部分
                     excelJson.Sheet1[i][0] == undefined
                       ? ""
-                      : (expense1.Title = excelJson.Sheet1[i][0].toString());
+                      : (expense1.Title = excelJson.Sheet1[i][1].toString());
                     excelJson.Sheet1[i][1] == undefined
                       ? ""
-                      : (expense1.Number = excelJson.Sheet1[i][1].toString());
+                      : (expense1.Number = excelJson.Sheet1[i][0].toString());
                     excelJson.Sheet1[i][2] == undefined
                       ? ""
                       : (expense1.CostCenterNumber = excelJson.Sheet1[
@@ -946,10 +946,10 @@ export default {
                     //摊入部分
                     excelJson.Sheet2[i][0] == undefined
                       ? ""
-                      : (expense2.Title = excelJson.Sheet2[i][0].toString());
+                      : (expense2.Title = excelJson.Sheet2[i][1].toString());
                     excelJson.Sheet2[i][1] == undefined
                       ? ""
-                      : (expense2.Number = excelJson.Sheet2[i][1].toString());
+                      : (expense2.Number = excelJson.Sheet2[i][0].toString());
                     excelJson.Sheet2[i][2] == undefined
                       ? ""
                       : (expense2.CostCenterNumber = excelJson.Sheet2[
@@ -2194,9 +2194,9 @@ export default {
         this.showApprover = false;
       }
       var getMainListData = this.loadMainListData(applicantNumber);
-      var getExpenseAllocationData = this.loadExpenseAllocationData(
-        applicantNumber
-      );
+      // var getExpenseAllocationData = this.loadExpenseAllocationData(
+      //   applicantNumber
+      // );
       getMainListData
         .done(req => {
           var data = req.d.results;

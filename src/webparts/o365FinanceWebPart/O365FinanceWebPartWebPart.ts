@@ -10,6 +10,7 @@ import Vue from "vue";
 import ElementUI from 'element-ui';
 // import 'element-ui/lib/theme-chalk/index.css';
 import VueRouter from 'vue-router';
+
 Vue.use(VueRouter);
 Vue.use(ElementUI);
 
@@ -40,7 +41,9 @@ import GPPayBillReport from "./components/GPPayBillReport.vue";
 import GPPayAssetReport from "./components/GPPayAssetReport.vue";
 import DetailGPPay from "./components/DetailGPPay.vue";
 import MyApplication from "./components/MyApplication.vue";
-
+import EditPTP from "./components/EditPTP.vue";
+import MyPTPDraft from "./components/MyPTPDraft.vue";
+import ViewPTPTasks from "./components/ViewPTPTasks.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -52,6 +55,10 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
     return super.onInit();
   }
   public render(): void {
+    var s1 = document.createElement("script");
+    s1.type = "text/javascript";
+    s1.src = this.context.pageContext.site.absoluteUrl + "/SiteAssets/shim.min.js";
+    document.getElementsByTagName("head")[0].appendChild(s1)
     var a = document.getElementById("s4-titlerow")
     var b = document.getElementById("sideNavBox")
     var c = document.getElementById("contentBox")
@@ -91,6 +98,10 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/gppayassetreport', component: GPPayAssetReport },
       { path: '/detailgppay', component: DetailGPPay },
       { path: '/myapplication', component: MyApplication },
+      { path: '/editptp', component: EditPTP },
+      { path: '/myptpdraft', component: MyPTPDraft },
+      { path: '/viewptptasks', component: ViewPTPTasks },
+
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 

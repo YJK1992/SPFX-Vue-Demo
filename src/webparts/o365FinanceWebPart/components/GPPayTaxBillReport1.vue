@@ -177,7 +177,7 @@ export default {
       console.log("筛选条件");
       console.log(this.Condition);
       var condition =
-        "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' ";
+        "?$filter=ReimbursementType ne '资产对公付款' and IsFreightInvoice eq 'true' and Status eq 'Approved' ";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
@@ -227,7 +227,7 @@ export default {
                   CompanyCode: sub.CompanyCode,
                   InvoiceNumber: sub.InvoiceNumber,
                   Currency: d.Currency,
-                  SupplierCode: "",
+                  SupplierCode: "8002178",
                   Money: d.Money,
                   TaxCode: sub.TaxCode,
                   BussinessScope: d.BussinessScope,

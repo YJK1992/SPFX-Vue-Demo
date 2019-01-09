@@ -1,6 +1,6 @@
 <template>
-  <div id="yuangong">
-    <table class="yuangong" style="border-collapse: collapse;width:100%">
+  <div>
+    <table class="edityuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">员工报销模板</span>
@@ -24,6 +24,7 @@
         <td align="right">成本中心：</td>
         <td>
           <el-select
+            :disabled="showApprover==true"
             filterable
             v-model="StaffReimbursement.CostCenter"
             placeholder="请选择"
@@ -40,6 +41,7 @@
         <td align="right">公司代码：</td>
         <td>
           <el-select
+            :disabled="showApprover==true"
             filterable
             v-model="StaffReimbursement.CompanyCode"
             placeholder="请选择"
@@ -67,31 +69,49 @@
             :on-exceed="fileLimit"
             :file-list="fileList"
           >
-            <el-button size="medium" type="primary">上传附件</el-button>
+            <el-button :disabled="showApprover==true" size="medium" type="primary">上传附件</el-button>
           </el-upload>
+        </td>
+      </tr>
+      <tr v-show="showEditor==false">
+        <td>附件 ：</td>
+        <td colspan="8" style="text-align:left;">
+          <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
         </td>
       </tr>
       <tr>
         <td align="right">备注：</td>
         <td colspan="7">
-          <el-input v-model="StaffReimbursement.Remark" placeholder="请输入内容"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="StaffReimbursement.Remark"
+            placeholder="请输入内容"
+          ></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">特殊审批人</td>
         <td colspan="7">
-          <el-input v-model="StaffReimbursement.SpecialApprover" placeholder="特殊审批人"></el-input>
+          <el-input
+            :disabled="showApprover==true"
+            v-model="StaffReimbursement.SpecialApprover"
+            placeholder="特殊审批人"
+          ></el-input>
         </td>
       </tr>
-      <!-- <tr>
+      <tr>
         <td align="right">审批意见：</td>
         <td colspan="7">
-          <el-input placeholder="请输入内容"></el-input>
+          <el-input v-model="Body" placeholder="请输入内容"></el-input>
         </td>
-      </tr>-->
+      </tr>
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="dialogFormVisible=true">添加项目行</el-button>
+          <el-button
+            :disabled="showApprover==true"
+            type="primary"
+            @click="dialogFormVisible=true"
+          >添加项目行</el-button>
         </td>
       </tr>
     </table>
@@ -133,11 +153,40 @@
         </template>
       </el-table-column>
     </el-table>
-    <table class="yuangong" style="border-collapse: collapse;width:100%">
+    <table class="edityuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Save)">保存</el-button>
+          <!-- <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
+          <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>-->
+          <el-button
+            type="primary"
+            @click="onSaveOrSubmmit(buttonType.Submit)"
+            v-show="showEditor"
+          >提交</el-button>
+          <el-button
+            @click="onSaveOrSubmmit(buttonType.Save)"
+            v-show="showEditor"
+            type="primary"
+            plain
+          >保存</el-button>
+          <el-button
+            type="primary"
+            @click="onApproval(buttonType.Approved)"
+            v-show="showApprover"
+          >批准</el-button>
+          <el-button type="danger" @click="onEnd(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
+          <el-button
+            @click="onApproval(buttonType.Return)"
+            v-show="showApprover"
+            type="danger"
+            plain
+          >退回</el-button>
+          <el-button
+            @click="onEnd(buttonType.Return)"
+            v-show="requestIsReject"
+            type="danger"
+            plain
+          >终止</el-button>
         </td>
       </tr>
     </table>
@@ -269,6 +318,8 @@ export default {
       taxCodeListName: "TaxCode", //税码
       applicantNumberListName: "ApplicantNumber",
       applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      PTPTaskListType: "SP.Data.StaffReimbursementApproval_x0020_TasksListItem",
+      PTPTaskListName: "StaffReimbursementApproval Tasks",
       approverList: "ApproveNode", //审批节点列表名
       SpecApproId: 0, //特殊审批人ID
       LoginName: "", //登录名
@@ -282,9 +333,17 @@ export default {
       CheckInLeaveData: "",
       expenseCategoryListName: "ExpenseCategory", //费用类别
       costAccountListName: "CostAccount", //费用科目
+      currentUserTitle: "", //当前用户名
+      currentUserITCode: "", //邮箱@前的code
+      currentItemId: 0,
+      taskId: 0,
+      Body: "", //审批意见
       buttonType: {
         Submit: "submit",
-        Save: "save"
+        Save: "save",
+        Approved: "Approved",
+        Return: "reject",
+        Rejected: "Rejected"
       },
       //主表数据
       StaffReimbursement: {
@@ -357,6 +416,7 @@ export default {
           label: "Other"
         }
       ],
+
       CostCenterArr: [], //成本中心数组
       CompanyCodeArr: [], //公司代码数组
       expenseCategoryOptions: [], //费用类别
@@ -366,12 +426,208 @@ export default {
       requestDigest: "", //POST Token
       fileList: [], //附件列表数据
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
-      actionUrl: "https://lenovonetapp.sharepoint.cn/" //绑定上传附件按钮的action
+      attrFileInfo: {
+        name: "",
+        url: ""
+      },
+      actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
+      currentStep: "",
+      showApprover: false,
+      requestIsReject: false,
+      showEditor: true,
+      ApprovalHistory: "", //审批历史
+      startNoAttr: true
     };
   },
   methods: {
+    onEnd: function(type) {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var itemInfo = {
+            __metadata: {
+              type: this.mainListType
+            }
+          };
+          if (type == "Rejected") {
+            itemInfo.Status = type;
+          } else {
+            itemInfo.Status = "Dumped";
+          }
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          $.when($.ajax(opt))
+            .done(req => {
+              this.$message(common.message("success", "终止流程成功!"));
+              this.$router.push("/home");
+            })
+            .catch(err => {
+              this.$message(common.message("error", "终止流程失败!"));
+              this.$router.push("/home");
+            });
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
+    },
+    onApproval: function(type) {
+      this.loading = true;
+      var taskOutcome;
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var mainItemInfo = {
+            __metadata: {
+              type: this.mainListType
+            }
+          };
+          if (type == "Approved") {
+            taskOutcome = "已批准"; //Approved 已批准
+          } else {
+            taskOutcome = "已拒绝"; //已拒绝 Rejected
+          }
+
+          if (this.ApprovalHistory == null || this.ApprovalHistory == "") {
+            var history = {};
+            history.approver1 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              common.getCurrentDate();
+            this.ApprovalHistory = JSON.stringify(history);
+          } else {
+            var history = JSON.parse(this.ApprovalHistory);
+            if (this.currentStep == "Approver1") {
+              history.approver1 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+            } else if (this.currentStep == "Approver2") {
+              history.approver2 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+            } else if (this.currentStep == "Approver3") {
+              history.approver3 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+            } else if (this.currentStep == "Approver4") {
+              history.approver4 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+            } else if (this.currentStep == "Approver6") {
+              history.approver6 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+            }
+            this.ApprovalHistory = JSON.stringify(history);
+          }
+
+          mainItemInfo.ApproverHistory = this.ApprovalHistory;
+          this.updateMainInfo(mainItemInfo, taskOutcome);
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
+    },
+    updateMainInfo: function(mainItemInfo, taskOutcome) {
+      var mainParm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.mainListName,
+        itemID: this.currentItemId,
+        item: mainItemInfo,
+        digest: this.requestDigest
+      };
+      var mainOpt = common.queryOpt(mainParm);
+      var updateMainList = common.service(mainOpt);
+      updateMainList
+        .done(re => {
+          this.updateTaskInfo(taskOutcome);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新主表数据失败"));
+        });
+    },
+    updateTaskInfo: function(taskOutcome) {
+      var taskItemInfo = {
+        __metadata: {
+          type: this.PTPTaskListType
+        },
+        Body: this.Body,
+        TaskOutcome: taskOutcome,
+        PercentComplete: 1,
+        Status: "已完成" //Completed 已完成
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.PTPTaskListName,
+        itemID: this.taskId,
+        item: taskItemInfo,
+        digest: this.requestDigest
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log(req);
+          this.loading = false;
+          this.$message(common.message("success", "审批成功!"));
+          this.$router.push("/home");
+        })
+        .catch(err => {
+          console.log(err);
+          this.loading = false;
+          this.$message(common.message("error", "审批失败!"));
+          this.$router.push("/home");
+        });
+    },
+    //加载主表数据
+    loadMainListData: function(guid) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=Title eq '" + guid + "'"
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
     ChangeTaxRate() {
+      console.log("税码Change");
+      console.log(this.taxCodeOptions);
+      console.log(this.SubItem.TaxCode);
       this.taxCodeOptions.forEach(item => {
+        console.log(item.label)
         if (item.label == this.SubItem.TaxCode) {
           this.SubItem.TaxRate = item.rate;
         }
@@ -693,13 +949,20 @@ export default {
               itemInfo.SpecialApproverId = this.SpecApproId;
             }
             if (type == "submit") {
-              itemInfo.Status = "Submitted";
+              if (this.currentStep == "Application" && this.taskId != 0) {
+                itemInfo.Status = "Changed";
+              } else {
+                itemInfo.Status = "Submitted";
+              }
+            } else {
+              itemInfo.Status = "Draft";
             }
             parm = {
               type: "post",
-              action: "AddInList",
+              action: "EditListItem",
               baseUrl: this.hostUrl,
               list: this.mainListName,
+              itemID: this.currentItemId,
               item: itemInfo,
               digest: this.requestDigest
             };
@@ -707,8 +970,57 @@ export default {
             option = common.queryOpt(parm);
             $.when($.ajax(option))
               .done(req => {
-                var attUrl = req.d.AttachmentFiles.__deferred.uri;
-                this.uploadAttFileToItem(attUrl);
+                if (type == "submit") {
+                  console.log("Is submit");
+                  if (this.currentStep == "Application" && this.taskId != 0) {
+                    this.onApproval("approve");
+                  }
+                }
+                if (this.startNoAttr) {
+                  console.log("Start No attachment");
+                  if (this.fileList.length > 0) {
+                    var attUrl =
+                      this.hostUrl +
+                      "/_api/web/lists/getbytitle('" +
+                      this.mainListName +
+                      "')/items(" +
+                      this.currentItemId +
+                      ")/AttachmentFiles";
+                    this.uploadAttFileToItem(attUrl);
+                  }
+                } else {
+                  console.log("Start have attachment");
+                  if (this.deleteAttName != "") {
+                    console.log("have change attachment");
+                    var parm = {
+                      type: "delete",
+                      action: "DeleteAttachment",
+                      baseUrl: this.hostUrl,
+                      digest: this.requestDigest,
+                      list: this.mainListName,
+                      itemID: this.currentItemId,
+                      fileName: this.deleteAttName
+                    };
+                    var opt = common.queryOpt(parm);
+                    var deleteFile = common.service(opt);
+                    deleteFile
+                      .done(reqf => {
+                        if (this.fileList.length > 0) {
+                          var attUrl =
+                            this.hostUrl +
+                            "/_api/web/lists/getbytitle('" +
+                            this.mainListName +
+                            "')/items(" +
+                            this.currentItemId +
+                            ")/AttachmentFiles";
+                          this.uploadAttFileToItem(attUrl);
+                        }
+                      })
+                      .catch(errf => {
+                        this.$message(common.message("error", "删除附件错误"));
+                      });
+                  }
+                }
                 this.$message(common.message("success", "员工报销添加成功!"));
                 this.updateApplicantBaseNumber();
                 this.loading = false;
@@ -831,6 +1143,8 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
+          this.currentUserITCode = loginName.split("@")[0];
+          this.currentUserTitle = c.d.Title;
           this.LoginName = loginName;
           this.StaffReimbursement.Applicant = c.d.Title;
           this.search(loginName);
@@ -1012,6 +1326,15 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载税码失败!"));
         });
+    },
+    loadAttachment: function(attUrl) {
+      var parm = {
+        type: "get",
+        action: "Attachments",
+        attUrl: attUrl
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
     }
   },
   mounted: function() {
@@ -1025,12 +1348,120 @@ export default {
     this.getCostCenter();
     //获取税码
     this.getTaxCode();
+
+    var applicantNumber = common.GetParameterValues("ApplicantNumber");
+    var step = common.GetParameterValues("Step");
+    this.currentStep = step;
+    var tId = common.GetParameterValues("TaskId");
+    if (this.fileList.length == 0) {
+      this.startNoAttr = false;
+    }
+    if (typeof Number(tId) == "number") {
+      this.taskId = tId;
+      if (tId > 0 && step != "Application") {
+        this.showEditor = false;
+        this.showApprover = true;
+      } else if (tId == 0) {
+        console.log("用户点击的是保存");
+      } else if (tId > 0 && step == "Application") {
+        console.log("该请求已被拒绝");
+        this.requestIsReject = true;
+        this.showEditor = false;
+        this.showApprover = false;
+      }
+      var getMainListData = this.loadMainListData(applicantNumber);
+      getMainListData
+        .done(req => {
+          var data = req.d.results;
+          console.log(data);
+          if (data.length > 0) {
+            //加载主表
+            this.ApprovalHistory = data[0].ApproverHistory;
+            this.StaffReimbursement.Title = data[0].Title;
+            this.StaffReimbursement.Applicant = data[0].Applicant;
+            this.StaffReimbursement.AccountNumber = data[0].AccountNumber;
+            this.StaffReimbursement.CostCenter = data[0].CostCenter;
+            this.StaffReimbursement.CompanyCode = data[0].CompanyCode;
+            this.StaffReimbursement.Remark = data[0].Remark;
+            this.StaffReimbursement.SpecialApprover = data[0].SpecialApprover;
+            this.currentItemId = data[0].Id;
+
+            if (data[0].Attachments) {
+              var attUrl = data[0].AttachmentFiles.__deferred.uri;
+              var getAtt = this.loadAttachment(attUrl);
+              getAtt
+                .done(f => {
+                  var data = f.d.results;
+                  if (data.length > 0) {
+                    this.attrFileInfo.url =
+                      window.location.origin +
+                      data[0].ServerRelativeUrl +
+                      "?Web=1";
+                    this.attrFileInfo.name = data[0].FileName;
+                    console.log("aaaaaaaaaaaa");
+                    console.log(this.fileList);
+                  }
+                })
+                .catch(errf => {
+                  console.log("获取附件失败");
+                });
+            }
+            //加载子表
+            console.log("加载子表");
+            var subItems =
+              data[0].DetailInvoiceJSON == null
+                ? null
+                : JSON.parse(data[0].DetailInvoiceJSON);
+            console.log(subItems);
+            if (subItems != null) {
+              subItems.forEach(element => {
+                this.SubItems.push({
+                  ExpenseCategory: element.ExpenseCategory, //费用类别
+                  CostAccount: element.CostAccount, //费用科目
+                  Count: element.Count, //数量
+                  Price: element.Price, //单位金额
+                  Total: element.Total, //总金额
+                  Currency: element.Currency, //币种
+                  Rate: element.Rate, //汇率
+                  ConvertMoney: element.ConvertMoney, //转换金额
+                  ConvertCurrency: element.ConvertCurrency, //转换后币种
+                  IsTax: element.IsTax, //是否用税
+                  TaxCode: element.TaxCode, //税码
+                  TaxRate: element.TaxRate, //税率
+                  OriginalTaxMoney: element.OriginalTaxMoney, //原币税额
+                  ExpenseDate: element.ExpenseDate, //费用日期
+                  StartDate: element.StartDate, //出发日期
+                  ArriveDate: element.ArriveDate, //到达日期
+                  Destination: element.Destination, //目的地
+                  Days: element.Days, //天数
+                  CheckInDate: element.CheckInDate, //入住日期
+                  LeaveDate: element.LeaveDate, //离店日期
+                  Name: element.Name, //酒店名称
+                  Number: element.Number //发票号
+                });
+              });
+            }
+          } else {
+            this.$message(
+              common.message("error", "员工报销列表中不存在该申请单号")
+            );
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载员工报销列表数据失败"));
+        });
+
+      this.loading = false;
+    } else {
+      this.loading = false;
+      common.message(common.message("error", "当前链接错误"));
+    }
   }
 };
 </script>
 
 <style>
-.yuangong {
+.edityuangong {
   min-height: 25px;
   line-height: 25px;
   text-align: center;
@@ -1038,7 +1469,7 @@ export default {
   color: gray;
   padding: 2px;
 }
-.yuangong tr td {
+.edityuangong tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }

@@ -52,22 +52,27 @@
     </el-form>
     <el-table :data="TableData" style="width: 100%" max-height="400">
       <el-table-column fixed prop="ApplicationNumber" label="申请单号" width="300"></el-table-column>
-      <el-table-column prop="SettlementType" label="结算方式"></el-table-column>
-      <el-table-column prop="Trustees" label="经办人"></el-table-column>
-      <el-table-column prop="PersonCode" label="人员编号"></el-table-column>
-      <el-table-column prop="TheHighestPersonNumber" label="最高级审批人编号"></el-table-column>
-      <el-table-column prop="InvoiceValue" label="金额"></el-table-column>
-      <el-table-column prop="BusinessDivision" label="所属事业部"></el-table-column>
-      <el-table-column prop="CodeOfFixedAssets" label="资产号"></el-table-column>
-      <el-table-column prop="LoanNumber" label="借款单号"></el-table-column>
-      <el-table-column prop="LoanMoney" label="借款金额"></el-table-column>
-      <el-table-column prop="LoanPersonNumber" label="借款人编号"></el-table-column>
-      <el-table-column prop="Balance" label="差额"></el-table-column>
-      <el-table-column prop="SpecialGeneralLedger" label="特别总账标志"></el-table-column>
-      <el-table-column prop="Allocation" label="分配"></el-table-column>
-      <el-table-column prop="Quota" label="定/限额"></el-table-column>
-      <el-table-column prop="Remarke" label="备注"></el-table-column>
-      <el-table-column fixed="right" prop="PONumber" label="PO号"></el-table-column>
+      <el-table-column width='200' prop="SettlementType" label="结算方式"></el-table-column>
+      <el-table-column width='200' prop="Trustees" label="经办人"></el-table-column>
+      <el-table-column width='200' prop="PersonCode" label="人员编号"></el-table-column>
+      <el-table-column width='200' prop="TheHighestPersonNumber" label="最高级审批人编号"></el-table-column>
+      <el-table-column width='200' prop="InvoiceValue" label="金额"></el-table-column>
+      <el-table-column width='200' prop="CostCenter" label="成本中心编号"></el-table-column>
+      <el-table-column width='200' prop="BusinessDivision" label="所属事业部"></el-table-column>
+      <el-table-column width='200' prop="CostAccount" label="费用编号"></el-table-column>
+      <el-table-column width='200' prop="ExpenseCategory" label="费用名称"></el-table-column>
+      <el-table-column width='200' prop="CodeOfFixedAssets" label="资产号"></el-table-column>
+      <el-table-column width='200' prop="TaxCode" label="税码"></el-table-column>
+      <el-table-column width='200' prop="InvoiceNumber" label="发票号"></el-table-column>
+      <el-table-column width='200' prop="LoanNumber" label="借款单号"></el-table-column>
+      <el-table-column width='200' prop="LoanMoney" label="借款金额"></el-table-column>
+      <el-table-column width='200' prop="LoanPersonNumber" label="借款人编号"></el-table-column>
+      <el-table-column width='200' prop="Balance" label="差额"></el-table-column>
+      <el-table-column width='200' prop="SpecialGeneralLedger" label="特别总账标志"></el-table-column>
+      <el-table-column width='200' prop="Allocation" label="分配"></el-table-column>
+      <el-table-column width='200' prop="Quota" label="定/限额"></el-table-column>
+      <el-table-column width='200' prop="Remarke" label="备注"></el-table-column>
+      <el-table-column width='200' fixed="right" prop="PONumber" label="PO号"></el-table-column>
     </el-table>
   </div>
 </template>
@@ -155,8 +160,13 @@ export default {
         "人员编号",
         "最高级审批人编号",
         "金额",
+        "成本中心编号",
         "所属事业部",
+        "费用编号",
+        "费用名称",
         "资产号",
+        "税码",
+        "发票号",
         "借款单号",
         "借款金额",
         "借款人编号",
@@ -206,77 +216,13 @@ export default {
         }
       });
     },
-    //查询子列表
-    getSubList(index, type) {
-      // if (type == 1) {
-      //   //查询税票清单
-      //   this.dialogTableVisible1 = true;
-      //   this.SubTableData1 = [];
-      //   var applicationNumber = this.TableData[index].ApplicationNumber;
-      //   var parm = {
-      //     type: "get",
-      //     action: "ListItems",
-      //     list: this.subListName1,
-      //     baseUrl: this.hostUrl,
-      //     condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
-      //   };
-      //   var opt = common.queryOpt(parm);
-      //   $.when($.ajax(opt))
-      //     .done(req => {
-      //       var data = req.d.results;
-      //       if (data.length > 0) {
-      //         data.forEach(d => {
-      //           this.SubTableData1.push({
-      //             InvoiceNumber: d.InvoiceNumber, //发票号码
-      //             TaxCode: d.TaxCode //税码
-      //           });
-      //         });
-      //       } else {
-      //         this.$message(common.message("warning", "没有税票清单数据!"));
-      //       }
-      //     })
-      //     .catch(err => {
-      //       this.$message(common.message("error", "没有税票清单数据!"));
-      //     });
-      // } else {
-      //   //查询费用分摊
-      //   this.dialogTableVisible2 = true;
-      //   this.SubTableData2 = [];
-      //   var applicationNumber = this.TableData[index].ApplicationNumber;
-      //   var parm = {
-      //     type: "get",
-      //     action: "ListItems",
-      //     list: this.subListName2,
-      //     baseUrl: this.hostUrl,
-      //     condition: "?$filter=PublicPaymentGUID eq '" + applicationNumber + "'"
-      //   };
-      //   var opt = common.queryOpt(parm);
-      //   $.when($.ajax(opt))
-      //     .done(req => {
-      //       var data = req.d.results;
-      //       if (data.length > 0) {
-      //         data.forEach(d => {
-      //           this.SubTableData1.push({
-      //             Title: d.Title, //费用名称
-      //             Number: d.Number //费用号码
-      //           });
-      //         });
-      //       } else {
-      //         this.$message(common.message("warning", "没有税票清单数据!"));
-      //       }
-      //     })
-      //     .catch(err => {
-      //       this.$message(common.message("error", "没有税票清单数据!"));
-      //     });
-      // }
-    },
     //查询主表
     onSubmit() {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      //默认对公付款
-      var condition = "?$filter=ReimbursementType eq '对公付款'";
+      //默认资产对公付款
+      var condition = "?$filter=ReimbursementType eq '资产对公付款'";
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件
@@ -310,25 +256,86 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
-            this.TableData.push({
-              ApplicationNumber: d.ApplicationNumber, //申请单号
-              SettlementType: d.SettlementType, //结算方式
-              Trustees: d.Trustees, //经办人
-              PersonCode: "", //人员编号
-              TheHighestPersonNumber: "", //最高审批人编号,
-              InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
-              BusinessDivision: "", //所属事业部编号
-              CodeOfFixedAssets: d.CodeOfFixedAssets, //固定资产编码
-              LoanNumber: d.LoanNumber, //借款单号
-              LoanMoney: "", //借款金额,
-              LoanPersonNumber: "", //借款人编号,
-              Balance: "", //差额
-              SpecialGeneralLedger: "", //特别总账
-              Allocation: "", //分配
-              Quota: "", //定/限额
-              Remarke: d.Remark, //备注
-              PONumber: "" //PO号
-            });
+            var subItems =
+              d.TaxFileJsonString == "{}"
+                ? { d: [] }
+                : JSON.parse(d.TaxFileJsonString);
+
+            console.log(subItems);
+            if (subItems.d.length > 0) {
+              subItems.d.forEach(sub => {
+                this.TableData.push({
+                  ApplicationNumber: d.ApplicationNumber, //申请单号
+                  SettlementType: d.SettlementType, //结算方式
+                  Trustees: d.Trustees+"-"+d.TrusteesEmail, //经办人
+                  PersonCode: d.EmployeeCode, //人员编号
+                  TheHighestPersonNumber: "", //最高审批人编号,
+                  InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
+                  CostCenter: d.CostCenter, //成本中心
+                  BusinessDivision: "", //所属事业部编号
+                  CostAccount: d.CostAccount, //费用编号
+                  ExpenseCategory: d.ExpenseCategory, //费用名称
+                  CodeOfFixedAssets: sub.CodeOfFixedAssets, //固定资产编码
+                  TaxCode: sub.TaxCode, //税码
+                  InvoiceNumber: sub.InvoiceNumber, //发票号码
+                  LoanNumber: d.LoanNumber, //借款单号
+                  LoanMoney: "", //借款金额,
+                  LoanPersonNumber: "", //借款人编号,
+                  Balance: "", //差额
+                  SpecialGeneralLedger: "", //特别总账
+                  Allocation: "", //分配
+                  Quota: "", //定/限额
+                  Remarke: d.Remark, //备注
+                  PONumber: "" //PO号
+                });
+              });
+            } else {
+              this.TableData.push({
+                ApplicationNumber: d.ApplicationNumber, //申请单号
+                SettlementType: d.SettlementType, //结算方式
+                Trustees: d.Trustees+"-"+d.TrusteesEmail, //经办人
+                PersonCode: d.EmployeeCode, //人员编号
+                TheHighestPersonNumber: "", //最高审批人编号,
+                InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
+                CostCenter: d.CostCenter, //成本中心
+                BusinessDivision: "", //所属事业部编号
+                CostAccount: d.CostAccount, //费用编号
+                ExpenseCategory: d.ExpenseCategory, //费用名称
+                CodeOfFixedAssets: "", //固定资产编码
+                TaxCode: "", //税码
+                InvoiceNumber: "", //发票号码
+                LoanNumber: d.LoanNumber, //借款单号
+                LoanMoney: "", //借款金额,
+                LoanPersonNumber: "", //借款人编号,
+                Balance: "", //差额
+                SpecialGeneralLedger: "", //特别总账
+                Allocation: "", //分配
+                Quota: "", //定/限额
+                Remarke: d.Remark, //备注
+                PONumber: "" //PO号
+              });
+            }
+            // this.TableData.push({
+            //   ApplicationNumber: d.ApplicationNumber, //申请单号
+            //   SettlementType: d.SettlementType, //结算方式
+            //   Trustees: d.Trustees, //经办人
+            //   PersonCode: "", //人员编号
+            //   TheHighestPersonNumber: "", //最高审批人编号,
+            //   InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
+            //   CostCenter:d.CostCenter,//成本中心
+            //   BusinessDivision: "", //所属事业部编号
+
+            //   CodeOfFixedAssets: d.CodeOfFixedAssets, //固定资产编码
+            //   LoanNumber: d.LoanNumber, //借款单号
+            //   LoanMoney: "", //借款金额,
+            //   LoanPersonNumber: "", //借款人编号,
+            //   Balance: "", //差额
+            //   SpecialGeneralLedger: "", //特别总账
+            //   Allocation: "", //分配
+            //   Quota: "", //定/限额
+            //   Remarke: d.Remark, //备注
+            //   PONumber: "" //PO号
+            // });
           });
         }
       });

@@ -25,6 +25,7 @@
     "element-ui": "^2.4.11",
     "file-saver": "^2.0.0",
     "shim": "^0.6.0",
+    "sprestlib": "^1.9.0",
     "vue": "^2.5.17",
     "vue-router": "^3.0.2",
     "xlsx": "^0.14.1"

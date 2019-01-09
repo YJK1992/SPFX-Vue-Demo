@@ -138,7 +138,7 @@ export default {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "?$filter=SettlementType eq '汇款'";
+      var condition = "?$filter=SettlementType eq '汇款' and Status eq 'Approved'";
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件

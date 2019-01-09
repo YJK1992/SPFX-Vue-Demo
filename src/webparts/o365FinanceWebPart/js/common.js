@@ -219,8 +219,12 @@ var common = {
       style: iframeStyle,
       id: iframeId
     });
+    // iframe.onload = function(){
+    //   alert("Local iframe is now loaded.");
+    //   };
     document.body.appendChild(iframe);
     var doc = iframe.contentWindow.document;
+    doc.open()
     $(document).find("link").filter(function () {
       return $(this).attr("rel").toLowerCase() == "stylesheet";
     }).each(
@@ -234,7 +238,9 @@ var common = {
     var frameWindow = iframe.contentWindow;
     frameWindow.close();
     frameWindow.focus();
-    frameWindow.print();
+    //iframe.onload = function(){
+      frameWindow.print();
+    //}
   },
   removePrintArea: function (id) {
     $("iframe#" + id).remove();

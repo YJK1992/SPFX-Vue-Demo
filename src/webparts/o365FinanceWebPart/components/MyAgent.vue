@@ -18,6 +18,7 @@
           <el-button type="primary">导入</el-button>
         </el-upload>
       </td>
+      <a href="https://lenovonetapp.sharepoint.cn/sites/SPFX/GPDocument/模板-税票清单-Ver1.0.xls" download="模板-税票清单-Ver1.0.xls">模板-税票清单-Ver1.0.xls</a>
     </tr>
   </div>
 </template>
@@ -25,6 +26,7 @@
 import $ from "jquery";
 import efn from "../js/json2excel.js";
 import common from "../js/common.js";
+import sprestlib from "sprestlib/dist/sprestlib.js";
 export default {
   data() {
     return {
@@ -53,7 +55,22 @@ export default {
       console.log("Remove file");
     }, //移除上传文件列表文件钩子函数
     downExcel: function() {
-      alert("Success333333444")
+      console.log("111111111111");
+      console.log(sprestlib);
+      sprLib.file("GPDocument/模板-税票清单-Ver1.0.xls").get()
+        .then(function(blob) {
+          var url = (window.URL || window.webkitURL).createObjectURL(blob);
+          var link = document.createElement("a");
+          link.setAttribute("href", url);
+          link.setAttribute("download", _fileName);
+          link.style = "visibility:hidden";
+          document.body.appendChild(link);
+          link.click();
+          setTimeout(function() {
+            document.body.removeChild(link);
+          }, 500);
+        });
+      //alert("Success333333444")
       // var th = ["姓名", "生日", "性别", "年龄"];
       // var filterVal = ["name", "birthday", "sex", "age"];
       // var data = this.excelData.map(v => filterVal.map(k => v[k]));
