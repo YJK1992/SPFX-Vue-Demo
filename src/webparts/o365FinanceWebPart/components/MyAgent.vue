@@ -53,18 +53,19 @@ export default {
       console.log("Remove file");
     }, //移除上传文件列表文件钩子函数
     downExcel: function() {
-      var th = ["姓名", "生日", "性别", "年龄"];
-      var filterVal = ["name", "birthday", "sex", "age"];
-      var data = this.excelData.map(v => filterVal.map(k => v[k]));
-      var [fileName, fileType, sheetName] = ["测试下载", "xlsx", "测试页"];
-      var parm = {
-        excelColumns: th,
-        excelData: data,
-        fileName: "test报表",
-        fileType: "xls",
-        sheetName: "test"
-      };
-      efn.toExcel(parm);
+      alert("Success333333444")
+      // var th = ["姓名", "生日", "性别", "年龄"];
+      // var filterVal = ["name", "birthday", "sex", "age"];
+      // var data = this.excelData.map(v => filterVal.map(k => v[k]));
+      // var [fileName, fileType, sheetName] = ["测试下载", "xlsx", "测试页"];
+      // var parm = {
+      //   excelColumns: th,
+      //   excelData: data,
+      //   fileName: "test报表",
+      //   fileType: "xls",
+      //   sheetName: "test"
+      // };
+      // efn.toExcel(parm);
     },
     uploadSuccess: function(response, file, fileList) {
       var fileInfo = file.raw;

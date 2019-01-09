@@ -1,138 +1,923 @@
 <template>
   <div id="yuangong">
-    <table class="yuangong" style="  border-collapse: collapse;">
+    <table class="yuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8">
-          <span style="font-size:30px;color:#409eff;">员工报销</span>
+          <span style="font-size:30px;color:#409eff;">员工报销模板</span>
         </td>
       </tr>
       <tr>
         <td>报销单号：</td>
         <td colspan="7">
-          <el-input placeholder="报销单号"></el-input>
+          <el-input v-model="StaffReimbursement.Title" disabled placeholder="报销单号"></el-input>
         </td>
       </tr>
       <tr>
         <td align="right">员工：</td>
         <td>
-          <el-input placeholder="员工"></el-input>
+          <el-input disabled v-model="StaffReimbursement.Applicant" placeholder="员工"></el-input>
         </td>
         <td align="right">账户号：</td>
         <td>
-          <el-input placeholder="账户号"></el-input>
+          <el-input v-model="StaffReimbursement.AccountNumber" disabled placeholder="账户号"></el-input>
         </td>
         <td align="right">成本中心：</td>
         <td>
-          <el-input placeholder="成本中心"></el-input>
+          <el-select
+            filterable
+            v-model="StaffReimbursement.CostCenter"
+            placeholder="请选择"
+            size="medium"
+          >
+            <el-option
+              v-for="item in CostCenterArr"
+              :key="item.CostCenter"
+              :label="item.CostCenter"
+              :value="item.CostCenter"
+            ></el-option>
+          </el-select>
         </td>
         <td align="right">公司代码：</td>
         <td>
-          <el-input placeholder="公司代码"></el-input>
+          <el-select
+            filterable
+            v-model="StaffReimbursement.CompanyCode"
+            placeholder="请选择"
+            size="medium"
+          >
+            <el-option
+              v-for="item in CompanyCodeArr"
+              :key="item.CompanyCode"
+              :label="item.CompanyCode"
+              :value="item.CompanyCode"
+            ></el-option>
+          </el-select>
         </td>
       </tr>
       <tr>
-        <td align="right">订单号：</td>
-        <td>
-          <el-input placeholder="订单号"></el-input>
-        </td>
-        <td align="right">费用日期：</td>
-        <td>
-          <el-input placeholder="费用日期"></el-input>
-        </td>
-        <td align="right">费用类型：</td>
-        <td>
-          <el-input placeholder="费用类型"></el-input>
-        </td>
-        <td align="right">费用科目：</td>
-        <td>
-          <el-input placeholder="费用科目"></el-input>
-        </td>
-      </tr>
-      <tr>
-        <td align="right">数量：</td>
-        <td>
-          <el-input placeholder="数量"></el-input>
-        </td>
-        <td align="right">单位金额:</td>
-        <td>
-          <el-input placeholder="单位金额"></el-input>
-        </td>
-        <td align="right">净税金额：</td>
-        <td colspan="3">
-          <el-input placeholder="净税金额"></el-input>
+        <td colspan="8" align="left">
+          <el-upload
+            class="upload-demo"
+            :action="actionUrl"
+            :on-success="uploadSuccess"
+            :on-error="uploadErr"
+            :beforeUpload="beforeUploadValidate"
+            :on-remove="removeFile"
+            :limit="1"
+            :on-exceed="fileLimit"
+            :file-list="fileList"
+          >
+            <el-button size="medium" type="primary">上传附件</el-button>
+          </el-upload>
         </td>
       </tr>
       <tr>
-        <td align="right">币种：</td>
-        <td>
-          <el-input placeholder="币种"></el-input>
-        </td>
-        <td align="right">汇率:</td>
-        <td>
-          <el-input placeholder="汇率"></el-input>
-        </td>
-        <td align="right">转换金额：</td>
-        <td colspan="3">
-          <el-input placeholder="转换金额"></el-input>
-        </td>
-      </tr>
-      <tr>
-        <td align="right">是否启用税：</td>
-        <td colspan="7" align="left">
-          <el-checkbox></el-checkbox>
-        </td>
-      </tr>
-      <tr>
-        <td align="right">VAT：</td>
-        <td>
-          <el-input placeholder="VAT"></el-input>
-        </td>
-        <td align="right">税额：</td>
-        <td>
-          <el-input placeholder="税额"></el-input>
-        </td>
-        <td align="right">总金额：</td>
-        <td colspan="3">
-          <el-input placeholder="净税金额"></el-input>
-        </td>
-      </tr>
-      <tr>
-        <td>参考号：</td>
+        <td align="right">备注：</td>
         <td colspan="7">
-          <el-input placeholder="参考号"></el-input>
+          <el-input v-model="StaffReimbursement.Remark" placeholder="请输入内容"></el-input>
         </td>
       </tr>
       <tr>
-        <td>特殊审批人：</td>
+        <td align="right">特殊审批人</td>
         <td colspan="7">
-          <el-input placeholder="特殊审批人"></el-input>
+          <el-input v-model="StaffReimbursement.SpecialApprover" placeholder="特殊审批人"></el-input>
         </td>
       </tr>
+      <!-- <tr>
+        <td align="right">审批意见：</td>
+        <td colspan="7">
+          <el-input placeholder="请输入内容"></el-input>
+        </td>
+      </tr>-->
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="save()">保存</el-button>
+          <el-button type="primary" @click="dialogFormVisible=true">添加项目行</el-button>
         </td>
       </tr>
     </table>
+    <el-table border :data="SubItems" style="width: 100%" max-height="600">
+      <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
+      <el-table-column prop="CostAccount" label="费用科目"></el-table-column>
+      <el-table-column prop="Count" label="数量"></el-table-column>
+      <el-table-column prop="Price" label="单位金额"></el-table-column>
+      <el-table-column prop="Total" label="总金额"></el-table-column>
+      <el-table-column prop="Currency" label="币种"></el-table-column>
+      <el-table-column prop="Rate" label="汇率"></el-table-column>
+      <el-table-column prop="ConvertMoney" label="转换金额"></el-table-column>
+      <el-table-column prop="ConvertCurrency" label="转换后的币种"></el-table-column>
+      <el-table-column prop="IsTax" label="是否启用税"></el-table-column>
+      <el-table-column prop="TaxCode" label="税码"></el-table-column>
+      <el-table-column prop="TaxRate" label="税率"></el-table-column>
+      <el-table-column prop="OriginalTaxMoney" label="原币税额"></el-table-column>
+      <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
+      <el-table-column prop="StartDate" label="出发日期"></el-table-column>
+      <el-table-column prop="ArriveDate" label="抵达日期"></el-table-column>
+      <el-table-column prop="Destination" label="目的地"></el-table-column>
+      <el-table-column prop="Days" label="天数"></el-table-column>
+      <el-table-column prop="CheckInDate" label="入住日期"></el-table-column>
+      <el-table-column prop="LeaveDate" label="离店日期"></el-table-column>
+      <el-table-column prop="Name" label="酒店名称"></el-table-column>
+      <el-table-column prop="Number" label="发票号"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button
+            @click.native.prevent="deleteRow(scope.$index, SubItems)"
+            type="text"
+            size="small"
+          >移除</el-button>
+          <el-button
+            type="text"
+            @click.native.prevent="onEditItem(scope.$index, SubItems)"
+            size="small"
+          >编辑</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
+    <table class="yuangong" style="border-collapse: collapse;width:100%">
+      <tr>
+        <td colspan="8" align="right">
+          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
+          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Save)">保存</el-button>
+        </td>
+      </tr>
+    </table>
+    <!-- 新增税票 -->
+    <el-dialog title="新增票据信息" :visible.sync="dialogFormVisible">
+      <el-form :model="SubItem">
+        <el-form-item label="费用类别：" :label-width="formLabelWidth">
+          <el-select
+            filterable
+            @change="SubItem.CostAccount=''"
+            v-model="SubItem.ExpenseCategory"
+            placeholder="请选择"
+          >
+            <el-option
+              v-for="item in expenseCategoryOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+            <!-- <el-option></el-option> -->
+          </el-select>
+        </el-form-item>
+        <el-form-item label="费用科目：" :label-width="formLabelWidth">
+          <el-select v-model="SubItem.CostAccount" placeholder="请选择">
+            <template v-for="item in costAccountOptions">
+              <el-option
+                v-if="SubItem.ExpenseCategory==item.Type"
+                :key="item.value"
+                :label="item.label"
+                :value="item.value"
+              ></el-option>
+            </template>
+          </el-select>
+        </el-form-item>
+        <el-form-item label="数量：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Count" placeholder="数量"></el-input>
+        </el-form-item>
+        <el-form-item label="总金额：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Total" placeholder="总金额" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="币种：" :label-width="formLabelWidth">
+          <el-select v-model="SubItem.Currency" filterable placeholder="请选择">
+            <!-- <el-option></el-option> -->
+          </el-select>
+        </el-form-item>
+        <el-form-item label="汇率：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Rate" placeholder="汇率"></el-input>
+        </el-form-item>
+        <el-form-item label="转换金额：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.ConvertMoney" placeholder="转换金额"></el-input>
+        </el-form-item>
+        <el-form-item label="转换后币种：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
+        </el-form-item>
+        <el-form-item label="是否启用税：" :label-width="formLabelWidth">
+          <el-checkbox v-model="SubItem.IsTax"></el-checkbox>
+        </el-form-item>
+        <el-form-item label="税码：" :label-width="formLabelWidth">
+          <el-select v-model="SubItem.TaxCode" filterable placeholder="请选择">
+            <!-- <el-option></el-option> -->
+          </el-select>
+        </el-form-item>
+        <el-form-item label="税率：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.TaxRate" placeholder="税率" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="原币税额：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.OriginalTaxMoney" placeholder="原币税额" disabled></el-input>
+        </el-form-item>
+        <el-form-item label="出发/抵达日期：" :label-width="formLabelWidth">
+          <el-date-picker
+            value-format="yyyy-MM-dd"
+            type="daterange"
+            range-separator="到"
+            v-model="StartArriveDate"
+            start-placeholder="出发日期"
+            end-placeholder="抵达日期"
+          ></el-date-picker>
+        </el-form-item>
+        <el-form-item label="目的地：" :label-width="formLabelWidth">
+          <el-input placeholder="目的地"></el-input>
+        </el-form-item>
+        <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
+          <el-date-picker
+            value-format="yyyy-MM-dd"
+            type="daterange"
+            v-model="CheckInLeaveData"
+            range-separator="到"
+            start-placeholder="出发日期"
+            end-placeholder="抵达日期"
+          ></el-date-picker>
+        </el-form-item>
+        <el-form-item label="酒店名称：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Name" placeholder="酒店名称"></el-input>
+        </el-form-item>
+        <el-form-item label="发票号：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Number" placeholder="发票号"></el-input>
+        </el-form-item>
+      </el-form>
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="onCancel('item')">取 消</el-button>
+        <el-button type="primary" @click="onAddItem()">确 定</el-button>
+      </div>
+    </el-dialog>
   </div>
 </template>
-
 <script>
+import $ from "jquery";
+import common from "../js/common.js";
 export default {
   data() {
-    return {};
+    return {
+      hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
+      mainListName: "StaffReimbursement", //对公付款
+      mainListType: "SP.Data.StaffReimbursementListItem", //税票清单列表类型，用于post请求
+      userListName: "EmployeeList", //员工详细信息列表名称
+      applicantNumberListName: "ApplicantNumber",
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      approverList: "ApproveNode", //审批节点列表名
+      SpecApproId: 0, //特殊审批人ID
+      LoginName: "", //登录名
+      PTPBaseApplicantNumber: 0,
+      PTPApplicantNumber: 0,
+      PTPBaseFormat: "EXP",
+      PTPAppliantNumberItemId: 0,
+      dialogFormVisible: false,
+      formLabelWidth: "150px",
+      StartArriveDate: "",
+      CheckInLeaveData: "",
+      expenseCategoryListName: "ExpenseCategory", //费用类别
+      costAccountListName: "CostAccount", //费用科目
+      buttonType: {
+        Submit: "submit",
+        Save: "save"
+      },
+      //主表数据
+      StaffReimbursement: {
+        Title: "", //申请单号
+        Applicant: "", //申请人
+        AccountNumber: "", //账户号
+        CostCenter: "", //成本中心
+        CompanyCode: "", //公司代码
+        Remark: "", //备注
+        SpecialApprover: "" //特殊审批人
+      },
+      //子表数据
+      SubItems: [],
+      SubItem: {
+        ExpenseCategory: "", //费用类别
+        CostAccount: "", //费用科目
+        Count: "", //数量
+        Price: "", //单位金额
+        Total: "", //总金额
+        Currency: "", //币种
+        Rate: "", //汇率
+        ConvertMoney: "", //转换金额
+        ConvertCurrency: "", //转换后币种
+        IsTax: false, //是否用税
+        TaxCode: "", //税码
+        TaxRate: "", //税率
+        OriginalTaxMoney: "", //原币税额
+        ExpenseDate: "", //费用日期
+        StartDate: "", //出发日期
+        ArriveDate: "", //到达日期
+        Destination: "", //目的地
+        Days: "", //天数
+        CheckInDate: "", //入住日期
+        LeaveDate: "", //离店日期
+        Name: "", //酒店名称
+        Number: "" //发票号
+      },
+      CostCenterArr: [], //成本中心数组
+      CompanyCodeArr: [], //公司代码数组
+      expenseCategoryOptions: [], //费用类别
+      costAccountOptions: [], //费用科目
+      editIndex: -1,
+      requestDigest: "", //POST Token
+      fileList: [], //附件列表数据
+      fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
+      actionUrl: "https://lenovonetapp.sharepoint.cn/" //绑定上传附件按钮的action
+    };
   },
   methods: {
-    save() {
-      //    this.Message.error('错了哦，这是一条错误消息');
-      this.$message({
-        showClose: true,
-        message: "错了哦，这是一条错误消息",
-        type: "error"
+    uploadAttFileToItem: function(attUrl) {
+      var parms = [];
+      this.fileToArr.forEach(f => {
+        parms.push({
+          type: "post",
+          action: "Attachements",
+          baseUrl: this.hostUrl,
+          fileName: f.fileName,
+          attUrl: attUrl,
+          fileArr: f.arrayBuffer,
+          digest: this.requestDigest
+        });
       });
+      console.log("1111");
+      console.log(parms);
+      this.uploadingAttachement(parms, 0, parms.length);
+    }, //上传文件入口函数
+    uploadingAttachement: function(parms, current, total) {
+      if (current < total) {
+        var opt = common.queryOpt(parms[current]);
+        console.log(current);
+        console.log(opt);
+        $.when($.ajax(opt))
+          .done(r => {
+            current++;
+            this.uploadingAttachement(parms, current, parms.length);
+          })
+          .catch(err => {
+            this.$message(common.message("error", "上传附件失败!"));
+          });
+      }
+    }, //上传文件主要函数，递归回调是为了防止资源冲突导致文件上传失败
+    AttToArrInfo: function(f) {
+      var file = f.raw;
+      var fileName = f.name;
+      var getFile = common.getFileBuffer(file);
+      getFile
+        .done(arrayBuffer => {
+          this.fileToArr.push({
+            fileName: fileName,
+            arrayBuffer: arrayBuffer
+          });
+        })
+        .catch(onError => {
+          this.$message(common.message("error", "获取附件失败!"));
+        });
+    },
+    removeFile: function(file, fileList, index) {
+      console.log(file, fileList, index);
+      this.fileList = fileList;
+      var i;
+      this.fileToArr.forEach(function(d, index) {
+        if (d.fileName === file.name) {
+          i = index;
+          console.log(i);
+        }
+      });
+      this.fileToArr.splice(i, 1);
+      console.log(this.fileList);
+    }, //移除上传文件列表文件钩子函数
+    uploadSuccess: function(response, file, fileList) {
+      console.log(file, fileList);
+      this.fileList = fileList;
+      this.AttToArrInfo(file);
+      console.log(this.fileList);
+    }, //附件上传成功后回调函数
+    uploadErr: function(err, file, fileList) {
+      this.$message(common.message("error", "上传附件出错!"));
+    }, //附件上传失败后回调函数
+    beforeUploadValidate: function(file) {
+      const extension = file.name.toLowerCase().endsWith("xls");
+      const extension2 = file.name.toLowerCase().endsWith("xlsx");
+      const extension3 = file.name.toLowerCase().endsWith("doc");
+      const extension4 = file.name.toLowerCase().endsWith("docx");
+      const extension5 = file.name.toLowerCase().endsWith("txt");
+      const extension6 = file.name.toLowerCase().endsWith("pdf");
+      const extension7 = file.name.toLowerCase().endsWith("xml");
+      const extension8 = file.name.toLowerCase().endsWith("msg");
+      const size = file.size / 1024 / 1024 < 10;
+      if (
+        !extension &&
+        !extension2 &&
+        !extension3 &&
+        !extension4 &&
+        !extension5 &&
+        !extension6 &&
+        !extension7 &&
+        !extension8
+      ) {
+        this.$message(
+          common.message(
+            "error",
+            "上传的文件只能是 xls、xlsx、doc、docx、txt、pdf、xml、msg 格式!"
+          )
+        );
+      }
+      if (!size) {
+        this.$message(common.message("error", "上传模板大小不能超过 10MB!"));
+      }
+      return (
+        extension ||
+        extension2 ||
+        extension3 ||
+        extension4 ||
+        extension8 ||
+        extension6 ||
+        extension7 ||
+        (extension5 && size)
+      );
+    }, //附件上传前对文件格式和大小进行验证
+    fileLimit: function(files, fileList) {
+      this.$message(common.message("error", "最多只能上传一个文件!"));
+    },
+    onEditItem(index) {
+      this.SubItem = this.SubItems[index];
+      this.editIndex = index;
+      this.dialogFormVisible = true;
+    },
+    deleteRow(index, rows) {
+      rows.splice(index, 1);
+    },
+    onCancel: function() {
+      this.editIndex = -1;
+      this.SubItem = {
+        ExpenseCategory: "", //费用类别
+        CostAccount: "", //费用科目
+        Count: "", //数量
+        Price: "", //单位金额
+        Total: "", //总金额
+        Currency: "", //币种
+        Rate: "", //汇率
+        ConvertMoney: "", //转换金额
+        ConvertCurrency: "", //转换后币种
+        IsTax: false, //是否用税
+        TaxCode: "", //税码
+        TaxRate: "", //税率
+        OriginalTaxMoney: "", //原币税额
+        ExpenseDate: "", //费用日期
+        StartDate: "", //出发日期
+        ArriveDate: "", //到达日期
+        Destination: "", //目的地
+        Days: "", //天数
+        CheckInDate: "", //入住日期
+        LeaveDate: "", //离店日期
+        Name: "", //酒店名称
+        Number: "" //发票号
+      };
+      this.dialogFormVisible = false;
+    },
+    handleClick(row) {
+      console.log(row);
+    },
+    onAddItem() {
+      console.log(this.StartArriveDate);
+      console.log(this.CheckInLeaveData);
+      this.SubItem.StartDate = this.StartArriveDate[0];
+      this.SubItem.ArriveDate = this.StartArriveDate[1];
+      this.SubItem.CheckInDate = this.CheckInLeaveData[0];
+      this.SubItem.LeaveDate = this.CheckInLeaveData[1];
+      if (false) {
+        //校验不通过
+        // this.$message({
+        //   message: this.message,
+        //   type: "error"
+        // });
+      } else {
+        if (this.editIndex != -1) {
+          //编辑
+          this.SubItems[this.editIndex] = this.SubItem;
+        } else {
+          //新增
+          this.SubItems.push(this.SubItem);
+        }
+        this.SubItem = {
+          ExpenseCategory: "", //费用类别
+          CostAccount: "", //费用科目
+          Count: "", //数量
+          Price: "", //单位金额
+          Total: "", //总金额
+          Currency: "", //币种
+          Rate: "", //汇率
+          ConvertMoney: "", //转换金额
+          ConvertCurrency: "", //转换后币种
+          IsTax: false, //是否用税
+          TaxCode: "", //税码
+          TaxRate: "", //税率
+          OriginalTaxMoney: "", //原币税额
+          ExpenseDate: "", //费用日期
+          StartDate: "", //出发日期
+          ArriveDate: "", //到达日期
+          Destination: "", //目的地
+          Days: "", //天数
+          CheckInDate: "", //入住日期
+          LeaveDate: "", //离店日期
+          Name: "", //酒店名称
+          Number: "" //发票号
+        };
+        this.dialogFormVisible = false;
+      }
+    },
+    formatAppNumber: function(AppNumber) {
+      var formatAppNumber = "";
+      var number = AppNumber;
+      if (number.toString().length == 1) {
+        formatAppNumber = "00000" + number.toString();
+      } else if (number.toString().length == 2) {
+        formatAppNumber = "0000" + number.toString();
+      } else if (number.toString().length == 3) {
+        formatAppNumber = "000" + number.toString();
+      } else if (number.toString().length == 4) {
+        formatAppNumber = "00" + number.toString();
+      } else if (number.toString().length == 5) {
+        formatAppNumber = "0" + number.toString();
+      } else if (number.toString().length == 6) {
+        formatAppNumber = number.toString();
+      }
+      return formatAppNumber;
+    },
+    //提交或保存
+    onSaveOrSubmmit(type) {
+      if (false) {
+        //校验不通过;
+        this.$message(common.message("error", this.message));
+      } else {
+        this.loading = true;
+        var getDigst = common.getRequestDigest(this.hostUrl);
+        getDigst
+          .done(data => {
+            this.requestDigest =
+              data.d.GetContextWebInformation.FormDigestValue;
+            this.CreateStaffReimbursement(type);
+          })
+          .catch(error => {
+            this.loading = false;
+            this.$message(common.message("error", "获取Digest失败"));
+          });
+      }
+    },
+    //创建数据
+    CreateStaffReimbursement(type) {
+      console.log(this.StaffReimbursement);
+      var costcenter = this.StaffReimbursement.CostCenter;
+      var applicantNumber = "";
+      var currentTime = common.getCurrentDate_NoLine();
+      var baseAppNumber = this.formatAppNumber(this.PTPApplicantNumber);
+      applicantNumber = this.PTPBaseFormat + currentTime + baseAppNumber;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.approverList,
+        baseUrl: this.hostUrl,
+        condition:
+          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(r => {
+          if (r.d.results.length > 0) {
+            var data1 = r.d.results[0];
+            var itemInfo = {
+              __metadata: {
+                type: this.mainListType
+              },
+              Title: applicantNumber,
+              Applicant: this.StaffReimbursement.Applicant, //申请人
+              AccountNumber: this.StaffReimbursement.AccountNumber, //账户号
+              CostCenter: this.StaffReimbursement.CostCenter, //成本中心
+              CompanyCode: this.StaffReimbursement.CompanyCode, //公司代码
+              Remark: this.StaffReimbursement.Remark, //备注
+              SpecialApproverTitle: this.StaffReimbursement.SpecialApprover, //特殊审批人
+              DetailInvoiceJSON: JSON.stringify(this.SubItems)
+            };
+            //总计发票金额
+            var total = 0;
+            this.SubItems.forEach(item => {
+              total += Number(item.ConvertMoney);
+            });
+            if (total > 0 && total < 1000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+            } else if (total >= 1000 && total < 20000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+            } else if (total >= 20000 && total < 50000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+            } else {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+              itemInfo.Approver4Id = data1.Approver4Id;
+            }
+            if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+              itemInfo.SpecialApproverId = this.SpecApproId;
+            }
+            if (type == "submit") {
+              itemInfo.Status = "Submitted";
+            }
+            parm = {
+              type: "post",
+              action: "AddInList",
+              baseUrl: this.hostUrl,
+              list: this.mainListName,
+              item: itemInfo,
+              digest: this.requestDigest
+            };
+            console.log(itemInfo);
+            option = common.queryOpt(parm);
+            $.when($.ajax(option))
+              .done(req => {
+                var attUrl = req.d.AttachmentFiles.__deferred.uri;
+                this.uploadAttFileToItem(attUrl);
+                this.$message(common.message("success", "员工报销添加成功!"));
+                this.updateApplicantBaseNumber();
+                this.loading = false;
+                this.$router.push("/home");
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "员工报销添加失败!"));
+              });
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "创建数据失败"));
+        });
+    },
+    speApprChange: function() {
+      this.loading = true;
+      this.SpecApproId = 0;
+      this.checkIsSpecAppro = false;
+      var speApproverName = this.StaffReimbursement.SpecialApprover;
+      var loginName;
+      if (speApproverName != "") {
+        var parm = {
+          type: "get",
+          action: "ListItems",
+          list: this.userListName,
+          condition:
+            "?$filter=EmployeeID eq  '" +
+            speApproverName.toLowerCase() +
+            "' and IsSpecial eq '1'",
+          baseUrl: this.hostUrl
+        };
+        var opt = common.queryOpt(parm);
+        $.when($.ajax(opt))
+          .done(req => {
+            var data = req.d.results;
+            console.log(data);
+            if (data.length > 0) {
+              loginName = "i:0#.f|membership|" + speApproverName;
+              var parm2 = {
+                type: "get",
+                action: "UserByName",
+                accountName: loginName,
+                baseUrl: this.hostUrl
+              };
+              console.log(parm2);
+              var opt2 = common.queryOpt(parm2);
+              $.when($.ajax(opt2))
+                .done(re => {
+                  console.log(re);
+                  this.SpecApproId = re.d.Id;
+                  this.checkIsSpecAppro = true;
+                  this.loading = false;
+                })
+                .catch(err => {
+                  this.loading = false;
+                  this.StaffReimbursement.SpecialApprover = "";
+                  this.$message(
+                    common.message(
+                      "error",
+                      "通过员工列表EmployeeID加载特殊审批用户出错!"
+                    )
+                  );
+                });
+            } else {
+              this.loading = false;
+              this.StaffReimbursement.SpecialApprover = "";
+              this.$message(
+                common.message(
+                  "error",
+                  "特殊审批人不在员工表中，请及时与管理员联系!"
+                )
+              );
+            }
+          })
+          .catch(err => {
+            this.loading = false;
+            this.StaffReimbursement.SpecialApprover = "";
+            this.$message(common.message("error", "加载特殊审批用户出错!"));
+          });
+      } else {
+        this.loading = false;
+      }
+    },
+    updateApplicantBaseNumber: function() {
+      var PTPbaseNumber = this.PTPBaseApplicantNumber;
+      var itemInfo = {
+        __metadata: {
+          type: this.applicantNumberListType
+        }
+      };
+      var parm = {
+        type: "post",
+        action: "EditListItem",
+        baseUrl: this.hostUrl,
+        list: this.applicantNumberListName,
+        digest: this.requestDigest
+      };
+      itemInfo.Number = GPBbaseNumber + 1;
+      parm.itemID = this.PTPAppliantNumberItemId;
+      parm.item = itemInfo;
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log("更新流水号成功");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新流水号失败"));
+        });
+    },
+    //获取当前用户
+    getCurrentUser() {
+      var parm = {
+        action: "CurrentUser",
+        type: "get",
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(c => {
+          var loginName = c.d.LoginName.split("|membership|")[1];
+          this.LoginName = loginName;
+          this.StaffReimbursement.Applicant = c.d.Title;
+          this.search(loginName);
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载当前用户出错!"));
+        });
+    },
+    //查询用户信息
+    search(userLoginName) {
+      var applicant = this.StaffReimbursement.Applicant;
+      if (applicant != "" || applicant != null) {
+        var parm = {
+          type: "get",
+          action: "ListItems",
+          list: this.userListName,
+          condition: "?$filter=EmployeeID eq  '" + userLoginName + "'",
+          baseUrl: this.hostUrl
+        };
+        var opt = common.queryOpt(parm);
+        $.when($.ajax(opt))
+          .done(req => {
+            var data = req.d.results;
+            if (data.length > 0) {
+              var selectedCostCenter = "";
+              data.forEach(d => {
+                selectedCostCenter = d.CostCenter;
+                this.CompanyCodeArr.push({
+                  CompanyCode: d.CompanyCode
+                });
+              });
+              //默认成本中心
+              this.StaffReimbursement.CostCenter = selectedCostCenter;
+              //默认员工账号
+              this.StaffReimbursement.AccountNumber =
+                data[0].EmployeeBankAccount;
+            } else {
+              this.$message(
+                common.message(
+                  "error",
+                  "搜索的用户不在员工信息列表中,请及时与管理员联系!"
+                )
+              );
+            }
+          })
+          .catch(err => {
+            this.loading = false;
+            this.$message(
+              common.message(
+                "error",
+                "搜索的用户不在员工信息列表中,请及时与管理员联系!"
+              )
+            );
+          });
+      }
+    },
+    //获取成本中心
+    getCostCenter() {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition: "",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          //去重成本中心
+          var costCenter = [];
+          data.forEach(d => {
+            costCenter.push(d.CostCenter);
+          });
+          console.log("未去重");
+          console.log(costCenter);
+          var costCenterUnique = costCenter.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          costCenterUnique.forEach(element => {
+            this.CostCenterArr.push({
+              CostCenter: element
+            });
+          });
+          console.log("去重后");
+          console.log(this.costCenterArr);
+        }
+      });
+    },
+    //获取费用类别
+    getExpenseCategory() {
+      //获取费用类别
+      var that = this;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.expenseCategoryListName,
+        baseUrl: this.hostUrl,
+        condition: "?$top=2000"
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(function(req) {
+          var data = req.d.results;
+          console.log("费用类别");
+          console.log(data);
+          if (data.length > 0) {
+            data.forEach(item => {
+              that.expenseCategoryOptions.push({
+                label: item.Title,
+                value: item.Title
+              });
+            });
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "加载费用类别时候出错!"));
+        });
+    },
+    //获取费用科目
+    getCostAccount() {
+      var that = this;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.costAccountListName,
+        baseUrl: this.hostUrl,
+        condition: ""
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(function(req) {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(item => {
+              that.costAccountOptions.push({
+                Type: item.ExpenseCategoryTitle,
+                label: item.Title,
+                value: item.Title
+              });
+            });
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "加载费用科目时候出错!"));
+        });
     }
   },
-  components: {}
+  mounted: function() {
+    //获取费用类别
+    this.getExpenseCategory();
+    //获取费用科目
+    this.getCostAccount();
+    //获取当前信息
+    this.getCurrentUser();
+    //获取成本中心
+    this.getCostCenter();
+  }
 };
 </script>
 

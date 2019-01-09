@@ -48,16 +48,13 @@
           <!-- <el-menu-item index="/myapplication">我的申请</el-menu-item> -->
         </el-menu-item-group>
       </el-submenu>
-      <el-submenu index="4" disabled>
+      <el-submenu index="4">
         <template slot="title">
           <i class="el-icon-location"></i>
-          <span>员工报销</span>
+          <span>员工报销 - 开发中</span>
         </template>
         <el-menu-item-group>
-          <el-menu-item index="/viewgppay">ECC待办</el-menu-item>
-          <el-menu-item index="/mygppaydraft">我的ECC草稿</el-menu-item>
-          <el-menu-item index="/creategppaytask">ECC申请</el-menu-item>
-          <!-- <el-menu-item index="1-2">ECC报表</el-menu-item> -->
+          <el-menu-item index="/createptptask">员工报销申请</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
     </el-menu>

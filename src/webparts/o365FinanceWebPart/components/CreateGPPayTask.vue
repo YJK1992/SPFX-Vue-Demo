@@ -325,7 +325,7 @@
           <el-select v-model="PublicPayment.CostAccount" placeholder="请选择">
             <template v-for="item in costAccountOptions">
               <el-option
-                v-if="PublicPayment.ExpenseCategory==item.Type"
+                v-if="PublicPayment.ExpenseCategory===item.Type"
                 :key="item.value"
                 :label="item.label"
                 :value="item.value"
@@ -421,6 +421,7 @@ export default {
     return {
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
+      requestDigest: "",
       mainListName: "PublicPayment", //对公付款
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
@@ -1133,28 +1134,53 @@ export default {
     },
     getExpenseCategory() {
       //获取费用类别
-      var that = this;
       var parm = {
         action: "ListItems",
         type: "get",
-        list: this.expenseCategoryListName,
+        //list: this.expenseCategoryListName,
+        list: this.costAccountListName,
         baseUrl: this.hostUrl,
         condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
-        .done(function(req) {
+        .done(req => {
           var data = req.d.results;
           console.log("费用类别");
           console.log(data);
+          // if (data.length > 0) {
+          //   data.forEach(item => {
+          //     that.expenseCategoryOptions.push({
+          //       label: item.Title,
+          //       value: item.Title
+          //     });
+          //   });
+          // }
+          var expCategory = [];
           if (data.length > 0) {
             data.forEach(item => {
-              that.expenseCategoryOptions.push({
-                label: item.Title,
-                value: item.Title
-              });
+              expCategory.push(item.ExpenseCategoryTitle);
             });
           }
+          console.log("2222s");
+          console.log(expCategory);
+          var expCategoryUnique = expCategory.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          console.log("2222aa");
+          console.log(expCategoryUnique);
+          expCategoryUnique.forEach(item => {
+            this.expenseCategoryOptions.push({
+              label: item,
+              value: item
+            });
+          });
+          console.log("去重费用类别");
+          console.log(this.expenseCategoryOptions);
         })
         .catch(err => {
           this.loading = false;
@@ -1168,7 +1194,7 @@ export default {
         type: "get",
         list: this.costAccountListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1322,7 +1348,10 @@ export default {
         !this.IsMoneyConsistent()
       ) {
         this.message = "摊入摊出金额不一致;";
-      }else if(this.PublicPayment.CostAccount==""){
+      } else if (
+        this.PublicPayment.CostAccount == "" ||
+        this.PublicPayment.CostAccount == null
+      ) {
         this.message = "费用科目不可为空;";
       } else {
         isSuccess = true;
