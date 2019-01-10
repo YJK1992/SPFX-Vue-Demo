@@ -273,7 +273,6 @@ export default {
       SpecApproId: 0, //特殊审批人ID
       LoginName: "", //登录名
       PTPBaseApplicantNumber: 0,
-      PTPApplicantNumber: 0,
       PTPBaseFormat: "EXP",
       PTPAppliantNumberItemId: 0,
       dialogFormVisible: false,
@@ -512,6 +511,19 @@ export default {
     },
     onEditItem(index) {
       this.SubItem = this.SubItems[index];
+      if (this.SubItem.CheckInDate != "" && this.SubItem.LeaveDate != "") {
+        this.CheckInLeaveData = [
+          this.SubItem.CheckInDate,
+          this.SubItem.LeaveDate
+        ];
+      }
+      if (this.SubItem.StartDate != "" && this.SubItem.ArriveDate != "") {
+        this.StartArriveDate = [
+          this.SubItem.StartDate,
+          this.SubItem.ArriveDate
+        ];
+      }
+      this.SubItem = this.SubItems[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
     },
@@ -520,6 +532,8 @@ export default {
     },
     onCancel: function() {
       this.editIndex = -1;
+      this.StartArriveDate = "";
+      this.CheckInLeaveData = "";
       this.SubItem = {
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
@@ -552,10 +566,14 @@ export default {
     onAddItem() {
       console.log(this.StartArriveDate);
       console.log(this.CheckInLeaveData);
-      this.SubItem.StartDate = this.StartArriveDate[0];
-      this.SubItem.ArriveDate = this.StartArriveDate[1];
-      this.SubItem.CheckInDate = this.CheckInLeaveData[0];
-      this.SubItem.LeaveDate = this.CheckInLeaveData[1];
+      if (this.StartArriveDate != "") {
+        this.SubItem.StartDate = this.StartArriveDate[0];
+        this.SubItem.ArriveDate = this.StartArriveDate[1];
+      }
+      if (this.CheckInLeaveData != "") {
+        this.SubItem.CheckInDate = this.CheckInLeaveData[0];
+        this.SubItem.LeaveDate = this.CheckInLeaveData[1];
+      }
       if (false) {
         //校验不通过
         // this.$message({
@@ -570,6 +588,8 @@ export default {
           //新增
           this.SubItems.push(this.SubItem);
         }
+        this.StartArriveDate = "";
+        this.CheckInLeaveData = "";
         this.SubItem = {
           ExpenseCategory: "", //费用类别
           CostAccount: "", //费用科目
@@ -641,8 +661,10 @@ export default {
       var costcenter = this.StaffReimbursement.CostCenter;
       var applicantNumber = "";
       var currentTime = common.getCurrentDate_NoLine();
-      var baseAppNumber = this.formatAppNumber(this.PTPApplicantNumber);
+      var baseAppNumber = this.formatAppNumber(this.PTPBaseApplicantNumber);
       applicantNumber = this.PTPBaseFormat + currentTime + baseAppNumber;
+      console.log("applicantNumber");
+      console.log(applicantNumber);
       var parm = {
         action: "ListItems",
         type: "get",
@@ -667,7 +689,8 @@ export default {
               CompanyCode: this.StaffReimbursement.CompanyCode, //公司代码
               Remark: this.StaffReimbursement.Remark, //备注
               SpecialApproverTitle: this.StaffReimbursement.SpecialApprover, //特殊审批人
-              DetailInvoiceJSON: JSON.stringify(this.SubItems)
+              DetailInvoiceJSON: JSON.stringify(this.SubItems),
+              ApplicantEmail: this.LoginName.split("@")[0]
             };
             //总计发票金额
             var total = 0;
@@ -794,6 +817,27 @@ export default {
         this.loading = false;
       }
     },
+    getApplicantNumber: function() {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.applicantNumberListName,
+        condition: "?$filter=Prefix eq 'EXP'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      var getBaseApplicantNumber = common.service(opt);
+      getBaseApplicantNumber
+        .done(req => {
+          var data = req.d.results;
+          console.log(data);
+          this.PTPBaseApplicantNumber = data[0].Number;
+          this.PTPAppliantNumberItemId = data[0].ID;
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取单号流水号失败!"));
+        });
+    }, //从申请单号列表中获取流水号
     updateApplicantBaseNumber: function() {
       var PTPbaseNumber = this.PTPBaseApplicantNumber;
       var itemInfo = {
@@ -1025,6 +1069,8 @@ export default {
     this.getCostCenter();
     //获取税码
     this.getTaxCode();
+    //获取流水号
+    this.getApplicantNumber();
   }
 };
 </script>

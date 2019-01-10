@@ -316,17 +316,11 @@ export default {
       mainListType: "SP.Data.StaffReimbursementListItem", //税票清单列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       taxCodeListName: "TaxCode", //税码
-      applicantNumberListName: "ApplicantNumber",
-      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
       PTPTaskListType: "SP.Data.StaffReimbursementApproval_x0020_TasksListItem",
       PTPTaskListName: "StaffReimbursementApproval Tasks",
       approverList: "ApproveNode", //审批节点列表名
       SpecApproId: 0, //特殊审批人ID
       LoginName: "", //登录名
-      PTPBaseApplicantNumber: 0,
-      PTPApplicantNumber: 0,
-      PTPBaseFormat: "EXP",
-      PTPAppliantNumberItemId: 0,
       dialogFormVisible: false,
       formLabelWidth: "150px",
       StartArriveDate: "",
@@ -436,10 +430,22 @@ export default {
       requestIsReject: false,
       showEditor: true,
       ApprovalHistory: "", //审批历史
-      startNoAttr: true
+      startNoAttr: true,
+      deleteAttName: ""
     };
   },
   methods: {
+    removeFile: function(file, fileList, index) {
+      this.fileList = fileList;
+      var i = 0;
+      // this.fileToArr.forEach(function(d, index) {
+      //   if (d.fileName === file.name) {
+      //     i = index;
+      //   }
+      // });
+      this.fileToArr.splice(i, 1);
+      this.deleteAttName = file.name;
+    },
     onEnd: function(type) {
       var getDigst = common.getRequestDigest(this.hostUrl);
       getDigst
@@ -627,7 +633,7 @@ export default {
       console.log(this.taxCodeOptions);
       console.log(this.SubItem.TaxCode);
       this.taxCodeOptions.forEach(item => {
-        console.log(item.label)
+        console.log(item.label);
         if (item.label == this.SubItem.TaxCode) {
           this.SubItem.TaxRate = item.rate;
         }
@@ -768,6 +774,19 @@ export default {
     },
     onEditItem(index) {
       this.SubItem = this.SubItems[index];
+      if (this.SubItem.CheckInDate != "" && this.SubItem.LeaveDate != "") {
+        this.CheckInLeaveData = [
+          this.SubItem.CheckInDate,
+          this.SubItem.LeaveDate
+        ];
+      }
+      if (this.SubItem.StartDate != "" && this.SubItem.ArriveDate != "") {
+        this.StartArriveDate = [
+          this.SubItem.StartDate,
+          this.SubItem.ArriveDate
+        ];
+      }
+      this.SubItem = this.SubItems[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
     },
@@ -776,6 +795,8 @@ export default {
     },
     onCancel: function() {
       this.editIndex = -1;
+      this.StartArriveDate = "";
+      this.CheckInLeaveData = "";
       this.SubItem = {
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
@@ -808,10 +829,14 @@ export default {
     onAddItem() {
       console.log(this.StartArriveDate);
       console.log(this.CheckInLeaveData);
-      this.SubItem.StartDate = this.StartArriveDate[0];
-      this.SubItem.ArriveDate = this.StartArriveDate[1];
-      this.SubItem.CheckInDate = this.CheckInLeaveData[0];
-      this.SubItem.LeaveDate = this.CheckInLeaveData[1];
+      if (this.StartArriveDate != "") {
+        this.SubItem.StartDate = this.StartArriveDate[0];
+        this.SubItem.ArriveDate = this.StartArriveDate[1];
+      }
+      if (this.CheckInLeaveData != "") {
+        this.SubItem.CheckInDate = this.CheckInLeaveData[0];
+        this.SubItem.LeaveDate = this.CheckInLeaveData[1];
+      }
       if (false) {
         //校验不通过
         // this.$message({
@@ -853,24 +878,6 @@ export default {
         this.dialogFormVisible = false;
       }
     },
-    formatAppNumber: function(AppNumber) {
-      var formatAppNumber = "";
-      var number = AppNumber;
-      if (number.toString().length == 1) {
-        formatAppNumber = "00000" + number.toString();
-      } else if (number.toString().length == 2) {
-        formatAppNumber = "0000" + number.toString();
-      } else if (number.toString().length == 3) {
-        formatAppNumber = "000" + number.toString();
-      } else if (number.toString().length == 4) {
-        formatAppNumber = "00" + number.toString();
-      } else if (number.toString().length == 5) {
-        formatAppNumber = "0" + number.toString();
-      } else if (number.toString().length == 6) {
-        formatAppNumber = number.toString();
-      }
-      return formatAppNumber;
-    },
     //提交或保存
     onSaveOrSubmmit(type) {
       if (false) {
@@ -895,10 +902,6 @@ export default {
     CreateStaffReimbursement(type) {
       console.log(this.StaffReimbursement);
       var costcenter = this.StaffReimbursement.CostCenter;
-      var applicantNumber = "";
-      var currentTime = common.getCurrentDate_NoLine();
-      var baseAppNumber = this.formatAppNumber(this.PTPApplicantNumber);
-      applicantNumber = this.PTPBaseFormat + currentTime + baseAppNumber;
       var parm = {
         action: "ListItems",
         type: "get",
@@ -916,7 +919,6 @@ export default {
               __metadata: {
                 type: this.mainListType
               },
-              Title: applicantNumber,
               Applicant: this.StaffReimbursement.Applicant, //申请人
               AccountNumber: this.StaffReimbursement.AccountNumber, //账户号
               CostCenter: this.StaffReimbursement.CostCenter, //成本中心
@@ -1022,7 +1024,6 @@ export default {
                   }
                 }
                 this.$message(common.message("success", "员工报销添加成功!"));
-                this.updateApplicantBaseNumber();
                 this.loading = false;
                 this.$router.push("/home");
               })
@@ -1106,32 +1107,7 @@ export default {
         this.loading = false;
       }
     },
-    updateApplicantBaseNumber: function() {
-      var PTPbaseNumber = this.PTPBaseApplicantNumber;
-      var itemInfo = {
-        __metadata: {
-          type: this.applicantNumberListType
-        }
-      };
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.applicantNumberListName,
-        digest: this.requestDigest
-      };
-      itemInfo.Number = PTPbaseNumber + 1;
-      parm.itemID = this.PTPAppliantNumberItemId;
-      parm.item = itemInfo;
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          console.log("更新流水号成功");
-        })
-        .catch(err => {
-          this.$message(common.message("error", "更新流水号失败"));
-        });
-    },
+
     //获取当前用户
     getCurrentUser() {
       var parm = {
@@ -1398,6 +1374,10 @@ export default {
                       data[0].ServerRelativeUrl +
                       "?Web=1";
                     this.attrFileInfo.name = data[0].FileName;
+                    this.fileList.push({
+                      name: data[0].FileName,
+                      url: data[0].ServerRelativeUrl
+                    });
                     console.log("aaaaaaaaaaaa");
                     console.log(this.fileList);
                   }

@@ -235,12 +235,15 @@ var common = {
     doc.write('<div class="' + $(ele).attr("class") + '">' + $(ele).html() +
       '</div>');
     doc.close();
-    var frameWindow = iframe.contentWindow;
-    frameWindow.close();
-    frameWindow.focus();
-    //iframe.onload = function(){
+    if (!iframe.readyState || iframe.readyState == "complete") {
+      console.log("Local iframe is now loaded.");
+      var frameWindow = iframe.contentWindow;
+      frameWindow.close();
+      frameWindow.focus();
       frameWindow.print();
-    //}
+    } else {
+      console.log("Local iframe is now loaded.Error");
+    }
   },
   removePrintArea: function (id) {
     $("iframe#" + id).remove();

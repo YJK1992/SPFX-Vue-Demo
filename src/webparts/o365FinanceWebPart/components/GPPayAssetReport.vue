@@ -267,8 +267,8 @@ export default {
                 this.TableData.push({
                   ApplicationNumber: d.ApplicationNumber, //申请单号
                   SettlementType: d.SettlementType, //结算方式
-                  Trustees: d.Trustees+"-"+d.TrusteesEmail, //经办人
-                  PersonCode: d.EmployeeCode, //人员编号
+                  Trustees: d.Trustees, //经办人
+                  PersonCode: "", //人员编号
                   TheHighestPersonNumber: "", //最高审批人编号,
                   InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
                   CostCenter: d.CostCenter, //成本中心
@@ -293,8 +293,8 @@ export default {
               this.TableData.push({
                 ApplicationNumber: d.ApplicationNumber, //申请单号
                 SettlementType: d.SettlementType, //结算方式
-                Trustees: d.Trustees+"-"+d.TrusteesEmail, //经办人
-                PersonCode: d.EmployeeCode, //人员编号
+                Trustees: d.Trustees, //经办人
+                PersonCode: "", //人员编号
                 TheHighestPersonNumber: "", //最高审批人编号,
                 InvoiceValue: d.InvoiceValue, //列为金额 实际发票金额,
                 CostCenter: d.CostCenter, //成本中心

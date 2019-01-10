@@ -44,6 +44,9 @@ import MyApplication from "./components/MyApplication.vue";
 import EditPTP from "./components/EditPTP.vue";
 import MyPTPDraft from "./components/MyPTPDraft.vue";
 import ViewPTPTasks from "./components/ViewPTPTasks.vue";
+import PTPTemp1 from "./components/PTPTemp1.vue";
+import PTPTemp2 from "./components/PTPTemp2.vue";
+import PTPTemp3 from "./components/PTPTemp3.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -101,6 +104,9 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/editptp', component: EditPTP },
       { path: '/myptpdraft', component: MyPTPDraft },
       { path: '/viewptptasks', component: ViewPTPTasks },
+      { path: '/ptptemp1', component: PTPTemp1 },
+      { path: '/ptptemp2', component: PTPTemp2 },
+      { path: '/ptptemp3', component: PTPTemp3 },
 
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]

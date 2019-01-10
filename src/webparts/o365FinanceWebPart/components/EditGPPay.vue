@@ -292,7 +292,7 @@
             style="margin-left: 20px;"
           >税票清单</el-button>
           <el-button
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsFreightInvoice"
             type="primary"
             @click="downloadTaxExcel"
           >下载税票清单Excel模板</el-button>
@@ -307,9 +307,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true"
           >
-            <el-button type="primary" :disabled="showApprover==true">导入税票清单</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
@@ -324,7 +324,7 @@
             style="margin-left: 20px;"
           >费用分摊清单</el-button>
           <el-button
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsExpenseAllocation"
             type="primary"
             @click="downloadExpenseExcel"
           >下载费用分摊Excel模板</el-button>
@@ -339,9 +339,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="showApprover==true"
+            :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true"
           >
-            <el-button type="primary" :disabled="showApprover==true">导入费用分摊</el-button>
+            <el-button type="primary" :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true">导入费用分摊</el-button>
           </el-upload>
         </td>
       </tr>

@@ -57,6 +57,9 @@
           <el-menu-item index="/createptptask">员工报销申请</el-menu-item>
           <el-menu-item index="/viewptptasks">我的代办</el-menu-item>
           <el-menu-item index="/myptpdraft">我的草稿</el-menu-item>
+          <el-menu-item index="/ptptemp1">员工报销报表1</el-menu-item>
+          <el-menu-item index="/ptptemp2">员工报销报表2</el-menu-item>
+          <el-menu-item index="/ptptemp3">员工报销报表1</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
     </el-menu>

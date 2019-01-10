@@ -144,7 +144,7 @@
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
-         <td v-if="cindex =='AccountPaid'" colspan="2">{{subItem}}</td>
+          <td v-if="cindex =='AccountPaid'" colspan="2">{{subItem}}</td>
           <td v-else>{{subItem}}</td>
         </template>
       </tr>
@@ -680,17 +680,19 @@ export default {
       );
     },
     Loadhistory() {
-      console.log(1);
-      var history = JSON.parse(this.ApprovalHistory);
-      var historyString = "";
-      var historyKV = Object.keys(history);
+      if (this.ApprovalHistory != "" && this.ApprovalHistory != null) {
+        console.log(1);
+        var history = JSON.parse(this.ApprovalHistory);
+        var historyString = "";
+        var historyKV = Object.keys(history);
 
-      historyKV.forEach(element => {
-        historyString += " " + history[element].replace(",", "/") + "，";
-      });
-      console.log(historyString);
-      this.Approver = historyString;
-      this.ApproverArr = history;
+        historyKV.forEach(element => {
+          historyString += " " + history[element].replace(",", "/") + "，";
+        });
+        console.log(historyString);
+        this.Approver = historyString;
+        this.ApproverArr = history;
+      }
     },
     GetPublicPaymentHistory(mainItem) {
       console.log("GetPublicPaymentHistory");

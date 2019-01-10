@@ -1497,6 +1497,10 @@ export default {
                       data[0].ServerRelativeUrl +
                       "?Web=1";
                     this.attrFileInfo.name = data[0].FileName;
+                    this.fileList.push({
+                      name: data[0].FileName,
+                      url: data[0].ServerRelativeUrl
+                    });
                     console.log("aaaaaaaaaaaa");
                     console.log(this.fileList);
                   }

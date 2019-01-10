@@ -227,7 +227,7 @@ export default {
                   CompanyCode: sub.CompanyCode,
                   InvoiceNumber: sub.InvoiceNumber,
                   Currency: d.Currency,
-                  SupplierCode: "8002178",
+                  SupplierCode: "",
                   Money: d.Money,
                   TaxCode: sub.TaxCode,
                   BussinessScope: d.BussinessScope,
