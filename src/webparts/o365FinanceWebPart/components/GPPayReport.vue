@@ -339,7 +339,7 @@ export default {
               ReimbursementType: d.ReimbursementType,
               SettlementType: d.SettlementType,
               Trustees: d.Trustees + "-" + d.TrusteesEmail,
-              Money: d.InvoiceValue,
+              Money: Number(d.InvoiceValue),
               ExpenseCategory: d.ExpenseCategory,
               Status: this.DisplayName[d.Status],
               Created: d.Created.substring(0, d.Created.indexOf("T")),

@@ -217,7 +217,7 @@ export default {
               City: d.City,
               County: d.County,
               Xian: "",
-              Money: d.InvoiceValue,
+              Money:Number(d.InvoiceValue),
               DetailsOfPayment: d.DetailsOfPayment,
               isWrittenOff: "",
               poNumber: ""
@@ -228,10 +228,13 @@ export default {
     },
 
     onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
       for (var item in this.TableData[0]) {
-        this.filterVal.push(item);
+        tempColumn.push(item);
       }
-      var data = this.TableData.map(v => this.filterVal.map(k => v[k]));
+      temp=this.TableData
+      var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,

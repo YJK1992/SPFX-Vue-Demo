@@ -268,9 +268,9 @@ export default {
                   ApplicationNumber: d.ApplicationNumber, //申请单号
                   SettlementType: d.SettlementType, //结算方式
                   Trustees: d.Trustees, //经办人
-                  PersonCode: "", //人员编号
+                  PersonCode: d.EmployeeCode, //人员编号
                   TheHighestPersonNumber: "", //最高审批人编号,
-                  InvoiceValue: sub.InvoiceValue, //列为金额 实际发票金额,
+                  InvoiceValue: Number(sub.InvoiceValue), //列为金额 实际发票金额,
                   CostCenter: d.CostCenter, //成本中心
                   BusinessDivision: "", //所属事业部编号
                   CostAccount: d.CostAccount, //费用编号

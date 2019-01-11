@@ -25,7 +25,7 @@
         </td>
         <td align="right">成本中心：</td>
         <td>
-          <el-select v-model="purchaseRequestData.CostCenter" placeholder="请选择" size="medium">
+          <el-select v-model="purchaseRequestData.CostCenter" placeholder="请选择" size="medium" @change="costCenterChange">
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -329,6 +329,48 @@ export default {
     };
   },
   methods: {
+    costCenterChange: function() {
+      this.companyCodeArr=[]
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition:
+          "?$filter=CostCenter eq '" + this.purchaseRequestData.CostCenter + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if(data.length>0){
+            this.purchaseRequestData.CompanyCode=data[0].CompanyCode
+            var companyCode = [];
+          data.forEach(d => {
+            companyCode.push(d.CompanyCode);
+          });
+          console.log("未去重公司代码");
+          console.log(companyCode);
+          var companyCodeUnique = companyCode.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          companyCodeUnique.forEach(element => {
+            this.companyCodeArr.push({
+              CompanyCode: element
+            });
+          });
+          }else{
+            this.$message(common.message("error", "未能找到对应的公司代码"));
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司代码失败"));
+        });
+    },
     clearContract() {
       if (!this.purchaseRequestData.IsContract) {
         this.purchaseRequestData.ContractNumber = ""; //合同号
@@ -739,18 +781,20 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var selectedCostCenter = "";
-            data.forEach(d => {
-              // this.costCenterArr.push({
-              //   CostCenter: d.CostCenter,
-              //   CostCenterName: d.CostCenterName
-              // });
-              selectedCostCenter = d.CostCenter;
-              this.companyCodeArr.push({
-                CompanyCode: d.CompanyCode
-              });
-            });
-            this.purchaseRequestData.CostCenter = selectedCostCenter;
+            this.purchaseRequestData.CostCenter=data[0].CostCenter
+            this.costCenterChange()
+            // var selectedCostCenter = "";
+            // data.forEach(d => {
+            //   // this.costCenterArr.push({
+            //   //   CostCenter: d.CostCenter,
+            //   //   CostCenterName: d.CostCenterName
+            //   // });
+            //   selectedCostCenter = d.CostCenter;
+            //   this.companyCodeArr.push({
+            //     CompanyCode: d.CompanyCode
+            //   });
+            // });
+            // this.purchaseRequestData.CostCenter = selectedCostCenter;
           } else {
             this.$message(
               common.message(

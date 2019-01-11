@@ -22,7 +22,7 @@
               v-model="ECCTaskForm.costcenter"
               placeholder="请选择"
               size="medium"
-              @change="costCenterChange"
+              @change="checkCostCenter"
             >
               <el-option
                 v-for="item in costCenterArr"
@@ -301,6 +301,48 @@ export default {
     };
   },
   methods: {
+    costCenterChange: function() {
+      this.companyCodeArr = [];
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition:
+          "?$filter=CostCenter eq '" + this.ECCTaskForm.costcenter + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            this.ECCTaskForm.companycode = data[0].CompanyCode;
+            var companyCode = [];
+            data.forEach(d => {
+              companyCode.push(d.CompanyCode);
+            });
+            console.log("未去重公司代码");
+            console.log(companyCode);
+            var companyCodeUnique = companyCode.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            companyCodeUnique.forEach(element => {
+              this.companyCodeArr.push({
+                CompanyCode: element
+              });
+            });
+          } else {
+            this.$message(common.message("error", "未能找到对应的公司代码"));
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司代码失败"));
+        });
+    },
     applicantTypeChange: function() {
       this.productTypeOpts = [];
       this.ECCTaskForm.productType = "";
@@ -334,8 +376,7 @@ export default {
           this.$message(common.message("error", "获取产品类型失败!"));
         });
     }, //申请类型change事件
-    costCenterChange: function() {
-      this.loading = true;
+    checkCostCenter: function() {
       var costCenter = this.ECCTaskForm.costcenter;
       var parm = {
         action: "ListItems",
@@ -348,15 +389,15 @@ export default {
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
-          this.loading = false;
-          if (req.d.results.length == 0) {
+          if (req.d.results.length > 0) {
+            this.costCenterChange();
+          } else {
             this.$message(
               common.message("error", "未找到对应成本中心的审批节点!")
             );
           }
         })
         .catch(err => {
-          this.loading = false;
           this.$message(common.message("error", "校验成本中心出错!"));
         });
     }, //成本中心change事件
@@ -526,14 +567,8 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            var selectedCostCenter = "";
-            data.forEach(d => {
-              selectedCostCenter = d.CostCenter;
-              this.companyCodeArr.push({
-                CompanyCode: d.CompanyCode
-              });
-            });
-            this.ECCTaskForm.costcenter = selectedCostCenter;
+            this.ECCTaskForm.costcenter = data[0].CostCenter;
+            this.ECCTaskForm.companycode=data[0].CompanyCode
           } else {
             this.$message(
               common.message(

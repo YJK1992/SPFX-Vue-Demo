@@ -293,7 +293,8 @@ export default {
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
         Remark: "", //备注
-        SpecialApprover: "" //特殊审批人
+        SpecialApprover: "", //特殊审批人
+           BussinessScope: "" //业务范围
       },
       //子表数据
       SubItems: [],
@@ -908,6 +909,7 @@ export default {
               });
               //默认成本中心
               this.StaffReimbursement.CostCenter = selectedCostCenter;
+               this.StaffReimbursement.BussinessScope = data[0].BusinessScope;
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;

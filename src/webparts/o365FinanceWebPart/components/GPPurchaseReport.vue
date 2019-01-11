@@ -231,7 +231,7 @@ export default {
                 Consignor: mainItem.Consignor,
                 Supplier: d.Supplier,
                 SupplierParts: d.SupplierParts,
-                Amount: d.Amount,
+                Amount:Number(d.Amount),
                 Taxation: d.Taxation
               });
             });

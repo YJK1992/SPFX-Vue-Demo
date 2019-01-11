@@ -347,8 +347,9 @@ export default {
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
         Remark: "", //备注
-        SpecialApprover: "" //特殊审批人
+        SpecialApprover: "", //特殊审批人
       },
+        FinanceITCode:'',
       //子表数据
       SubItems: [],
       SubItem: {
@@ -543,8 +544,11 @@ export default {
                 this.currentUserITCode +
                 "," +
                 common.getCurrentDate();
-            } else if (this.currentStep == "Approver6") {
-              history.approver6 =
+            } else if (this.currentStep == "Approver5") {
+              if(type=="Approved"){
+                  mainItemInfo.FinanceITCode=this.FinanceITCode;
+              }
+              history.approver5 =
                 this.currentUserTitle +
                 "-" +
                 this.currentUserITCode +
@@ -1154,6 +1158,7 @@ export default {
               });
               //默认成本中心
               this.StaffReimbursement.CostCenter = selectedCostCenter;
+              this.FinanceITCode=this.LoginName.split("@")[0]
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;

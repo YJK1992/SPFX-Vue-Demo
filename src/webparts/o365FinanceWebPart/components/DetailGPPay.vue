@@ -1,6 +1,6 @@
 <template>
   <div>
-    <table class="duigong" style="  border-collapse: collapse;">
+    <table class="view_duigong" style="  border-collapse: collapse;">
       <tr>
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">对公付款</span>
@@ -11,8 +11,12 @@
       </tr>
       <tr>
         <td align="right">申请单号：</td>
-        <td colspan="7">
+        <td colspan="2">
           <el-input disabled v-model="PublicPayment.ApplicationNumber" placeholder="申请单号"></el-input>
+        </td>
+        <td align="right">联系电话：</td>
+        <td colspan="3">
+          <el-input disabled v-model="PublicPayment.PhoneNumber" placeholder="联系电话"></el-input>
         </td>
       </tr>
 
@@ -231,7 +235,7 @@
         <el-table-column property="InvoiceValue" label="发票金额"></el-table-column>
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
-                <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
+        <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
         <el-table-column property="Amount" label="数量"></el-table-column>
       </el-table>
     </el-dialog>
@@ -325,7 +329,7 @@
             >{{this.PublicPayment.ApplicationNumber}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">62193</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">2018-11-09</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Created}}</td>
           </tr>
           <tr>
             <td
@@ -379,7 +383,7 @@
             >Bank：{{this.PublicPayment.Bank}}</td>
           </tr>
           <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Account No.：</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Account No.：{{this.PublicPayment.Account}}</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
@@ -566,7 +570,9 @@ export default {
         SpecialApprover: "", //特殊审批人
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
-        EmployeeCode: "" //人员编号
+        EmployeeCode: "", //人员编号
+        Created:'',
+        PhoneNumber:""
       }, //主表
       AccountPaid: "", //合同列表已支付金额
       UnPaid: "", //合同列表未支付金额
@@ -577,20 +583,20 @@ export default {
     };
   },
   methods: {
-   printDeal() {
-        var printBox = document.getElementById('printBox');
-        //拿到打印的区域的html内容
-        var newContent = printBox.innerHTML;
-        //将旧的页面储存起来，当打印完成后返给给页面。
-        var oldContent = document.body.innerHTML;
-        //赋值给body
-        document.body.innerHTML = newContent;
-        //执行window.print打印功能
-        window.print();
-        // 重新加载页面，以刷新数据。以防打印完之后，页面不能操作的问题
-        window.location.reload();
-        document.body.innerHTML = oldContent;
-        return false;
+    printDeal() {
+      var printBox = document.getElementById("printBox");
+      //拿到打印的区域的html内容
+      var newContent = printBox.innerHTML;
+      //将旧的页面储存起来，当打印完成后返给给页面。
+      var oldContent = document.body.innerHTML;
+      //赋值给body
+      document.body.innerHTML = newContent;
+      //执行window.print打印功能
+      window.print();
+      // 重新加载页面，以刷新数据。以防打印完之后，页面不能操作的问题
+      window.location.reload();
+      document.body.innerHTML = oldContent;
+      return false;
     },
     print() {
       common.print("#myPrintArea");
@@ -781,6 +787,7 @@ export default {
             (data[0].PaymentApproval["Description"] == "End" &&
               data[0].Status == "Approved")),
             (this.ApprovalHistory = data[0].ApproverHistory),
+            (this.PublicPayment.PhoneNumber = data[0].PhoneNumber),
             (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
             (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
             (this.PublicPayment.Trustees = data[0].Trustees), //经办人
@@ -833,6 +840,7 @@ export default {
             data[0].IsExpenseAllocation == "true" ? true : false; //是否有费用分摊
           this.PublicPayment.CompanyCode = data[0].CompanyCode; //是否有费用分摊
           this.currentItemId = data[0].Id;
+          this.PublicPayment.Created =data[0].Created.substring(0,data[0].Created.indexOf("T"))
           console.log("!22222222222222");
           console.log(this.IsDisable);
           console.log(this.PublicPayment);
@@ -852,7 +860,8 @@ export default {
                 InvoiceValue: element.InvoiceValue, //发票金额
                 TaxRate: element.TaxRate, //税率
                 TaxCode: element.TaxCode, //税码
-                CodeOfFixedAssets: element.CodeOfFixedAssets //固定资产编码
+                CodeOfFixedAssets: element.CodeOfFixedAssets, //固定资产编码
+                Amount: element.Amount //固定资产编码
               });
             });
           }
@@ -915,7 +924,7 @@ export default {
 </script>
 
 <style>
-.duigong {
+.view_duigong {
   min-height: 25px;
   line-height: 25px;
   text-align: center;
@@ -923,11 +932,11 @@ export default {
   color: gray;
   padding: 2px;
 }
-.duigong tr td {
+.view_duigong tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.duigong tr:nth-child(15) {
+.view_duigong tr:nth-child(15) {
   background-color: #409eff;
   font-weight: bold;
   color: white;

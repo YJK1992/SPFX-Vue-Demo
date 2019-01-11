@@ -64,7 +64,7 @@
       <el-table-column prop="InvoiceValue" label="金额" width="150"></el-table-column>
       <el-table-column prop="TXT1" label="文本" width="300"></el-table-column>
       <el-table-column prop="BankSubjectAllocation" label="银行科目分配" width="150"></el-table-column>
-      <el-table-column prop="SupplierNumbe" label="供应商编码" width="270"></el-table-column>
+      <el-table-column prop="SupplierNumber" label="供应商编码" width="270"></el-table-column>
       <el-table-column prop="SpecialGeneralLedger" label="特别总账" width="150"></el-table-column>
       <el-table-column prop="Allocation" label="分配" width="150"></el-table-column>
       <el-table-column prop="PONumber" label="PO号" width="150"></el-table-column>
@@ -283,11 +283,11 @@ export default {
               TXT:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               ScopeOfService: "", //业务范围
-              InvoiceValue: total, //金额
+              InvoiceValue: Number(total), //金额
               TXT1:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               BankSubjectAllocation: "", //银行科目分配,
-              SupplierNumber: "", //供应商编号,
+              SupplierNumber: "8002178", //供应商编号,
               SpecialGeneralLedger: "", //特别总账
               Allocation: "", //分配
               PONumber: "" //PO号

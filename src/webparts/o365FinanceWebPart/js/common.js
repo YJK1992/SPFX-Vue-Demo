@@ -84,6 +84,9 @@ var common = {
         },
         contentType: "application/json",
       }
+      if (parm.async != undefined) {
+        opt.async = parm.async
+      }
     } else if (parm.type == "post") {
       var headers = {}
       switch (parm.action) {

@@ -8,8 +8,12 @@
       </tr>
       <tr>
         <td align="right">申请单号：</td>
-        <td colspan="7">
+        <td colspan="2">
           <el-input disabled v-model="PublicPayment.ApplicationNumber" placeholder="申请单号"></el-input>
+        </td>
+        <td align="right">联系电话：</td>
+        <td colspan="3">
+          <el-input v-model="PublicPayment.PhoneNumber" placeholder="联系电话"></el-input>
         </td>
       </tr>
       <tr>
@@ -209,6 +213,12 @@
         </td>
       </tr>
       <tr>
+        <td align="right">供应商：</td>
+        <td align="left" colspan="2">{{ContractSupplier}}</td>
+        <td align="right">法人：</td>
+        <td align="left" colspan="3">{{ContractLegal}}</td>
+      </tr>
+      <tr id="ContractInfoPart">
         <td style="width:200px">合同名称</td>
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
@@ -485,7 +495,8 @@ export default {
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
         EmployeeCode: "", //人员编号
-        BussinessScope: "" //业务范围
+        BussinessScope: "", //业务范围
+        PhoneNumber:""
       },
       TaxReceiptList: [], //税票清单
       TaxFileId: "",
@@ -1307,6 +1318,8 @@ export default {
       var isSuccess = false;
       if (this.PublicPayment.ReimbursementType == "") {
         this.message = "请选择报销类型;";
+      }else if(this.PublicPayment.PhoneNumber == ""){
+        this.message = "请输入联系电话;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
       } else if (this.PublicPayment.CompanyCode == "") {
@@ -1588,6 +1601,7 @@ export default {
               TaxFileItemId: Number(this.TaxFileId),
               ExpenseFileId: Number(this.ExpenseFileId),
               TaxFileJsonString: JSON.stringify(this.TaxFileJson),
+              PhoneNumber:this.PublicPayment.PhoneNumber,
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
             if (total > 0 && total < 1000) {
@@ -1811,6 +1825,8 @@ export default {
           if (data.length > 0) {
             data.forEach(item => {
               that.ContractNumbers.push({
+                supplier:item.Supplier,
+                legalPerson:item.LegalPerson,
                 label: item.Number,
                 value: item.Number,
                 money: item.Money
@@ -1828,6 +1844,12 @@ export default {
       that.ContractList = []; //还原
       that.AccountPaid = ""; //还原
       that.UnPaid = ""; //还原
+      this.ContractNumbers.forEach(item=>{
+          if(this.PublicPayment.ContractNumber==item.label){
+              this.ContractSupplier=item.supplier;
+              this.ContractLegal=item.legalPerson;
+          } 
+      });
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -1935,7 +1957,7 @@ export default {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.duigong tr:nth-child(15) {
+#ContractInfoPart{
   background-color: #409eff;
   font-weight: bold;
   color: white;

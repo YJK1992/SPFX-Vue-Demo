@@ -8,8 +8,12 @@
       </tr>
       <tr>
         <td align="right">申请单号：</td>
-        <td colspan="7">
+        <td colspan="2">
           <el-input disabled v-model="PublicPayment.ApplicationNumber" placeholder="申请单号"></el-input>
+        </td>
+        <td align="right">联系电话：</td>
+        <td colspan="3">
+          <el-input v-model="PublicPayment.PhoneNumber" placeholder="联系电话" :disabled="showApprover==true"></el-input>
         </td>
       </tr>
       <tr>
@@ -246,6 +250,12 @@
         </td>
       </tr>
       <tr>
+        <td align="right">供应商：</td>
+        <td align="left" colspan="2">{{ContractSupplier}}</td>
+        <td align="right">法人：</td>
+        <td align="left" colspan="3">{{ContractLegal}}</td>
+      </tr>
+      <tr id="Edit_ContractInfoPart">
         <td style="width:200px">合同名称</td>
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
@@ -592,7 +602,8 @@ export default {
         IsSettlement: true, //结算
         SpecialApprover: "", //特殊审批人
         IsExpenseAllocation: false, //是否有费用分摊
-        CompanyCode: "" //公司代码
+        CompanyCode: "", //公司代码
+        PhoneNumber:""
       },
       IsChangeTaxReceipt: false,
       IsChangeExpenseAllocation: false,
@@ -725,26 +736,26 @@ export default {
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
-          if(data.length>0){
-              var companyCode = [];
-          data.forEach(d => {
-            companyCode.push(d.CompanyCode);
-          });
-          console.log("未去重公司代码");
-          console.log(companyCode);
-          var companyCodeUnique = companyCode.filter(function(
-            element,
-            index,
-            array
-          ) {
-            return array.indexOf(element) === index;
-          });
-          companyCodeUnique.forEach(element => {
-            this.companyCodeArr.push({
-              CompanyCode: element
+          if (data.length > 0) {
+            var companyCode = [];
+            data.forEach(d => {
+              companyCode.push(d.CompanyCode);
             });
-          });
-          }else{
+            console.log("未去重公司代码");
+            console.log(companyCode);
+            var companyCodeUnique = companyCode.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            companyCodeUnique.forEach(element => {
+              this.companyCodeArr.push({
+                CompanyCode: element
+              });
+            });
+          } else {
             this.$message(common.message("error", "未能找到对应的公司代码"));
           }
         })
@@ -1342,7 +1353,7 @@ export default {
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
-        .done(req=> {
+        .done(req => {
           var data = req.d.results;
           console.log("费用类别");
           console.log(data);
@@ -1459,6 +1470,8 @@ export default {
       var isSuccess = false;
       if (this.PublicPayment.ReimbursementType == "") {
         this.message = "请选择报销类型;";
+      }else if(this.PublicPayment.PhoneNumber == ""){
+        this.message = "请输入联系电话;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
       } else if (this.PublicPayment.CompanyCode == "") {
@@ -1681,6 +1694,7 @@ export default {
               IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
               TaxFileItemId: Number(this.TaxFileId),
               ExpenseFileId: Number(this.ExpenseFileId),
+              PhoneNumber:this.PublicPayment.PhoneNumber,
               TaxFileJsonString: JSON.stringify(this.TaxFileJson),
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
@@ -1901,7 +1915,8 @@ export default {
         type: "get",
         list: this.ContractListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "",
+        async:false
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1910,6 +1925,8 @@ export default {
           if (data.length > 0) {
             data.forEach(item => {
               that.ContractNumbers.push({
+                supplier: item.Supplier,
+                legalPerson: item.LegalPerson,
                 label: item.Number,
                 value: item.Number,
                 money: item.Money
@@ -1927,6 +1944,12 @@ export default {
       that.ContractList = []; //还原
       that.AccountPaid = ""; //还原
       that.UnPaid = ""; //还原
+      this.ContractNumbers.forEach(item => {
+        if (this.PublicPayment.ContractNumber == item.label) {
+          this.ContractSupplier = item.supplier;
+          this.ContractLegal = item.legalPerson;
+        }
+      });
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -2212,12 +2235,12 @@ export default {
     this.loading = true;
     this.FileGUID = common.generateUUID();
     //this.requestDigest = common.getRequestDigest();
+    this.getContractNumber();
     this.loadExcelFileUrl();
     this.getExpenseCategory();
     this.getCostCenter();
     this.getCostAccount();
     this.getCurrentUser();
-    this.getContractNumber();
     this.getGPPRNumber();
     var applicantNumber = common.GetParameterValues("ApplicantNumber");
     var step = common.GetParameterValues("Step");
@@ -2252,6 +2275,7 @@ export default {
             //获取主表
             (this.ApprovalHistory = data[0].ApproverHistory), //审批历史
               (this.TaxFileId = data[0].TaxFileItemId),
+              (this.PublicPayment.PhoneNumber = data[0].PhoneNumber),
               (this.ExpenseFileId = data[0].ExpenseFileId),
               (this.ExpenseFileJson = JSON.parse(
                 data[0].ExpenseFileJsonString
@@ -2314,6 +2338,12 @@ export default {
               data[0].IsExpenseAllocation == "true" ? true : false; //是否有费用分摊
             this.PublicPayment.CompanyCode = data[0].CompanyCode; //是否有费用分摊
             this.currentItemId = data[0].Id;
+            this.ContractNumbers.forEach(item => {
+              if (this.PublicPayment.ContractNumber == item.label) {
+                this.ContractSupplier = item.supplier;
+                this.ContractLegal = item.legalPerson;
+              }
+            });
             console.log("!22222222222222");
             console.log(this.PublicPayment);
             console.log("解析子表");
@@ -2394,7 +2424,6 @@ export default {
       this.loading = false;
       common.message(common.message("error", "当前链接错误"));
     }
-
     this.loading = false;
   },
   components: {}
@@ -2413,7 +2442,7 @@ export default {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.duigongEdit tr:nth-child(15) {
+#Edit_ContractInfoPart {
   background-color: #409eff;
   font-weight: bold;
   color: white;

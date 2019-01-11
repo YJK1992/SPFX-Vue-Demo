@@ -246,7 +246,7 @@ export default {
                 Materiel: d.Materiel,
                 Amount: d.Amount,
                 Price: d.Price,
-                Total: d.Total,
+                Total:Number(d.Total),
                 FixedAssetsCode: d.FixedAssetsCode,
                 RequestType: d.FixedAssetsCode
               });

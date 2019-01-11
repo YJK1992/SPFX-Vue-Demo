@@ -35,7 +35,7 @@
       </el-form-item>
 
       <el-form-item label="费用条目">
-        <el-input v-model="Condition.CostAccount" placeholder="费用条目"></el-input>
+        <el-input v-model="CostAccount" placeholder="费用条目"></el-input>
       </el-form-item>
 
       <el-form-item label="成本中心">
@@ -50,7 +50,7 @@
       </el-form-item>
 
       <el-form-item>
-        <el-button type="primary" @click="Condition={}">重置</el-button>
+        <el-button type="primary" @click="clearCondition">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
         <el-button @click="onExcel()" type="primary">导出Excel</el-button>
       </el-form-item>
@@ -78,22 +78,118 @@ export default {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       userListName: "EmployeeList", //员工详细信息列表名称
+      mainListName: "StaffReimbursement", //员工报销
       //筛选条件
       Condition: {
         ApplicationNumber: "", //申请单号
         Applicant: "", //员工
         ApplicantEmail: "", //ITcode
         CompanyCode: "", //公司代码
-        CostAccount: "", //费用条目
         CostCenter: "", //成本中心
         ComplateDate: "" //完成日期
       },
+      CostAccount: "", //费用条目
       CompanyCodeArr: [], //公司代码
       CostCenterArr: [], //成本中心
       TableData: [] //主表数据
     };
   },
   methods: {
+    clearCondition() {
+      this.Condition = {};
+      this.CostAccount = "";
+    },
+    onSubmit() {
+      this.TableData = [];
+      console.log("筛选条件");
+      console.log(this.Condition);
+      var condition = "?$filter=Status eq 'Approved' ";
+
+      for (var item in this.Condition) {
+        if (this.Condition[item] != null && this.Condition[item] != "") {
+          //存在条件
+          if (item == "ComplateDate") {
+            condition +=
+              " and Modified gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Modified lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
+          } else {
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
+          }
+        }
+      }
+      this.getMainList(condition);
+    },
+    getMainList(condition) {
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.mainListName,
+        baseUrl: this.hostUrl,
+        condition: condition
+      };
+      var option = common.queryOpt(parm);
+
+      $.when($.ajax(option)).done(req => {
+        var data = req.d.results;
+        if (data.length > 0) {
+          data.forEach(d => {
+            //修改读取子表逻辑
+            var subItems =
+              d.DetailInvoiceJSON == null
+                ? null
+                : JSON.parse(d.DetailInvoiceJSON);
+            console.log(subItems);
+            if (subItems != null) {
+              subItems.forEach(sub => {
+                if (this.CostAccount == "") {
+                  this.TableData.push({
+                    CompanyCode: sub.CompanyCode,
+                    CostAccount: sub.CostAccount,
+                    Money: sub.Money,
+                    CostCenter: sub.CostCenter,
+                    lirun: "",
+                    yewu: "",
+                    TXT:
+                      d.Applicant +
+                      "报销" +
+                      d.Created.substring(0, d.Created.indexOf("T")) +
+                      sub.ExpenseCategory,
+                    Title: d.Title,
+                    orderNo: ""
+                  });
+                } else {
+                  if (sub.CostAccount == this.CostAccount) {
+                    this.TableData.push({
+                      CompanyCode: sub.CompanyCode,
+                      CostAccount: sub.CostAccount,
+                      Money: sub.Money,
+                      CostCenter: sub.CostCenter,
+                      lirun: "",
+                      yewu: "",
+                      TXT:
+                        d.Applicant +
+                        "报销" +
+                        d.Created.substring(0, d.Created.indexOf("T")) +
+                        sub.ExpenseCategory,
+                      Title: d.Title,
+                      orderNo: ""
+                    });
+                  }
+                }
+              });
+            }
+          });
+        }
+      });
+    },
     getCompanyCodeAndCostCenter() {
       //获取公司代码和成本中心
       var parm = {
