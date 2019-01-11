@@ -49,7 +49,7 @@
         <td align="right">结算方式：</td>
         <td align="left" colspan="5">
           <el-select
-            :disabled="showApprover==true"
+            :disabled="showFA==true?(currentStep=='Approver5'?false:true):showApprover"
             v-model="PublicPayment.SettlementType"
             placeholder="请选择"
           >
@@ -74,6 +74,7 @@
             v-model="PublicPayment.CostCenter"
             placeholder="请选择"
             size="medium"
+            @change="costCenterChange"
           >
             <el-option
               v-for="item in costCenterArr"
@@ -106,7 +107,7 @@
         <td>
           <el-input
             @change="CalculateAmountInlowercase"
-            :disabled="showFA==false"
+            :disabled="showFA==true?(currentStep=='Approver5'?false:true):showApprover"
             v-model="PublicPayment.InvoiceValue"
             placeholder="发票金额"
           ></el-input>
@@ -249,8 +250,9 @@
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
         <td>法人代表</td>
+        <td>币种</td>
         <td style="width:170px">总金额</td>
-        <td colspan="2" style="width:170px">已付款</td>
+        <td style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
@@ -292,12 +294,12 @@
             style="margin-left: 20px;"
           >税票清单</el-button>
           <el-button
-            :disabled="!PublicPayment.IsFreightInvoice"
+            :disabled="showApprover==true"
             type="primary"
             @click="downloadTaxExcel"
           >下载税票清单Excel模板</el-button>
         </td>
-        <td colspan="3" align="left">
+        <td colspan="5" align="left">
           <el-upload
             class="upload-demo"
             :action="actionUrl"
@@ -307,9 +309,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true"
+            :disabled="showApprover==true"
           >
-            <el-button type="primary" :disabled="!PublicPayment.IsFreightInvoice&&showApprover==true">导入税票清单</el-button>
+            <el-button type="primary" :disabled="showApprover==true">导入税票清单</el-button>
           </el-upload>
         </td>
       </tr>
@@ -324,12 +326,12 @@
             style="margin-left: 20px;"
           >费用分摊清单</el-button>
           <el-button
-            :disabled="!PublicPayment.IsExpenseAllocation"
+            :disabled="showApprover==true"
             type="primary"
             @click="downloadExpenseExcel"
           >下载费用分摊Excel模板</el-button>
         </td>
-        <td colspan="3" align="left">
+        <td colspan="5" align="left">
           <el-upload
             class="upload-demo"
             :action="actionUrl"
@@ -339,9 +341,9 @@
             :on-exceed="fileLimit"
             :beforeUpload="beforeUploadValidate"
             :show-file-list="TaxFlg"
-            :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true"
+            :disabled="showApprover==true"
           >
-            <el-button type="primary" :disabled="!PublicPayment.IsExpenseAllocation&&showApprover==true">导入费用分摊</el-button>
+            <el-button type="primary" :disabled="showApprover==true">导入费用分摊</el-button>
           </el-upload>
         </td>
       </tr>
@@ -356,7 +358,7 @@
         <td align="left">
           <el-select
             filterable
-            :disabled="showFA==false"
+            :disabled="showFA==true?(currentStep=='Approver5'?false:true):showApprover"
             @change="PublicPayment.CostAccount=''"
             v-model="PublicPayment.ExpenseCategory"
             placeholder="请选择"
@@ -372,7 +374,7 @@
         <td align="right">费用科目:</td>
         <td colspan="5" align="left">
           <el-select
-            :disabled="showFA==false"
+            :disabled="showFA==true?(currentStep=='Approver5'?false:true):showApprover"
             v-model="PublicPayment.CostAccount"
             placeholder="请选择"
           >
@@ -709,6 +711,47 @@ export default {
     };
   },
   methods: {
+    costCenterChange: function() {
+      this.companyCodeArr = [];
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition:
+          "?$filter=CostCenter eq '" + this.PublicPayment.CostCenter + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if(data.length>0){
+              var companyCode = [];
+          data.forEach(d => {
+            companyCode.push(d.CompanyCode);
+          });
+          console.log("未去重公司代码");
+          console.log(companyCode);
+          var companyCodeUnique = companyCode.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          companyCodeUnique.forEach(element => {
+            this.companyCodeArr.push({
+              CompanyCode: element
+            });
+          });
+          }else{
+            this.$message(common.message("error", "未能找到对应的公司代码"));
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司代码失败"));
+        });
+    },
     loadExcelFileUrl: function() {
       var parm = {
         action: "ListItems",
@@ -1055,22 +1098,24 @@ export default {
     },
     addFileToFolder: function(arrayBuffer, fileName, listName) {
       var getDigst = common.getRequestDigest(this.hostUrl);
-      var opt=""
-        getDigst.done(data=>{
+      var opt = "";
+      getDigst
+        .done(data => {
           this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           var parm = {
-        type: "post",
-        action: "AddFile",
-        baseUrl: this.hostUrl,
-        list: listName,
-        fileName: this.FileGUID + "_" + fileName,
-        digest: this.requestDigest
-      };
-      opt = common.queryOpt(parm);
-        }).catch(error=>{
+            type: "post",
+            action: "AddFile",
+            baseUrl: this.hostUrl,
+            list: listName,
+            fileName: this.FileGUID + "_" + fileName,
+            digest: this.requestDigest
+          };
+          opt = common.queryOpt(parm);
+        })
+        .catch(error => {
           this.loading = false;
           this.$message(common.message("error", "获取Digest失败"));
-        })
+        });
       return common.service(opt);
     },
     fileLimit: function(files, fileList) {
@@ -1247,41 +1292,43 @@ export default {
     },
     onEnd: function(type) {
       var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
+      getDigst
+        .done(data => {
           this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           var itemInfo = {
-        __metadata: {
-          type: this.mainListType
-        }
-      };
-      if (type == "Rejected") {
-        itemInfo.Status = type;
-      } else {
-        itemInfo.Status = "Dumped";
-      }
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.mainListName,
-        itemID: this.currentItemId,
-        item: itemInfo,
-        digest: this.requestDigest
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          this.$message(common.message("success", "终止流程成功!"));
-          this.$router.push("/home");
+            __metadata: {
+              type: this.mainListType
+            }
+          };
+          if (type == "Rejected") {
+            itemInfo.Status = type;
+          } else {
+            itemInfo.Status = "Dumped";
+          }
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          $.when($.ajax(opt))
+            .done(req => {
+              this.$message(common.message("success", "终止流程成功!"));
+              this.$router.push("/home");
+            })
+            .catch(err => {
+              this.$message(common.message("error", "终止流程失败!"));
+              this.$router.push("/home");
+            });
         })
-        .catch(err => {
-          this.$message(common.message("error", "终止流程失败!"));
-          this.$router.push("/home");
-        });
-        }).catch(error=>{
+        .catch(error => {
           this.loading = false;
           this.$message(common.message("error", "获取Digest失败"));
-        })
+        });
     },
     getExpenseCategory() {
       //获取费用类别
@@ -1295,7 +1342,7 @@ export default {
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
-        .done(function(req) {
+        .done(req=> {
           var data = req.d.results;
           console.log("费用类别");
           console.log(data);
@@ -1332,7 +1379,6 @@ export default {
           });
           console.log("去重费用类别");
           console.log(this.expenseCategoryOptions);
-
         })
         .catch(err => {
           this.loading = false;
@@ -1382,11 +1428,12 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-              data.forEach(d => {
-                this.companyCodeArr.push({
-                  CompanyCode: d.CompanyCode
-                });
-              });
+              //   data.forEach(d => {
+              //     this.companyCodeArr.push({
+              //       CompanyCode: d.CompanyCode
+              //     });
+              //});
+              console.log("load user success");
             } else {
               this.$message(
                 common.message(
@@ -1490,7 +1537,7 @@ export default {
         !this.IsMoneyConsistent()
       ) {
         this.message = "摊入摊出金额不一致;";
-      }else if (
+      } else if (
         this.PublicPayment.CostAccount == "" ||
         this.PublicPayment.CostAccount == null
       ) {
@@ -1567,13 +1614,16 @@ export default {
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
-          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
-          this.createPublicPayment(type);
-        }).catch(error=>{
-          this.loading = false;
-          this.$message(common.message("error", "获取Digest失败"));
-        })
+        getDigst
+          .done(data => {
+            this.requestDigest =
+              data.d.GetContextWebInformation.FormDigestValue;
+            this.createPublicPayment(type);
+          })
+          .catch(error => {
+            this.loading = false;
+            this.$message(common.message("error", "获取Digest失败"));
+          });
       }
     },
     createPublicPayment(type) {
@@ -1589,107 +1639,109 @@ export default {
           "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
       };
       var option = common.queryOpt(parm);
-      $.when($.ajax(option)).done(r => {
-        if (r.d.results.length > 0) {
-          var data1 = r.d.results[0];
-          var itemInfo = {
-            __metadata: {
-              type: this.mainListType
-            },
-            Title: this.ApplicationNumber,
-            ReimbursementType: this.PublicPayment.ReimbursementType,
-            SettlementType: this.PublicPayment.SettlementType,
-            CostCenter: this.PublicPayment.CostCenter,
-            Currency: this.PublicPayment.Currency,
-            InvoiceValue: this.PublicPayment.InvoiceValue,
-            ExchangeRate: this.PublicPayment.ExchangeRate,
-            CapitalizationAmount: this.PublicPayment.CapitalizationAmount,
-            AmountInlowercase: this.PublicPayment.AmountInlowercase,
-            LoanNumber: this.PublicPayment.LoanNumber,
-            CollectionUnit: this.PublicPayment.CollectionUnit,
-            OpeningBank: this.PublicPayment.OpeningBank,
-            Account: this.PublicPayment.Account,
-            City: this.PublicPayment.City,
-            County: this.PublicPayment.County,
-            DetailsOfPayment: this.PublicPayment.DetailsOfPayment,
-            IsContract: this.PublicPayment.IsContract.toString(),
-            ContractNumber: this.PublicPayment.ContractNumber,
-            Money: this.PublicPayment.Money,
-            ProjectName: this.PublicPayment.ProjectName,
-            ProjectNumber: this.PublicPayment.ProjectNumber,
-            ExpenseCategory: this.PublicPayment.ExpenseCategory,
-            CostAccount: this.PublicPayment.CostAccount,
-            // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
-            ApplicationNumber: this.PublicPayment.ApplicationNumber,
-            ReceiptNumber: this.PublicPayment.ReceiptNumber,
-            IsSettlement: this.PublicPayment.IsSettlement.toString(),
-            IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
-            Remark: this.PublicPayment.Remark,
-            SpecialApproverTitle: this.SpecialApprover,
-            CompanyCode: this.PublicPayment.CompanyCode,
-            IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
-            TaxFileItemId: Number(this.TaxFileId),
-            ExpenseFileId: Number(this.ExpenseFileId),
-            TaxFileJsonString: JSON.stringify(this.TaxFileJson),
-            ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
-          };
-          if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-          } else if (total >= 1000 && total < 20000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-          } else if (total >= 20000 && total < 50000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-          } else {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-            itemInfo.Approver4Id = data1.Approver4Id;
-          }
-          if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
-            itemInfo.SpecialApproverId = this.SpecApproId;
-          }
-          if (type == "submit") {
-            if (this.currentStep == "Application" && this.taskId != 0) {
-              itemInfo.Status = "Changed";
+      $.when($.ajax(option))
+        .done(r => {
+          if (r.d.results.length > 0) {
+            var data1 = r.d.results[0];
+            var itemInfo = {
+              __metadata: {
+                type: this.mainListType
+              },
+              Title: this.ApplicationNumber,
+              ReimbursementType: this.PublicPayment.ReimbursementType,
+              SettlementType: this.PublicPayment.SettlementType,
+              CostCenter: this.PublicPayment.CostCenter,
+              Currency: this.PublicPayment.Currency,
+              InvoiceValue: this.PublicPayment.InvoiceValue,
+              ExchangeRate: this.PublicPayment.ExchangeRate,
+              CapitalizationAmount: this.PublicPayment.CapitalizationAmount,
+              AmountInlowercase: this.PublicPayment.AmountInlowercase,
+              LoanNumber: this.PublicPayment.LoanNumber,
+              CollectionUnit: this.PublicPayment.CollectionUnit,
+              OpeningBank: this.PublicPayment.OpeningBank,
+              Account: this.PublicPayment.Account,
+              City: this.PublicPayment.City,
+              County: this.PublicPayment.County,
+              DetailsOfPayment: this.PublicPayment.DetailsOfPayment,
+              IsContract: this.PublicPayment.IsContract.toString(),
+              ContractNumber: this.PublicPayment.ContractNumber,
+              Money: this.PublicPayment.Money,
+              ProjectName: this.PublicPayment.ProjectName,
+              ProjectNumber: this.PublicPayment.ProjectNumber,
+              ExpenseCategory: this.PublicPayment.ExpenseCategory,
+              CostAccount: this.PublicPayment.CostAccount,
+              // CodeOfFixedAssets: this.PublicPayment.CodeOfFixedAssets,
+              ApplicationNumber: this.PublicPayment.ApplicationNumber,
+              ReceiptNumber: this.PublicPayment.ReceiptNumber,
+              IsSettlement: this.PublicPayment.IsSettlement.toString(),
+              IsFreightInvoice: this.PublicPayment.IsFreightInvoice.toString(),
+              Remark: this.PublicPayment.Remark,
+              SpecialApproverTitle: this.SpecialApprover,
+              CompanyCode: this.PublicPayment.CompanyCode,
+              IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
+              TaxFileItemId: Number(this.TaxFileId),
+              ExpenseFileId: Number(this.ExpenseFileId),
+              TaxFileJsonString: JSON.stringify(this.TaxFileJson),
+              ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
+            };
+            if (total > 0 && total < 1000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+            } else if (total >= 1000 && total < 20000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+            } else if (total >= 20000 && total < 50000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
             } else {
-              itemInfo.Status = "Submitted";
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+              itemInfo.Approver4Id = data1.Approver4Id;
             }
-          } else {
-            itemInfo.Status = "Draft";
-          }
-          parm = {
-            type: "post",
-            action: "EditListItem",
-            baseUrl: this.hostUrl,
-            list: this.mainListName,
-            itemID: this.currentItemId,
-            item: itemInfo,
-            digest: this.requestDigest
-          };
-          option = common.queryOpt(parm);
-          $.when($.ajax(option))
-            .done(req => {
-              if (type == "submit") {
-                if (this.currentStep == "Application" && this.taskId != 0) {
-                  this.onApproval("approve");
-                }
+            if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+              itemInfo.SpecialApproverId = this.SpecApproId;
+            }
+            if (type == "submit") {
+              if (this.currentStep == "Application" && this.taskId != 0) {
+                itemInfo.Status = "Changed";
+              } else {
+                itemInfo.Status = "Submitted";
               }
-              this.$message(common.message("success", "对公付款添加成功!"));
-              this.loading = false;
-              this.$router.push("/home");
-            })
-            .catch(err => {
-              this.loading = false;
-              this.$message(common.message("error", "对公付款添加失败!"));
-            });
-        }
-      }).catch(err=>{
-        this.loading = false;
-        this.$message(common.message("error", "操作数据失败"));
-      });
+            } else {
+              itemInfo.Status = "Draft";
+            }
+            parm = {
+              type: "post",
+              action: "EditListItem",
+              baseUrl: this.hostUrl,
+              list: this.mainListName,
+              itemID: this.currentItemId,
+              item: itemInfo,
+              digest: this.requestDigest
+            };
+            option = common.queryOpt(parm);
+            $.when($.ajax(option))
+              .done(req => {
+                if (type == "submit") {
+                  if (this.currentStep == "Application" && this.taskId != 0) {
+                    this.onApproval("approve");
+                  }
+                }
+                this.$message(common.message("success", "对公付款添加成功!"));
+                this.loading = false;
+                this.$router.push("/home");
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "对公付款添加失败!"));
+              });
+          }
+        })
+        .catch(err => {
+          this.loading = false;
+          this.$message(common.message("error", "操作数据失败"));
+        });
     },
     indexMethod(index) {
       return index + 1;
@@ -1906,136 +1958,129 @@ export default {
       this.loading = true;
       var taskOutcome;
       var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
+      getDigst
+        .done(data => {
           this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           var mainItemInfo = {
-        __metadata: {
-          type: this.mainListType
-        }
-      };
-      if (type == "Approved") {
-        taskOutcome = "已批准"; //Approved 已批准
-      } else {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
-      }
-
-      if (this.currentStep == "Approver5") {
-        // if (
-        //   this.PublicPayment.IsSettlement === true &&
-        //   this.PublicPayment.IsContract === true
-        // ) {
-        //   var VerifyMoney = this.VerifyMoney();
-        //   if (VerifyMoney) {
-        //     console.log("合同金额不合法");
-        //     this.$message(
-        //       common.message("error", "当前金额已经超过了合同未结算金额")
-        //     );
-        //   }
-        //   return;
-        // }
-        var history = JSON.parse(this.ApprovalHistory);
-        history.approver5 =
-          this.currentUserTitle +
-          "-" +
-          this.currentUserITCode +
-          "," +
-          common.getCurrentDate();
-        mainItemInfo.ApproverHistory = JSON.stringify(history);
-        (mainItemInfo.InvoiceValue = this.PublicPayment.InvoiceValue), //更新发票金额
-          (mainItemInfo.ExpenseCategory = this.PublicPayment.ExpenseCategory), //更新费用类别
-          (mainItemInfo.CostAccount = this.PublicPayment.CostAccount), //更新费用科目
-          (mainItemInfo.IsFreightInvoice = this.PublicPayment.IsFreightInvoice.toString()); //更新是否存在税票
-        if (this.PublicPayment.IsSettlement) {
-          mainItemInfo.AuthorizedPersonId = this.currentUserId;
-          mainItemInfo.AuthorizedPersonITCode = this.currentUserITCode;
-          mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
-          mainItemInfo.IsSettlement = this.PublicPayment.IsSettlement.toString();
-          mainItemInfo.SettlingTime = common.getCurrentDate();
-        }
-        this.updateMainInfo(mainItemInfo, taskOutcome);
-      } else {
-        if (this.ApprovalHistory == null || this.ApprovalHistory == "") {
-          var history = {};
-          history.approver1 =
-            this.currentUserTitle +
-            "-" +
-            this.currentUserITCode +
-            "," +
-            common.getCurrentDate();
-          this.ApprovalHistory = JSON.stringify(history);
-        } else {
-          var history = JSON.parse(this.ApprovalHistory);
-          if (this.currentStep == "Approver1") {
-            history.approver1 =
-              this.currentUserTitle +
-              "-" +
-              this.currentUserITCode +
-              "," +
-              common.getCurrentDate();
-          } else if (this.currentStep == "Approver2") {
-            history.approver2 =
-              this.currentUserTitle +
-              "-" +
-              this.currentUserITCode +
-              "," +
-              common.getCurrentDate();
-          } else if (this.currentStep == "Approver3") {
-            history.approver3 =
-              this.currentUserTitle +
-              "-" +
-              this.currentUserITCode +
-              "," +
-              common.getCurrentDate();
-          } else if (this.currentStep == "Approver4") {
-            history.approver4 =
-              this.currentUserTitle +
-              "-" +
-              this.currentUserITCode +
-              "," +
-              common.getCurrentDate();
-          } else if (this.currentStep == "Approver6") {
-            // if (this.PublicPayment.IsContract === true) {
-            //   var VerifyMoney = this.VerifyMoney();
-            //   if (VerifyMoney) {
-            //     console.log("合同金额不合法");
-            //     this.$message(
-            //       common.message("error", "当前金额已经超过了合同未结算金额")
-            //     );
-            //   }
-            //   return;
-            // }
-            history.approver6 =
-              this.currentUserTitle +
-              "-" +
-              this.currentUserITCode +
-              "," +
-              common.getCurrentDate();
+            __metadata: {
+              type: this.mainListType
+            }
+          };
+          if (type == "Approved") {
+            taskOutcome = "已批准"; //Approved 已批准
+          } else {
+            taskOutcome = "已拒绝"; //已拒绝 Rejected
           }
-          this.ApprovalHistory = JSON.stringify(history);
-        }
-        if (this.currentStep == "Approver6") {
-          // if (this.PublicPayment.IsContract === true) {
-          //   var VerifyMoney = this.VerifyMoney();
-          //   if (VerifyMoney) {
-          //     console.log("合同金额不合法");
-          //     this.$message(
-          //       common.message("error", "当前金额已经超过了合同未结算金额")
-          //     );
-          //   }
-          //   return;
-          // }
-          mainItemInfo.SettlementOfPeopleId = this.currentUserId;
-          mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
-          mainItemInfo.SettlingTime = common.getCurrentDate();
-        }
 
-        mainItemInfo.ApproverHistory = this.ApprovalHistory;
-        this.updateMainInfo(mainItemInfo, taskOutcome);
-      }
-        }).catch(error=>{
+          if (this.currentStep == "Approver5") {
+            var history = JSON.parse(this.ApprovalHistory);
+            history.approver5 =
+              this.currentUserTitle +
+              "-" +
+              this.currentUserITCode +
+              "," +
+              common.getCurrentDate();
+            mainItemInfo.ApproverHistory = JSON.stringify(history);
+            (mainItemInfo.InvoiceValue = this.PublicPayment.InvoiceValue), //更新发票金额
+              (mainItemInfo.ExpenseCategory = this.PublicPayment.ExpenseCategory), //更新费用类别
+              (mainItemInfo.CostAccount = this.PublicPayment.CostAccount), //更新费用科目
+              (mainItemInfo.IsFreightInvoice = this.PublicPayment.IsFreightInvoice.toString()); //更新是否存在税票
+            if (type == "Approved") {
+              if (this.PublicPayment.IsSettlement) {
+                mainItemInfo.AuthorizedPersonId = this.currentUserId;
+                mainItemInfo.AuthorizedPersonITCode = this.currentUserITCode;
+                mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
+                mainItemInfo.IsSettlement = this.PublicPayment.IsSettlement.toString();
+                mainItemInfo.SettlingTime = common.getCurrentDate();
+              }
+            }
+            this.updateMainInfo(mainItemInfo, taskOutcome);
+          } else {
+            if (this.ApprovalHistory == null || this.ApprovalHistory == "") {
+              var history = {};
+              history.approver1 =
+                this.currentUserTitle +
+                "-" +
+                this.currentUserITCode +
+                "," +
+                common.getCurrentDate();
+              this.ApprovalHistory = JSON.stringify(history);
+            } else {
+              var history = JSON.parse(this.ApprovalHistory);
+              if (this.currentStep == "Approver1") {
+                history.approver1 =
+                  this.currentUserTitle +
+                  "-" +
+                  this.currentUserITCode +
+                  "," +
+                  common.getCurrentDate();
+              } else if (this.currentStep == "Approver2") {
+                history.approver2 =
+                  this.currentUserTitle +
+                  "-" +
+                  this.currentUserITCode +
+                  "," +
+                  common.getCurrentDate();
+              } else if (this.currentStep == "Approver3") {
+                history.approver3 =
+                  this.currentUserTitle +
+                  "-" +
+                  this.currentUserITCode +
+                  "," +
+                  common.getCurrentDate();
+              } else if (this.currentStep == "Approver4") {
+                history.approver4 =
+                  this.currentUserTitle +
+                  "-" +
+                  this.currentUserITCode +
+                  "," +
+                  common.getCurrentDate();
+              } else if (this.currentStep == "Approver6") {
+                // if (this.PublicPayment.IsContract === true) {
+                //   var VerifyMoney = this.VerifyMoney();
+                //   if (VerifyMoney) {
+                //     console.log("合同金额不合法");
+                //     this.$message(
+                //       common.message("error", "当前金额已经超过了合同未结算金额")
+                //     );
+                //   }
+                //   return;
+                // }
+                history.approver6 =
+                  this.currentUserTitle +
+                  "-" +
+                  this.currentUserITCode +
+                  "," +
+                  common.getCurrentDate();
+              }
+              this.ApprovalHistory = JSON.stringify(history);
+            }
+            if (this.currentStep == "Approver6") {
+              // if (this.PublicPayment.IsContract === true) {
+              //   var VerifyMoney = this.VerifyMoney();
+              //   if (VerifyMoney) {
+              //     console.log("合同金额不合法");
+              //     this.$message(
+              //       common.message("error", "当前金额已经超过了合同未结算金额")
+              //     );
+              //   }
+              //   return;
+              // }
+              if (type == "Approved") {
+                mainItemInfo.SettlementOfPeopleId = this.currentUserId;
+                mainItemInfo.SettlementPeopleITCode = this.currentUserITCode;
+                mainItemInfo.SettlingTime = common.getCurrentDate();
+              }
+            }
+
+            mainItemInfo.ApproverHistory = this.ApprovalHistory;
+            this.updateMainInfo(mainItemInfo, taskOutcome);
+          }
+        })
+        .catch(error => {
           this.loading = false;
           this.$message(common.message("error", "获取Digest失败"));
-        })
+        });
     },
     updateMainInfo: function(mainItemInfo, taskOutcome) {
       var mainParm = {
@@ -2139,9 +2184,10 @@ export default {
               //push 合同列表
               that.ContractList.push({
                 Name: mainItem[0].Name,
-                Supplier: mainItem[0].Suppler,
+                Supplier: mainItem[0].Supplier,
                 Contents: mainItem[0].Contents,
                 LegalPerson: mainItem[0].LegalPerson,
+                Currency: mainItem[0].Currency,
                 Money: mainItem[0].Money,
                 AccountPaid: item.InvoiceValue
               });

@@ -5,7 +5,7 @@
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">对公付款</span>
           <div style="float:right">
-            <el-button :disabled="!IsDisable" type="primary" @click="print">打印</el-button>
+            <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button>
           </div>
         </td>
       </tr>
@@ -139,8 +139,9 @@
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
         <td>法人代表</td>
+        <td style="width:170px">币种</td>
         <td style="width:170px">总金额</td>
-        <td colspan="2" style="width:170px">已付款</td>
+        <td style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
@@ -230,6 +231,8 @@
         <el-table-column property="InvoiceValue" label="发票金额"></el-table-column>
         <el-table-column property="TaxRate" label="税率"></el-table-column>
         <el-table-column property="TaxCode" label="税码"></el-table-column>
+                <el-table-column property="CodeOfFixedAssets" label="固定资产编码"></el-table-column>
+        <el-table-column property="Amount" label="数量"></el-table-column>
       </el-table>
     </el-dialog>
 
@@ -278,7 +281,7 @@
     </el-dialog>
 
     <!-- 打印模板 -->
-    <div style="display:none" id="print">
+    <div style="display:none" id="printBox">
       <div style="margin-top:20px;" id="myPrintArea">
         <!--startprint1-->
         <table
@@ -574,6 +577,21 @@ export default {
     };
   },
   methods: {
+   printDeal() {
+        var printBox = document.getElementById('printBox');
+        //拿到打印的区域的html内容
+        var newContent = printBox.innerHTML;
+        //将旧的页面储存起来，当打印完成后返给给页面。
+        var oldContent = document.body.innerHTML;
+        //赋值给body
+        document.body.innerHTML = newContent;
+        //执行window.print打印功能
+        window.print();
+        // 重新加载页面，以刷新数据。以防打印完之后，页面不能操作的问题
+        window.location.reload();
+        document.body.innerHTML = oldContent;
+        return false;
+    },
     print() {
       common.print("#myPrintArea");
     },
@@ -720,9 +738,10 @@ export default {
               //push 合同列表
               that.ContractList.push({
                 Name: mainItem[0].Name,
-                Supplier: mainItem[0].Suppler,
+                Supplier: mainItem[0].Supplier,
                 Contents: mainItem[0].Contents,
                 LegalPerson: mainItem[0].LegalPerson,
+                Currency: mainItem[0].Currency,
                 Money: mainItem[0].Money,
                 AccountPaid: item.InvoiceValue
               });
@@ -832,7 +851,8 @@ export default {
                 Supplier: element.Supplier, //供应商
                 InvoiceValue: element.InvoiceValue, //发票金额
                 TaxRate: element.TaxRate, //税率
-                TaxCode: element.TaxCode //税码
+                TaxCode: element.TaxCode, //税码
+                CodeOfFixedAssets: element.CodeOfFixedAssets //固定资产编码
               });
             });
           }

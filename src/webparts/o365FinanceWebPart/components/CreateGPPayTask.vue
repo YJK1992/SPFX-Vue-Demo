@@ -63,7 +63,7 @@
         </td>
         <td align="right">成本中心：</td>
         <td align="left">
-          <el-select v-model="PublicPayment.CostCenter" placeholder="请选择" size="medium">
+          <el-select v-model="PublicPayment.CostCenter" placeholder="请选择" size="medium" @change="costCenterChange">
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -74,7 +74,11 @@
         </td>
         <td align="right">公司代码 ：</td>
         <td align="left" colspan="2">
-          <el-select v-model="PublicPayment.CompanyCode" placeholder="请选择" size="medium">
+          <el-select
+            v-model="PublicPayment.CompanyCode"
+            placeholder="请选择"
+            size="medium"
+          >
             <el-option
               v-for="item in companyCodeArr"
               :key="item.CompanyCode"
@@ -209,8 +213,9 @@
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
         <td>法人代表</td>
+        <td>币种</td>
         <td style="width:170px">总金额</td>
-        <td colspan="2" style="width:170px">已付款</td>
+        <td style="width:170px">已付款</td>
       </tr>
       <tr v-for="(subItems,index) in  ContractList">
         <template v-for="(subItem,cindex) in subItems">
@@ -249,7 +254,7 @@
             @click="downloadTaxExcel"
           >下载税票清单Excel模板</el-button>
         </td>
-        <td colspan="3" align="left">
+        <td colspan="5" align="left">
           <el-upload
             class="upload-demo"
             :action="actionUrl"
@@ -281,7 +286,7 @@
             @click="downloadExpenseExcel"
           >下载费用分摊Excel模板</el-button>
         </td>
-        <td colspan="3" align="left">
+        <td colspan="5" align="left">
           <el-upload
             class="upload-demo"
             :action="actionUrl"
@@ -416,7 +421,7 @@
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
-import sprestlib from 'sprestlib/dist/sprestlib'
+import sprestlib from "sprestlib/dist/sprestlib";
 export default {
   data() {
     return {
@@ -593,6 +598,48 @@ export default {
     };
   },
   methods: {
+    costCenterChange: function() {
+      this.companyCodeArr=[]
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition:
+          "?$filter=CostCenter eq '" + this.PublicPayment.CostCenter + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if(data.length>0){
+            this.PublicPayment.CompanyCode=data[0].CompanyCode
+            var companyCode = [];
+          data.forEach(d => {
+            companyCode.push(d.CompanyCode);
+          });
+          console.log("未去重公司代码");
+          console.log(companyCode);
+          var companyCodeUnique = companyCode.filter(function(
+            element,
+            index,
+            array
+          ) {
+            return array.indexOf(element) === index;
+          });
+          companyCodeUnique.forEach(element => {
+            this.companyCodeArr.push({
+              CompanyCode: element
+            });
+          });
+          }else{
+            this.$message(common.message("error", "未能找到对应的公司代码"));
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司代码失败"));
+        });
+    },
     getApplicantNumber: function() {
       var parm = {
         type: "get",
@@ -1231,21 +1278,10 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-              var selectedCostCenter = "";
-              data.forEach(d => {
-                // this.costCenterArr.push({
-                //   CostCenter: d.CostCenter,
-                //   CostCenterName: d.CostCenterName
-                // });
-                selectedCostCenter = d.CostCenter;
-                this.companyCodeArr.push({
-                  CompanyCode: d.CompanyCode
-                });
-                this.PublicPayment.BussinessScope = d.BusinessScope;
-                this.PublicPayment.EmployeeCode = d.EmployeeCode;
-              });
-
-              this.PublicPayment.CostCenter = selectedCostCenter;
+                this.PublicPayment.CostCenter=data[0].CostCenter;
+                this.costCenterChange()
+                this.PublicPayment.BussinessScope = data[0].BusinessScope;
+                this.PublicPayment.EmployeeCode = data[0].EmployeeCode;
             } else {
               this.$message(
                 common.message(
@@ -1842,9 +1878,10 @@ export default {
               //push 合同列表
               that.ContractList.push({
                 Name: mainItem[0].Name,
-                Supplier: mainItem[0].Suppler,
+                Supplier: mainItem[0].Supplier,
                 Contents: mainItem[0].Contents,
                 LegalPerson: mainItem[0].LegalPerson,
+                Currency: mainItem[0].Currency,
                 Money: mainItem[0].Money,
                 AccountPaid: item.InvoiceValue
               });

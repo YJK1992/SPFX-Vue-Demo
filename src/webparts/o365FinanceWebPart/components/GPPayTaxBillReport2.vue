@@ -262,6 +262,18 @@ export default {
         var data = req.d.results;
         if (data.length > 0) {
           data.forEach(d => {
+            //修改读取子表逻辑
+            var subItems =
+              d.TaxFileJsonString == "{}"
+                ? { d: [] }
+                : JSON.parse(d.TaxFileJsonString);
+            console.log(subItems);
+            var total = 0;
+            if (subItems.d.length > 0) {
+              subItems.d.forEach(sub => {
+                total += Number(sub.InvoiceValue);
+              });
+            }
             this.TableData.push({
               ApplicationNumber: d.ApplicationNumber, //申请单号
               CopmanyCode: d.CopmanyCode, //公司代码
@@ -271,7 +283,7 @@ export default {
               TXT:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               ScopeOfService: "", //业务范围
-              InvoiceValue: d.InvoiceValue, //金额
+              InvoiceValue: total, //金额
               TXT1:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
               BankSubjectAllocation: "", //银行科目分配,

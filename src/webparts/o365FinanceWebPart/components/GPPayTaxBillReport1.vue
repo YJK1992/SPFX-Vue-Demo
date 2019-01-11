@@ -228,7 +228,7 @@ export default {
                   InvoiceNumber: sub.InvoiceNumber,
                   Currency: d.Currency,
                   SupplierCode: "",
-                  Money: d.Money,
+                  Money: sub.InvoiceValue,
                   TaxCode: sub.TaxCode,
                   BussinessScope: d.BussinessScope,
                   Tex:
@@ -251,7 +251,7 @@ export default {
                 InvoiceNumber: "",
                 Currency: d.Currency,
                 SupplierCode: "",
-                Money: d.Money,
+                Money: sub.InvoiceValue,
                 TaxCode: "",
                 BussinessScope: d.BussinessScope,
                 Tex:
