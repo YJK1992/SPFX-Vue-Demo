@@ -228,7 +228,7 @@ export default {
                   InvoiceNumber: sub.InvoiceNumber,
                   Currency: d.Currency,
                   SupplierCode: "8002178",
-                  Money: sub.InvoiceValue,
+                  Money: Number(sub.InvoiceValue),
                   TaxCode: sub.TaxCode,
                   BussinessScope: d.BussinessScope,
                   Tex:

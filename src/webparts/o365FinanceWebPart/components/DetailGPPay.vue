@@ -19,7 +19,6 @@
           <el-input disabled v-model="PublicPayment.PhoneNumber" placeholder="联系电话"></el-input>
         </td>
       </tr>
-
       <tr>
         <td align="right">单据编号：</td>
         <td align="left">
@@ -61,21 +60,14 @@
           <el-input disabled v-model="PublicPayment.InvoiceValue" placeholder="发票金额"></el-input>
         </td>
         <td align="right">币种：</td>
-        <td align="left">
+        <td colspan="4" align="left">
           <el-select disabled v-model="PublicPayment.Currency" placeholder="请选择"></el-select>
-        </td>
-        <td align="right">汇率：</td>
-        <td colspan="2">
-          <el-input disabled v-model="PublicPayment.ExchangeRate" placeholder="汇率"></el-input>
         </td>
       </tr>
       <tr>
-        <td align="right">金额(小写)：</td>
-        <td>
-          <el-input disabled placeholder="小写金额"></el-input>
-        </td>
+
         <td align="right">金额(大写)：</td>
-        <td colspan="6">
+        <td colspan="8">
           <el-input v-model="PublicPayment.CapitalizationAmount" disabled placeholder="大写金额"></el-input>
         </td>
       </tr>
@@ -138,7 +130,7 @@
           <el-input disabled v-model="PublicPayment.Money" placeholder="金额"></el-input>
         </td>
       </tr>
-      <tr>
+      <tr id="viewPart">
         <td style="width:200px">合同名称</td>
         <td style="width:270px">供应商</td>
         <td style="width:200px">内容</td>
@@ -285,6 +277,7 @@
     </el-dialog>
 
     <!-- 打印模板 -->
+    <!-- 打印模板 -->
     <div style="display:none" id="printBox">
       <div style="margin-top:20px;" id="myPrintArea">
         <!--startprint1-->
@@ -301,129 +294,161 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
               colspan="4"
-            >GP Payment form</td>
+            >{{this.PublicPayment.ReimbursementType}}</td>
           </tr>
           <tr :hidden="ExpenseAllocationList.length==0">
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;"
               colspan="4"
-            >Include Expense Allocation Sheet</td>
+            >是否含分摊：{{this.PublicPayment.IsExpenseAllocation?'是':'否'}}</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >SheetId:</td>
+            >单据编号:</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Applicant:</td>
+            >经办人:</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Contact Phone:</td>
+            >联系电话:</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;background-color: #b2e6fc; font-weight: bold;"
-            >Submit time:</td>
+            >单据提交时间:</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
             >{{this.PublicPayment.ApplicationNumber}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">62193</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.PhoneNumber}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Created}}</td>
           </tr>
           <tr>
             <td
+              colspan="4"
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Company Name:联想（北京）有限公司（0 0 0 1）</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Expense Category:{{this.PublicPayment.ExpenseCategory}}</td>
+            >公司名称：联想（北京）有限公司（0 0 0 1）</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Cost Center Group:{{this.PublicPayment.CostCenter}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Finance Counter:</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Cost Center:</td>
+            >成本中心：{{this.PublicPayment.CostCenter}}</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Payment:{{this.PublicPayment.SettlementType}}</td>
+            >结算方式：{{this.PublicPayment.SettlementType}}</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Amount:{{this.PublicPayment.AmountInlowercase}}</td>
+            >发票金额：{{this.PublicPayment.InvoiceValue}}</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Amount（In Words）:{{this.PublicPayment. CapitalizationAmount}}</td>
+            >借款单号：{{this.PublicPayment.LoanNumber}}</td>
+          </tr>
+          <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="4"
+            >币种：{{this.PublicPayment.Currency}}</td>
+            <!-- <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >汇率：{{this.PublicPayment.ExchangeRate}}</td> -->
+          </tr>
+          <tr>
+            <!-- <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >金额（小写）:{{this.PublicPayment.AmountInlowercase}}</td> -->
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="4"
+            >金额（大写）:{{this.PublicPayment. CapitalizationAmount}}</td>
+          </tr>
+          <tr>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">借款金额：</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">差额：</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Currency:{{this.PublicPayment.Currency}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Borrowing Form No:</td>
+            >收款单位名称：{{this.PublicPayment.CollectionUnit}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >省/直辖市：{{this.PublicPayment.City}}</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Name Of Receiver:{{this.PublicPayment.Currency}}</td>
+            >市/县：{{this.PublicPayment.County}}</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Bank：{{this.PublicPayment.Bank}}</td>
-          </tr>
-          <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Account No.：{{this.PublicPayment.Account}}</td>
-            <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Province/Municipality：{{this.PublicPayment.City}}</td>
+            >开户行：{{this.PublicPayment.OpeningBank}}</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >City/County：{{this.PublicPayment.County}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Remit Postscript：</td>
+            >账号：{{this.PublicPayment.Account}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >汇款附言：{{this.PublicPayment.DetailsOfPayment}}</td>
           </tr>
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Project Name:{{this.PublicPayment.ProjectName}}</td>
+            >项目名称：{{this.PublicPayment.ProjectName}}</td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Project No:{{this.PublicPayment.ProjectNumber}}</td>
+            >项目编码：{{this.PublicPayment.ProjectNumber}}</td>
           </tr>
           <tr>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">
-              Contract No:
+              合同编号：
               <span style="color: aqua">{{this.PublicPayment.ContractNumber}}</span>
             </td>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >Currency:{{this.PublicPayment.Currency}}</td>
+            >合同币种：{{this.PublicPayment.Currency}}</td>
           </tr>
           <tr>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">Service:</td>
+            <td
+              style="border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="4"
+            >合同总金额：{{this.PublicPayment.Money}}</td>
+          </tr>
+          <tr>
+            <td
+              colspan="4"
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+            >签批人/签批时间：{{this.PublicPayment.AuthorizedPersonITCode+" / "+ this.PublicPayment.SettlingTime}}</td>
+          </tr>
+          <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >Percentage of Finished and Paid Accepted Portion:{{ ((Number(this.AccountPaid)/Number(this.PublicPayment.money))*100).toFixed(2)}}%</td>
+              colspan="4"
+            >备注：{{this.PublicPayment.Remark}}</td>
           </tr>
-          <tr>
+          <tr v-if="PublicPayment.AuthorizedPersonITCode!=null">
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
+              colspan="4"
+            >Approver/Approved Time: {{this.Approver}}</td>
+          </tr>
+          <!-- <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
@@ -445,53 +470,21 @@
               style=" border: 1px solid #cfcfcf; padding: 5px;font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
               colspan="4"
             >Notes(Usage/Others) Time:{{this.PublicPayment.Remark}}</td>
-          </tr>
+          </tr>-->
         </table>
         <div :hidden="ExpenseAllocationList.length==0" style="margin-top:10px">
           <table
             style="width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
           >
             <tr>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Account No.</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Expense Purposes</td>
-              <td
-                style=" border: 1px solid #cfcfcf; padding: 5px;"
-              >Cost Center No. of Shared Expense</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Shared out Amount</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">ProjectName.</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">ProjectNumber.</td>
-              <td
-                style=" border: 1px solid #cfcfcf; padding: 5px;"
-              >Approve's Name of Cost Center for Shared out Expense</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Summary</td>
-            </tr>
-
-            <template>
-              <tr v-for="(subItems,index) in  ExpenseAllocationList">
-                <template v-if="ExpenseAllocationList[index].IsIn">
-                  <template v-for="(subItem,cindex) in subItems">
-                    <td
-                      style=" border: 1px solid #cfcfcf; padding: 5px;"
-                      v-if="cindex!='IsIn'"
-                    >{{subItem}}</td>
-                  </template>
-                </template>
-              </tr>
-            </template>
-
-            <tr>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Account No.</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Expense Purposes</td>
-              <td
-                style=" border: 1px solid #cfcfcf; padding: 5px;"
-              >Cost Center No. of Shared Expense</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Shared out Amount</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">ProjectName.</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">ProjectNumber.</td>
-              <td
-                style=" border: 1px solid #cfcfcf; padding: 5px;"
-              >Approve's Name of Cost Center for Shared in Expense</td>
-              <td style=" border: 1px solid #cfcfcf; padding: 5px;">Summary</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用科目号</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用名称</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊出成本中心编号</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊出金额</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">项目名称</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">项目编号.</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊出成本中心签批人姓名</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摘要</td>
             </tr>
 
             <template>
@@ -506,15 +499,39 @@
                 </template>
               </tr>
             </template>
+
+            <tr>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用科目号</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用名称</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊入成本中心编号/td></td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊入金额</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">项目名称</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">项目编号</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摊入成本中心签批人姓名</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">摘要</td>
+            </tr>
+
+            <template>
+              <tr v-for="(subItems,index) in  ExpenseAllocationList">
+                <template v-if="ExpenseAllocationList[index].IsIn">
+                  <template v-for="(subItem,cindex) in subItems">
+                    <td
+                      style=" border: 1px solid #cfcfcf; padding: 5px;"
+                      v-if="cindex!='IsIn'"
+                    >{{subItem}}</td>
+                  </template>
+                </template>
+              </tr>
+            </template>
           </table>
         </div>
-        <div>
+        <div v-if="PublicPayment.AuthorizedPersonITCode!=null">
           <template v-for="(item,index) in ApproverArr">
             <p>
               {{item.substring(0,item.indexOf(','))}} Manager-Senior Manager
               <span
                 style="color:red"
-              >（Hand Input）</span>
+              >（手动输入）</span>
             </p>
           </template>
         </div>
@@ -571,8 +588,10 @@ export default {
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
         EmployeeCode: "", //人员编号
-        Created:'',
-        PhoneNumber:""
+        Created: "",
+        SettlingTime: "",
+        AuthorizedPersonITCode: "",
+        PhoneNumber: ""
       }, //主表
       AccountPaid: "", //合同列表已支付金额
       UnPaid: "", //合同列表未支付金额
@@ -787,7 +806,12 @@ export default {
             (data[0].PaymentApproval["Description"] == "End" &&
               data[0].Status == "Approved")),
             (this.ApprovalHistory = data[0].ApproverHistory),
+            (this.PublicPayment.AuthorizedPersonITCode =
+              data[0].AuthorizedPersonITCode),
             (this.PublicPayment.PhoneNumber = data[0].PhoneNumber),
+            (this.PublicPayment.SettlingTime = data[0].SettlingTime.split(
+              "T"
+            )[0]),
             (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
             (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
             (this.PublicPayment.Trustees = data[0].Trustees), //经办人
@@ -840,7 +864,12 @@ export default {
             data[0].IsExpenseAllocation == "true" ? true : false; //是否有费用分摊
           this.PublicPayment.CompanyCode = data[0].CompanyCode; //是否有费用分摊
           this.currentItemId = data[0].Id;
-          this.PublicPayment.Created =data[0].Created.substring(0,data[0].Created.indexOf("T"))
+          this.PublicPayment.Created = data[0].Created.substring(
+            0,
+            data[0].Created.indexOf("T")
+          );
+          this.PublicPayment.AuthorizedPersonITCode =
+            data[0].AuthorizedPersonITCode;
           console.log("!22222222222222");
           console.log(this.IsDisable);
           console.log(this.PublicPayment);
@@ -936,7 +965,7 @@ export default {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-.view_duigong tr:nth-child(15) {
+#viewPart {
   background-color: #409eff;
   font-weight: bold;
   color: white;

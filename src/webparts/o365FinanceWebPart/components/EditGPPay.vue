@@ -13,7 +13,11 @@
         </td>
         <td align="right">联系电话：</td>
         <td colspan="3">
-          <el-input v-model="PublicPayment.PhoneNumber" placeholder="联系电话" :disabled="showApprover==true"></el-input>
+          <el-input
+            v-model="PublicPayment.PhoneNumber"
+            placeholder="联系电话"
+            :disabled="showApprover==true"
+          ></el-input>
         </td>
       </tr>
       <tr>
@@ -117,7 +121,7 @@
           ></el-input>
         </td>
         <td align="right">币种：</td>
-        <td align="left">
+        <td colspan="4" align="left">
           <el-select
             @change="CalculateAmountInlowercase"
             :disabled="showApprover==true"
@@ -132,28 +136,10 @@
             ></el-option>
           </el-select>
         </td>
-        <td align="right">汇率：</td>
-        <td colspan="2">
-          <el-input
-            @change="CalculateAmountInlowercase"
-            :disabled="showApprover==true"
-            v-model="PublicPayment.ExchangeRate"
-            placeholder="汇率"
-          ></el-input>
-        </td>
       </tr>
       <tr>
-        <td align="right">金额(小写)：</td>
-        <td>
-          <el-input
-            disabled
-            v-model="PublicPayment.AmountInlowercase"
-            @change="convertMoney"
-            placeholder="小写金额"
-          ></el-input>
-        </td>
         <td align="right">金额(大写)：</td>
-        <td colspan="6">
+        <td colspan="8">
           <el-input v-model="PublicPayment.CapitalizationAmount" disabled placeholder="大写金额"></el-input>
         </td>
       </tr>
@@ -603,7 +589,7 @@ export default {
         SpecialApprover: "", //特殊审批人
         IsExpenseAllocation: false, //是否有费用分摊
         CompanyCode: "", //公司代码
-        PhoneNumber:""
+        PhoneNumber: ""
       },
       IsChangeTaxReceipt: false,
       IsChangeExpenseAllocation: false,
@@ -1285,19 +1271,10 @@ export default {
         this.$message(common.message("error", "发票金额不合法!"));
       } else if (this.PublicPayment.Currency == "") {
         this.$message(common.message("error", "请选择币种!"));
-      } else if (this.PublicPayment.ExchangeRate == "") {
-        this.$message(common.message("error", "请输入汇率!"));
-      } else if (isNaN(this.PublicPayment.ExchangeRate)) {
-        this.$message(common.message("error", "汇率不合法!"));
       } else {
         //计算
-        if (this.PublicPayment.Currency == "RMB") {
-          this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
-        } else {
-          this.PublicPayment.AmountInlowercase =
-            parseFloat(this.PublicPayment.InvoiceValue) *
-            parseFloat(this.PublicPayment.ExchangeRate);
-        }
+        this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
+
         this.convertMoney();
       }
     },
@@ -1470,7 +1447,7 @@ export default {
       var isSuccess = false;
       if (this.PublicPayment.ReimbursementType == "") {
         this.message = "请选择报销类型;";
-      }else if(this.PublicPayment.PhoneNumber == ""){
+      } else if (this.PublicPayment.PhoneNumber == "") {
         this.message = "请输入联系电话;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
@@ -1482,12 +1459,6 @@ export default {
         this.message = "发票金额不合法;";
       } else if (this.PublicPayment.Currency == "") {
         this.message = "请选择币种;";
-      } else if (this.PublicPayment.ExchangeRate == "") {
-        this.message = "请输入汇率;";
-      } else if (isNaN(this.PublicPayment.ExchangeRate)) {
-        this.message = "汇率不合法;";
-      } else if (this.PublicPayment.AmountInlowercase == "") {
-        this.message = "请输入小写金额;";
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
       } else if (
@@ -1694,7 +1665,7 @@ export default {
               IsExpenseAllocation: this.PublicPayment.IsExpenseAllocation.toString(),
               TaxFileItemId: Number(this.TaxFileId),
               ExpenseFileId: Number(this.ExpenseFileId),
-              PhoneNumber:this.PublicPayment.PhoneNumber,
+              PhoneNumber: this.PublicPayment.PhoneNumber,
               TaxFileJsonString: JSON.stringify(this.TaxFileJson),
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
@@ -1916,7 +1887,7 @@ export default {
         list: this.ContractListName,
         baseUrl: this.hostUrl,
         condition: "",
-        async:false
+        async: false
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))

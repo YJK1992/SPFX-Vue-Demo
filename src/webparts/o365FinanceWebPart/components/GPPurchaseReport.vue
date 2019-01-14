@@ -232,7 +232,7 @@ export default {
                 Supplier: d.Supplier,
                 SupplierParts: d.SupplierParts,
                 Amount:Number(d.Amount),
-                Taxation: d.Taxation
+                Taxation:Number(d.Taxation) 
               });
             });
           } else {
