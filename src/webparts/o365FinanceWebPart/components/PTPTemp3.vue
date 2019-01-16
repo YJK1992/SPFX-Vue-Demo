@@ -57,6 +57,7 @@
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -73,10 +74,29 @@ export default {
         ComplateDate: "" //完成日期
       },
       CompanyCodeArr: [], //公司代码
-      TableData: [] //主表数据
+      TableData: [], //主表数据
+      excelColumns: ["账号", "户名", "金额", "费用报告编号", "法人", "审批日期"] //excel字段名
     };
   },
   methods: {
+        onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
+      for (var item in this.TableData[0]) {
+  
+          tempColumn.push(item);
+      }
+      temp = this.TableData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "PTP3",
+        fileType: "xls",
+        sheetName: "PTP3"
+      };
+      efn.toExcel(excelInfo);
+    },
     clearCondition() {
       this.Condition = {};
       this.CostAccount = "";

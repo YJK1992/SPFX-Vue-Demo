@@ -57,15 +57,15 @@
     </el-form>
 
     <el-table border :data="TableData" style="width: 100%" max-height="600">
-      <el-table-column width="200" prop label="公司代码"></el-table-column>
-      <el-table-column width="200" prop label="科目号"></el-table-column>
-      <el-table-column width="200" prop label="金额"></el-table-column>
-      <el-table-column width="200" prop label="成本中心"></el-table-column>
-      <el-table-column width="200" prop label="利润中心"></el-table-column>
-      <el-table-column width="200" prop label="业务范围"></el-table-column>
-      <el-table-column width="200" prop label="文本"></el-table-column>
-      <el-table-column width="200" prop label="报销单号"></el-table-column>
-      <el-table-column width="200" prop label="订单号"></el-table-column>
+      <el-table-column width="200" prop='CompanyCode' label="公司代码"></el-table-column>
+      <el-table-column width="200" prop='CostAccount' label="科目号"></el-table-column>
+      <el-table-column width="200" prop='Total' label="金额"></el-table-column>
+      <el-table-column width="200" prop='CostCenter' label="成本中心"></el-table-column>
+      <el-table-column width="200" prop='lirun' label="利润中心"></el-table-column>
+      <el-table-column width="200" prop='yewu' label="业务范围"></el-table-column>
+      <el-table-column width="200" prop='TXT' label="文本"></el-table-column>
+      <el-table-column width="200" prop='Title' label="报销单号"></el-table-column>
+      <el-table-column width="200" prop='orderNo' label="订单号"></el-table-column>
     </el-table>
   </div>
 </template>
@@ -73,6 +73,7 @@
 <script>
 import $ from "jquery";
 import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -91,10 +92,39 @@ export default {
       CostAccount: "", //费用条目
       CompanyCodeArr: [], //公司代码
       CostCenterArr: [], //成本中心
-      TableData: [] //主表数据
+      TableData: [], //主表数据
+      excelColumns: [
+        "公司代码",
+        "科目号",
+        "金额",
+        "成本中心",
+        "利润中心",
+        "业务范围",
+        "文本",
+        "报销单号",
+        "订单号"
+      ] //excel字段名
     };
   },
   methods: {
+    onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
+      for (var item in this.TableData[0]) {
+        console.log(item);
+        tempColumn.push(item);
+      }
+      temp = this.TableData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "PTP2",
+        fileType: "xls",
+        sheetName: "PTP2"
+      };
+      efn.toExcel(excelInfo);
+    },
     clearCondition() {
       this.Condition = {};
       this.CostAccount = "";
@@ -151,10 +181,10 @@ export default {
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
-                    CompanyCode: sub.CompanyCode,
+                    CompanyCode: data[0].CompanyCode,
                     CostAccount: sub.CostAccount,
                     Money: sub.Money,
-                    CostCenter: sub.CostCenter,
+                    CostCenter: data[0].CostCenter,
                     lirun: "",
                     yewu: "",
                     TXT:
@@ -168,10 +198,10 @@ export default {
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
-                      CompanyCode: sub.CompanyCode,
+                      CompanyCode: data[0].CompanyCode,
                       CostAccount: sub.CostAccount,
                       Money: sub.Money,
-                      CostCenter: sub.CostCenter,
+                      CostCenter: data[0].CostCenter,
                       lirun: "",
                       yewu: "",
                       TXT:

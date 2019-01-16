@@ -65,7 +65,6 @@
         </td>
       </tr>
       <tr>
-
         <td align="right">金额(大写)：</td>
         <td colspan="8">
           <el-input v-model="PublicPayment.CapitalizationAmount" disabled placeholder="大写金额"></el-input>
@@ -288,7 +287,7 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
               colspan="4"
-            >联想（北京）有限公司（0 0 0 1）</td>
+            >{{this.CompanyName}}</td>
           </tr>
           <tr>
             <td
@@ -320,7 +319,7 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
             >{{this.PublicPayment.ApplicationNumber}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees}}</td>
+            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees+'-'+ this.PublicPayment.TrusteesEmail}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.PhoneNumber}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Created}}</td>
           </tr>
@@ -328,7 +327,7 @@
             <td
               colspan="4"
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-            >公司名称：联想（北京）有限公司（0 0 0 1）</td>
+            >公司名称：{{this.CompanyName}}</td>
           </tr>
           <tr>
             <td
@@ -353,27 +352,31 @@
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="4"
+              colspan="2"
             >币种：{{this.PublicPayment.Currency}}</td>
-            <!-- <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >汇率：{{this.PublicPayment.ExchangeRate}}</td> -->
-          </tr>
-          <tr>
-            <!-- <td
-              style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="2"
-            >金额（小写）:{{this.PublicPayment.AmountInlowercase}}</td> -->
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-              colspan="4"
+              colspan="2"
             >金额（大写）:{{this.PublicPayment. CapitalizationAmount}}</td>
+            <!-- <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >汇率：{{this.PublicPayment.ExchangeRate}}</td>-->
           </tr>
-          <tr>
+          <!-- <tr>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >金额（小写）:{{this.PublicPayment.AmountInlowercase}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+              colspan="2"
+            >金额（大写）:{{this.PublicPayment. CapitalizationAmount}}</td>
+          </tr>-->
+          <!-- <tr>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">借款金额：</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">差额：</td>
-          </tr>
+          </tr> -->
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
@@ -434,7 +437,7 @@
             <td
               colspan="4"
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-            >签批人/签批时间：{{this.PublicPayment.AuthorizedPersonITCode+" / "+ this.PublicPayment.SettlingTime}}</td>
+            >签批人/签批时间：{{this.Approver}}</td>
           </tr>
           <tr>
             <td
@@ -442,12 +445,12 @@
               colspan="4"
             >备注：{{this.PublicPayment.Remark}}</td>
           </tr>
-          <tr v-if="PublicPayment.AuthorizedPersonITCode!=null">
+          <!-- <tr v-if="PublicPayment.AuthorizedPersonITCode!=null">
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
               colspan="4"
             >Approver/Approved Time: {{this.Approver}}</td>
-          </tr>
+          </tr> -->
           <!-- <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
@@ -476,6 +479,9 @@
           <table
             style="width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
           >
+            <tr>
+              <td colspan="8" style=" border: 1px solid #cfcfcf; padding: 5px;">分摊表</td>
+            </tr>
             <tr>
               <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用科目号</td>
               <td style=" border: 1px solid #cfcfcf; padding: 5px;">费用名称</td>
@@ -525,7 +531,34 @@
             </template>
           </table>
         </div>
-        <div v-if="PublicPayment.AuthorizedPersonITCode!=null">
+
+        <div :hidden="PublicPayment.ReimbursementType!='资产对公付款'" style="margin-top:10px">
+          <table
+            style="width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
+          >
+            <tr>
+              <td colspan="4" style=" border: 1px solid #cfcfcf; padding: 5px;">资产表</td>
+            </tr>
+            <tr>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">资产费用类型</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">资产编码</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">资产数量</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">资产金额</td>
+            </tr>
+            <template>
+              <tr v-for="(subItems,index) in  total">
+                <template v-for="(subItem,cindex) in subItems">
+                  <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{subItem}}</td>
+                </template>
+              </tr>
+            </template>
+            <tr>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="3">合计</td>
+              <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.totalMoney}}</td>
+            </tr>
+          </table>
+        </div>
+        <!-- <div v-if="PublicPayment.AuthorizedPersonITCode!=null">
           <template v-for="(item,index) in ApproverArr">
             <p>
               {{item.substring(0,item.indexOf(','))}} Manager-Senior Manager
@@ -534,7 +567,7 @@
               >（手动输入）</span>
             </p>
           </template>
-        </div>
+        </div>-->
       </div>
     </div>
   </div>
@@ -549,11 +582,14 @@ export default {
       mainListName: "PublicPayment", //对公付款
       subListName2: "ExpenseAllocation",
       ContractListName: "ContractList", //合同列表pushtable
+      EmployeeName: "EmployeeList",
       ContractList: [], //合同列表
       dialogTableVisible: false, //税票清单列表
       dialogTableVisible2: false, //费用分摊列表
       ExpenseAllocationList: [], //费用分摊列表
       TaxReceiptList: [], //税票清单
+      total: [],
+      totalMoney: "",
       PublicPayment: {
         ReimbursementType: "", //报销类型
         SettlementType: "", //结算方式
@@ -591,14 +627,16 @@ export default {
         Created: "",
         SettlingTime: "",
         AuthorizedPersonITCode: "",
-        PhoneNumber: ""
+        PhoneNumber: "",
+        TrusteesEmail:''
       }, //主表
       AccountPaid: "", //合同列表已支付金额
       UnPaid: "", //合同列表未支付金额
       ApprovalHistory: "", //审批历史
       Approver: "",
       ApproverArr: [],
-      IsDisable: false
+      IsDisable: false,
+      CompanyName: ""
     };
   },
   methods: {
@@ -619,6 +657,31 @@ export default {
     },
     print() {
       common.print("#myPrintArea");
+    },
+    getCompanyName(code) {
+      var that = this;
+
+      //获取合同列表
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.EmployeeName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=CompanyCode eq '" + code + "'&$top=1"
+      }; //Completed 已完成
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            console.log("公司名称:" + data[0].CompanyName);
+            console.log(data);
+            that.CompanyName = data[0].CompanyName;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司名称失败!"));
+        });
     },
     changeMoney() {
       var that = this;
@@ -674,6 +737,7 @@ export default {
       var opt = common.queryOpt(parm);
       return common.service(opt);
     },
+
     convertMoney() {
       //转换金额change事件
       if (
@@ -809,9 +873,7 @@ export default {
             (this.PublicPayment.AuthorizedPersonITCode =
               data[0].AuthorizedPersonITCode),
             (this.PublicPayment.PhoneNumber = data[0].PhoneNumber),
-            (this.PublicPayment.SettlingTime = data[0].SettlingTime.split(
-              "T"
-            )[0]),
+            (this.PublicPayment.SettlingTime=data[0].SettlingTime ==null?"":data[0].SettlingTime.split("T")[0]),
             (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
             (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
             (this.PublicPayment.Trustees = data[0].Trustees), //经办人
@@ -870,6 +932,7 @@ export default {
           );
           this.PublicPayment.AuthorizedPersonITCode =
             data[0].AuthorizedPersonITCode;
+            this.PublicPayment.TrusteesEmail=data[0].TrusteesEmail;
           console.log("!22222222222222");
           console.log(this.IsDisable);
           console.log(this.PublicPayment);
@@ -890,9 +953,48 @@ export default {
                 TaxRate: element.TaxRate, //税率
                 TaxCode: element.TaxCode, //税码
                 CodeOfFixedAssets: element.CodeOfFixedAssets, //固定资产编码
-                Amount: element.Amount //固定资产编码
+                Amount: element.Amount //数量
               });
             });
+          }
+          //统计税票子表
+          if (this.TaxReceiptList.length > 0) {
+            var nameContainer = {}; // 针对键name进行归类的容器
+            var selectNew = []; //新数组
+
+            this.TaxReceiptList.forEach(item => {
+              selectNew.push({
+                name: item.CodeOfFixedAssets,
+                value: item.InvoiceValue
+              });
+            });
+            selectNew.forEach(item => {
+              nameContainer[item.name] = nameContainer[item.name] || [];
+              nameContainer[item.name].push(item);
+            });
+            console.log("统计税票子表");
+            console.log(nameContainer);
+            var AmountName = Object.keys(nameContainer);
+            console.log(AmountName);
+            var totalMoney = 0;
+            AmountName.forEach(nameItem => {
+              var count = 0;
+              nameContainer[nameItem].forEach(item => {
+                count += Number(item.value); // 遍历每种水果中包含的条目计算总数
+                totalMoney += Number(item.value);
+              });
+              this.total.push({
+                name:
+                  this.PublicPayment.ExpenseCategory +
+                  "（" +
+                  this.PublicPayment.CostAccount +
+                  "）",
+                code: nameItem,
+                count: nameContainer[nameItem].length,
+                total: count
+              });
+            });
+            this.totalMoney = totalMoney;
           }
           console.log("解析费用分摊");
           var subExpenseItems =
@@ -934,6 +1036,8 @@ export default {
               });
             });
           }
+
+          this.getCompanyName(this.PublicPayment.CompanyCode);
           this.Loadhistory();
           this.changeMoney();
         } else {

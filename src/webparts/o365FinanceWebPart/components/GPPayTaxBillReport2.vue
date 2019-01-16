@@ -282,7 +282,7 @@ export default {
               BankSubject: "", //银行科目,
               TXT:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本
-              ScopeOfService: "", //业务范围
+              ScopeOfService: d.BussinessScope, //业务范围
               InvoiceValue: Number(total), //金额
               TXT1:
                 d.Trustees + "-" + d.TrusteesEmail + "报" + d.ExpenseCategory, //文本

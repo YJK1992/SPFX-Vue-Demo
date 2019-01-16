@@ -68,7 +68,7 @@
       <el-table-column width="200" prop="Currency" label="币种"></el-table-column>
       <el-table-column width="200" prop="Rate" label="汇率"></el-table-column>
       <el-table-column width="200" prop="ConvertMoney" label="转换金额"></el-table-column>
-      <el-table-column width="200" prop label="附件"></el-table-column>
+      <!-- <el-table-column width="200" prop label="附件"></el-table-column> -->
       <el-table-column width="200" prop="FinanceITCode" label="最后签批人"></el-table-column>
       <el-table-column width="200" prop="Modified" label="最后签批时间"></el-table-column>
       <el-table-column width="200" prop="Status" label="状态"></el-table-column>
@@ -86,8 +86,9 @@
 </template>
 
 <script>
-// import $ from "jquery";
-// import common from "../js/common.js";
+import $ from "jquery";
+import common from "../js/common.js";
+import efn from "../js/json2excel.js";
 export default {
   data() {
     return {
@@ -133,10 +134,53 @@ export default {
       CostAccount: "",
       CompanyCodeArr: [], //公司代码
       CostCenterArr: [], //成本中心
-      TableData: [] //主表数据
+      TableData: [], //主表数据
+      excelColumns: [
+        "报销单号",
+        "费用日期",
+        "费用科目",
+        "成本中心",
+        "数量",
+        "单位金额",
+        "总金额",
+        "币种",
+        "汇率",
+        "转换金额",
+        // "附件",
+        "最后签批人",
+        "最后签批时间",
+        "状态",
+        "公司代码",
+        "员工名",
+        "员工ITCode",
+        "出发日期",
+        "抵达日期",
+        "目的地",
+        "入住日期",
+        "离店日期",
+        "出差天数"
+      ] //excel字段名
     };
   },
   methods: {
+    onExcel: function() {
+      var temp = [];
+      var tempColumn = [];
+      for (var item in this.TableData[0]) {
+        console.log(item);
+        tempColumn.push(item);
+      }
+      temp = this.TableData;
+      var data = temp.map(v => tempColumn.map(k => v[k]));
+      var excelInfo = {
+        excelColumns: this.excelColumns,
+        excelData: data,
+        fileName: "PTP1",
+        fileType: "xls",
+        sheetName: "PTP1"
+      };
+      efn.toExcel(excelInfo);
+    },
     clearCondition() {
       this.Condition = {};
       this.CostAccount = "";
@@ -166,7 +210,7 @@ export default {
         }
       }
       console.log(condition);
-      this.loadMainList(condition);
+      this.getMainList(condition);
     },
     getMainList(condition) {
       var parm = {
@@ -202,7 +246,7 @@ export default {
                     Currency: sub.Currency,
                     Rate: sub.Rate,
                     ConvertMoney: sub.ConvertMoney,
-                    File: "",
+                    // File: "",
                     FinanceITCode: d.FinanceITCode,
                     Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
                     Status: d.Status,
@@ -212,9 +256,9 @@ export default {
                     StartDate: sub.StartDate,
                     ArriveDate: sub.ArriveDate,
                     Destination: sub.Destination,
-                    Days: d.Days,
                     CheckInDate: sub.CheckInDate,
-                    LeaveDate: sub.LeaveDate
+                    LeaveDate: sub.LeaveDate,
+                    Days: d.Days
                   });
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
@@ -308,7 +352,7 @@ export default {
     }
   },
   mounted() {
-    this. getCompanyCodeAndCostCenter();
+    this.getCompanyCodeAndCostCenter();
   }
 };
 </script>
