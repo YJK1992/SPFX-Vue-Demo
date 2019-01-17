@@ -287,7 +287,7 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;font-size: 20px; color: #405ca1; text-align: center;"
               colspan="4"
-            >{{this.CompanyName}}</td>
+            >{{this.CompanyName+'（'+this.PublicPayment.CompanyCode+'）'}}</td>
           </tr>
           <tr>
             <td
@@ -319,7 +319,9 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
             >{{this.PublicPayment.ApplicationNumber}}</td>
-            <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Trustees+'-'+ this.PublicPayment.TrusteesEmail}}</td>
+            <td
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+            >{{this.PublicPayment.Trustees+'-'+ this.PublicPayment.TrusteesEmail}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.PhoneNumber}}</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;">{{this.PublicPayment.Created}}</td>
           </tr>
@@ -327,7 +329,7 @@
             <td
               colspan="4"
               style=" border: 1px solid #cfcfcf; padding: 5px;"
-            >公司名称：{{this.CompanyName}}</td>
+            >公司名称：{{this.CompanyName+'（'+this.PublicPayment.CompanyCode+'）'}}</td>
           </tr>
           <tr>
             <td
@@ -347,7 +349,7 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >借款单号：{{this.PublicPayment.LoanNumber}}</td>
+            >金额（大写）：{{this.PublicPayment. CapitalizationAmount}}</td>
           </tr>
           <tr>
             <td
@@ -357,7 +359,7 @@
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
-            >金额（大写）:{{this.PublicPayment. CapitalizationAmount}}</td>
+            >借款单号：{{this.PublicPayment.LoanNumber}}</td>
             <!-- <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
               colspan="2"
@@ -376,7 +378,7 @@
           <!-- <tr>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">借款金额：</td>
             <td style=" border: 1px solid #cfcfcf; padding: 5px;" colspan="2">差额：</td>
-          </tr> -->
+          </tr>-->
           <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
@@ -450,7 +452,7 @@
               style=" border: 1px solid #cfcfcf; padding: 5px; font-weight: bold;  font-size: 14px;background-color: #cfcfcf;"
               colspan="4"
             >Approver/Approved Time: {{this.Approver}}</td>
-          </tr> -->
+          </tr>-->
           <!-- <tr>
             <td
               style=" border: 1px solid #cfcfcf; padding: 5px;"
@@ -628,7 +630,7 @@ export default {
         SettlingTime: "",
         AuthorizedPersonITCode: "",
         PhoneNumber: "",
-        TrusteesEmail:''
+        TrusteesEmail: ""
       }, //主表
       AccountPaid: "", //合同列表已支付金额
       UnPaid: "", //合同列表未支付金额
@@ -669,6 +671,7 @@ export default {
         baseUrl: this.hostUrl,
         condition: "?$filter=CompanyCode eq '" + code + "'&$top=1"
       }; //Completed 已完成
+      console.log(parm.condition);
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
         .done(req => {
@@ -873,7 +876,10 @@ export default {
             (this.PublicPayment.AuthorizedPersonITCode =
               data[0].AuthorizedPersonITCode),
             (this.PublicPayment.PhoneNumber = data[0].PhoneNumber),
-            (this.PublicPayment.SettlingTime=data[0].SettlingTime ==null?"":data[0].SettlingTime.split("T")[0]),
+            (this.PublicPayment.SettlingTime =
+              data[0].SettlingTime == null
+                ? ""
+                : data[0].SettlingTime.split("T")[0]),
             (this.PublicPayment.ReimbursementType = data[0].ReimbursementType), //报销类型
             (this.PublicPayment.SettlementType = data[0].SettlementType), //结算方式
             (this.PublicPayment.Trustees = data[0].Trustees), //经办人
@@ -932,7 +938,7 @@ export default {
           );
           this.PublicPayment.AuthorizedPersonITCode =
             data[0].AuthorizedPersonITCode;
-            this.PublicPayment.TrusteesEmail=data[0].TrusteesEmail;
+          this.PublicPayment.TrusteesEmail = data[0].TrusteesEmail;
           console.log("!22222222222222");
           console.log(this.IsDisable);
           console.log(this.PublicPayment);

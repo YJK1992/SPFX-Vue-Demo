@@ -31,9 +31,9 @@
           ></el-option>
         </el-select>
       </el-form-item>
-      <!-- <el-form-item label="物控人员：">
-        <el-input v-model="Condition.MaterialControl" placeholder="审批人" v-show="false"></el-input>
-      </el-form-item>-->
+      <el-form-item label="物控人员：">
+        <el-input v-model="Condition.OTCMember" placeholder="物控人员"></el-input>
+      </el-form-item>
       <el-form-item label="申请单号：">
         <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
@@ -77,12 +77,12 @@
       <el-table-column prop="Price" label="单价"></el-table-column>
       <el-table-column prop="Total" label="总金额"></el-table-column>
       <el-table-column prop="FixedAssetsCode" label="固定资产编码"></el-table-column>
-      <el-table-column fixed="right" prop="RequestType" label="费用类别"></el-table-column>
-      <!-- <el-table-column fixed="right" label="操作" width="100">
+      <el-table-column fixed="right" prop="CostItems" label="费用条目"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-      </el-table-column>-->
+      </el-table-column>
     </el-table>
   </div>
 </template>
@@ -123,6 +123,7 @@ export default {
       excelColumns: [
         "申请单号",
         "公司代码",
+        "状态",
         "申请人",
         "成本中心",
         "申请类别",
@@ -142,7 +143,7 @@ export default {
         ApplicationDate: "", //申请日期
         ApplicationType: "", //申请类型
         Status: "", //状态
-        // MaterialControl: "", //物控人员
+        OTCMember: "", //物控人员
         Title: "", //申请单号
         CompanyCode: ""
       },
@@ -238,6 +239,7 @@ export default {
               this.TableData.push({
                 Title: MainItem.Title,
                 companyCode: MainItem.CompanyCode,
+                Status:MainItem.Status,
                 Applicant: MainItem.Applicant,
                 CostCenter: MainItem.CostCenter,
                 ApplicationType: MainItem.ApplicationType,
@@ -248,13 +250,14 @@ export default {
                 Price: d.Price,
                 Total:Number(d.Total),
                 FixedAssetsCode: d.FixedAssetsCode,
-                RequestType: d.FixedAssetsCode
+                CostItems: d.CostItems
               });
             });
           } else {
             this.TableData.push({
               Title: MainItem.Title,
               companyCode: MainItem.CompanyCode,
+              Status:MainItem.Status,
               Applicant: MainItem.Applicant,
               CostCenter: MainItem.CostCenter,
               ApplicationType: MainItem.ApplicationType,
@@ -265,7 +268,7 @@ export default {
               Price: "",
               Total: "",
               FixedAssetsCode: "",
-              RequestType: ""
+              CostItems: ""
             });
           }
         })

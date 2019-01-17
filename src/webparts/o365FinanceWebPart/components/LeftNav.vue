@@ -51,11 +51,11 @@
       <el-submenu index="4">
         <template slot="title">
           <i class="el-icon-location"></i>
-          <span>员工报销 - 开发中</span>
+          <span>员工报销</span>
         </template>
         <el-menu-item-group>
           <el-menu-item index="/createptptask">员工报销申请</el-menu-item>
-          <el-menu-item index="/viewptptasks">我的代办</el-menu-item>
+          <el-menu-item index="/viewptptasks">我的待办</el-menu-item>
           <el-menu-item index="/myptpdraft">我的草稿</el-menu-item>
           <el-menu-item index="/ptptemp1">员工报销报表1</el-menu-item>
           <el-menu-item index="/ptptemp2">员工报销报表2</el-menu-item>

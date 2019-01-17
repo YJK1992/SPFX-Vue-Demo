@@ -19,19 +19,9 @@
       </el-form-item>
 
       <el-form-item label="费用条目：">
-        <el-select v-model="CostAccount" placeholder="请选择"></el-select>
+        <el-input v-model="CostAccount" placeholder="请选择"></el-input>
       </el-form-item>
 
-      <el-form-item label="状态：">
-        <el-select v-model="Condition.Status" placeholder="请选择">
-          <el-option
-            v-for="item in Status"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          ></el-option>
-        </el-select>
-      </el-form-item>
       <el-form-item label="公司代码：">
         <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
@@ -81,6 +71,11 @@
       <el-table-column width="200" prop="CheckInDate" label="入住日期"></el-table-column>
       <el-table-column width="200" prop="LeaveDate" label="离店日期"></el-table-column>
       <el-table-column width="200" prop="Days" label="出差天数"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="100">
+        <template slot-scope="scope">
+          <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
+        </template>
+      </el-table-column>
     </el-table>
   </div>
 </template>
@@ -126,7 +121,6 @@ export default {
         Title: "",
         Applicant: "",
         ApplicantEmail: "",
-        Status: "",
         CompanyCode: "",
         CostCenter: "",
         Date: ""
@@ -149,7 +143,6 @@ export default {
         // "附件",
         "最后签批人",
         "最后签批时间",
-        "状态",
         "公司代码",
         "员工名",
         "员工ITCode",
@@ -163,6 +156,15 @@ export default {
     };
   },
   methods: {
+    viewItem: function(index) {
+      var applicantNumber = this.TableData[index].Title;
+      this.$router.push({
+        path: "/detailptp",
+        query: {
+          ApplicantNumber: applicantNumber
+        }
+      });
+    },
     onExcel: function() {
       var temp = [];
       var tempColumn = [];
@@ -232,12 +234,14 @@ export default {
                 ? null
                 : JSON.parse(d.DetailInvoiceJSON);
             console.log(subItems);
+            console.log("this.CostAccount:" + this.CostAccount == "");
             if (subItems != null) {
+              console.log("subItems" + subItems != null);
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
                     Title: d.Title,
-                    ExpenseDate: sub.ExpenseDate,
+                    ExpenseDate: d.Created.split("T")[0],
                     CostAccount: sub.CostAccount,
                     CostCenter: d.CostCenter,
                     Count: sub.Count,
@@ -249,7 +253,6 @@ export default {
                     // File: "",
                     FinanceITCode: d.FinanceITCode,
                     Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
-                    Status: d.Status,
                     CompanyCode: d.CompanyCode,
                     Applicant: d.Applicant,
                     ApplicantEmail: d.ApplicantEmail,
@@ -264,7 +267,7 @@ export default {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
                       Title: d.Title,
-                      ExpenseDate: sub.ExpenseDate,
+                      ExpenseDate: d.Created.split("T")[0],
                       CostAccount: sub.CostAccount,
                       CostCenter: d.CostCenter,
                       Count: sub.Count,
@@ -279,7 +282,6 @@ export default {
                         0,
                         d.Modified.indexOf("T")
                       ),
-                      Status: d.Status,
                       CompanyCode: d.CompanyCode,
                       Applicant: d.Applicant,
                       ApplicantEmail: d.ApplicantEmail,
@@ -292,6 +294,31 @@ export default {
                     });
                   }
                 }
+              });
+            } else {
+              this.TableData.push({
+                Title: d.Title,
+                ExpenseDate: d.Created.split("T")[0],
+                CostAccount: sub.CostAccount,
+                CostCenter: d.CostCenter,
+                Count: "",
+                Price: "",
+                Total: "",
+                Currency: "",
+                Rate: "",
+                ConvertMoney: "",
+                File: "",
+                FinanceITCode: d.FinanceITCode,
+                Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
+                CompanyCode: d.CompanyCode,
+                Applicant: d.Applicant,
+                ApplicantEmail: d.ApplicantEmail,
+                StartDate: "",
+                ArriveDate: "",
+                Destination: "",
+                Days: d.Days,
+                CheckInDate: "",
+                LeaveDate: ""
               });
             }
           });

@@ -295,7 +295,7 @@ export default {
                   Trustees: d.Trustees + "-" + d.TrusteesEmail, //经办人
                   EmployeeCode: d.EmployeeCode, //人员编号
                   TheHighestPersonNumber: "", //最高审批人编号
-                  Money: element.Money, //剩余的余额
+                  Money: Number(element.Money), //剩余的余额
                   ProjectNumber: d.ProjectNumber, //项目编号
                   ProjectName: d.ProjectName, //项目名称
                   CostCenterNumber: d.CostCenter, //成本中心编号
@@ -348,7 +348,7 @@ export default {
                 Trustees: d.Trustees + "-" + d.TrusteesEmail, //经办人
                 EmployeeCode: d.EmployeeCode, //人员编号
                 TheHighestPersonNumber: "", //最高审批人编号
-                Money:Number(d.InvoiceValue), //剩余的余额
+                Money: Number(d.InvoiceValue), //剩余的余额
                 ProjectNumber: d.ProjectNumber, //项目编号
                 ProjectName: d.ProjectName, //项目名称
                 CostCenterNumber: d.CostCenter, //成本中心编号

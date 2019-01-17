@@ -26,6 +26,7 @@
           <el-select
             filterable
             v-model="StaffReimbursement.CostCenter"
+            @change="costCenterChange"
             placeholder="请选择"
             size="medium"
           >
@@ -294,7 +295,8 @@ export default {
         CompanyCode: "", //公司代码
         Remark: "", //备注
         SpecialApprover: "", //特殊审批人
-           BussinessScope: "" //业务范围
+        BussinessScope: "", //业务范围
+        ProfitCenter: "" //利润中心
       },
       //子表数据
       SubItems: [],
@@ -307,7 +309,7 @@ export default {
         Currency: "", //币种
         Rate: "", //汇率
         ConvertMoney: "", //转换金额
-        ConvertCurrency: "", //转换后币种
+        ConvertCurrency: "RMB", //转换后币种
         IsTax: false, //是否用税
         TaxCode: "", //税码
         TaxRate: "", //税率
@@ -370,12 +372,55 @@ export default {
     };
   },
   methods: {
+    costCenterChange: function() {
+      this.companyCodeArr = [];
+      var parm = {
+        type: "get",
+        action: "ListItems",
+        list: this.userListName,
+        condition:
+          "?$filter=CostCenter eq '" + this.StaffReimbursement.CostCenter + "'",
+        baseUrl: this.hostUrl
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            this.StaffReimbursement.CompanyCode = data[0].CompanyCode;
+            var companyCode = [];
+            data.forEach(d => {
+              companyCode.push(d.CompanyCode);
+            });
+            console.log("未去重公司代码");
+            console.log(companyCode);
+            var companyCodeUnique = companyCode.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            companyCodeUnique.forEach(element => {
+              this.companyCodeArr.push({
+                CompanyCode: element
+              });
+            });
+          } else {
+            this.$message(common.message("error", "未能找到对应的公司代码"));
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司代码失败"));
+        });
+    },
     ChangeTaxRate() {
       this.taxCodeOptions.forEach(item => {
         if (item.label == this.SubItem.TaxCode) {
           this.SubItem.TaxRate = item.rate;
         }
       });
+      this.ChangeConvertMoney();
     },
     //根据汇率和总金额 结算转换后的金额
     ChangeConvertMoney() {
@@ -385,8 +430,9 @@ export default {
 
         //计算原币税额
         this.SubItem.OriginalTaxMoney =
-          (Number(this.SubItem.Total) / (1 + Number(this.SubItem.Rate))) *
-          Number(this.SubItem.Rate);
+          (Number(this.SubItem.Total) /
+            (1 + Number(this.SubItem.TaxRate.split("%")[0]) / 100)) *
+          (Number(this.SubItem.TaxRate.split("%")[0]) / 100);
       }
     },
     //改变数量和单位金额的时候变更总金额
@@ -395,6 +441,7 @@ export default {
         this.SubItem.Total = (
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
         ).toString();
+        this.ChangeConvertMoney();
       }
     },
     uploadAttFileToItem: function(attUrl) {
@@ -544,7 +591,7 @@ export default {
         Currency: "", //币种
         Rate: "", //汇率
         ConvertMoney: "", //转换金额
-        ConvertCurrency: "", //转换后币种
+        ConvertCurrency: "RMB", //转换后币种
         IsTax: false, //是否用税
         TaxCode: "", //税码
         TaxRate: "", //税率
@@ -600,7 +647,7 @@ export default {
           Currency: "", //币种
           Rate: "", //汇率
           ConvertMoney: "", //转换金额
-          ConvertCurrency: "", //转换后币种
+          ConvertCurrency: "RMB", //转换后币种
           IsTax: false, //是否用税
           TaxCode: "", //税码
           TaxRate: "", //税率
@@ -900,16 +947,11 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-              var selectedCostCenter = "";
-              data.forEach(d => {
-                selectedCostCenter = d.CostCenter;
-                this.CompanyCodeArr.push({
-                  CompanyCode: d.CompanyCode
-                });
-              });
-              //默认成本中心
-              this.StaffReimbursement.CostCenter = selectedCostCenter;
-               this.StaffReimbursement.BussinessScope = data[0].BusinessScope;
+              //默认业务范围
+              this.StaffReimbursement.CostCenter = data[0].CostCenter;
+              this.costCenterChange();
+              this.StaffReimbursement.BussinessScope = data[0].BusinessScope;
+              this.StaffReimbursement.ProfitCenter = data[0].ProfitCenter;
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;

@@ -642,6 +642,7 @@ export default {
           this.SubItem.TaxRate = item.rate;
         }
       });
+        this.ChangeConvertMoney();
     },
     //根据汇率和总金额 结算转换后的金额
     ChangeConvertMoney() {
@@ -649,10 +650,11 @@ export default {
         this.SubItem.ConvertMoney =
           Number(this.SubItem.Total) * Number(this.SubItem.Rate);
 
-        //计算原币税额
+      //计算原币税额
         this.SubItem.OriginalTaxMoney =
-          (Number(this.SubItem.Total) / (1 + Number(this.SubItem.Rate))) *
-          Number(this.SubItem.Rate);
+          (Number(this.SubItem.Total) /
+            (1 + Number(this.SubItem.TaxRate.split("%")[0]) / 100)) *
+          (Number(this.SubItem.TaxRate.split("%")[0]) / 100);
       }
     },
     //改变数量和单位金额的时候变更总金额
@@ -662,6 +664,7 @@ export default {
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
         ).toString();
       }
+       this.ChangeConvertMoney();
     },
     uploadAttFileToItem: function(attUrl) {
       var parms = [];

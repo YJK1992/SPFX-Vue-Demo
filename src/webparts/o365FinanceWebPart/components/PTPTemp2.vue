@@ -61,8 +61,8 @@
       <el-table-column width="200" prop='CostAccount' label="科目号"></el-table-column>
       <el-table-column width="200" prop='Total' label="金额"></el-table-column>
       <el-table-column width="200" prop='CostCenter' label="成本中心"></el-table-column>
-      <el-table-column width="200" prop='lirun' label="利润中心"></el-table-column>
-      <el-table-column width="200" prop='yewu' label="业务范围"></el-table-column>
+      <el-table-column width="200" prop='ProfitCenter' label="利润中心"></el-table-column>
+      <el-table-column width="200" prop='BussinessScope' label="业务范围"></el-table-column>
       <el-table-column width="200" prop='TXT' label="文本"></el-table-column>
       <el-table-column width="200" prop='Title' label="报销单号"></el-table-column>
       <el-table-column width="200" prop='orderNo' label="订单号"></el-table-column>
@@ -185,8 +185,8 @@ export default {
                     CostAccount: sub.CostAccount,
                     Money: sub.Money,
                     CostCenter: data[0].CostCenter,
-                    lirun: "",
-                    yewu: "",
+                    ProfitCenter: data[0].ProfitCenter,
+                    BussinessScope: data[0].BussinessScope,
                     TXT:
                       d.Applicant +
                       "报销" +
@@ -202,8 +202,8 @@ export default {
                       CostAccount: sub.CostAccount,
                       Money: sub.Money,
                       CostCenter: data[0].CostCenter,
-                      lirun: "",
-                      yewu: "",
+                      ProfitCenter: data[0].ProfitCenter,
+                    BussinessScope: data[0].BussinessScope,
                       TXT:
                         d.Applicant +
                         "报销" +

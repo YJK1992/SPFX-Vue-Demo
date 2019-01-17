@@ -27,7 +27,7 @@
       <el-form-item label="结算日期段：">
         <el-date-picker
           value-format="yyyy-MM-dd"
-          v-model="Condition.SettlementDate"
+          v-model="Condition.SettlingTime"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -142,14 +142,14 @@ export default {
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件
-          if (item == "ApplicantDate") {
+          if (item == "SettlingTime") {
             condition +=
-              " and Created gt datetime" +
+              " and SettlingTime gt datetime" +
               "'" +
               this.Condition[item][0] +
               "T00:00:00Z" +
               "'" +
-              " and Created lt datetime" +
+              " and SettlingTime lt datetime" +
               "'" +
               this.Condition[item][1] +
               "T00:00:00Z" +
