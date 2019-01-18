@@ -26,7 +26,7 @@
           <el-option
             v-for="item in Status"
             :key="item.value"
-            :label="item.value"
+            :label="item.label"
             :value="item.value"
           ></el-option>
         </el-select>
@@ -67,6 +67,7 @@
     <el-table :data="TableData" style="width: 100%" max-height="500">
       <el-table-column fixed prop="Title" label="申请单号" width="300"></el-table-column>
       <el-table-column prop="companyCode" label="公司代码"></el-table-column>
+      <el-table-column prop="Status" label="状态"></el-table-column>
       <el-table-column prop="Applicant" label="申请人"></el-table-column>
       <el-table-column prop="CostCenter" label="成本中心"></el-table-column>
       <el-table-column prop="ApplicationType" label="申请类别"></el-table-column>
@@ -77,7 +78,7 @@
       <el-table-column prop="Price" label="单价"></el-table-column>
       <el-table-column prop="Total" label="总金额"></el-table-column>
       <el-table-column prop="FixedAssetsCode" label="固定资产编码"></el-table-column>
-      <el-table-column fixed="right" prop="CostItems" label="费用条目"></el-table-column>
+      <el-table-column prop="CostItems" label="费用条目"></el-table-column>
       <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
@@ -105,21 +106,38 @@ export default {
       CompanyCodeArr: [], //公司代码
       Status: [
         {
-          value: "Draft"
+          value: "Draft",
+          label: "草稿"
         },
         {
-          value: "Submitted"
+          value: "Submitted",
+          label: "审批中"
         },
         {
-          value: "Changed"
+          value: "Changed",
+          label: "被驳回并提交"
         },
         {
-          value: "Dumped"
+          value: "Dumped",
+          label: "终止"
         },
         {
-          value: "Approved"
+          value: "Rejected",
+          label: "已拒绝"
+        },
+        {
+          value: "Approved",
+          label: "审批完成"
         }
       ],
+      DisplayName: {
+        Draft: "草稿",
+        Submitted: "审批中",
+        Changed: "被驳回并提交",
+        Dumped: "终止",
+        Approved: "审批完成",
+        Rejected: "已拒绝"
+      },
       excelColumns: [
         "申请单号",
         "公司代码",
@@ -134,7 +152,7 @@ export default {
         "单价",
         "总金额",
         "固定资产编码",
-        "费用类别"
+        "费用条目"
       ],
       //filterVal: [],
       //筛选条件
@@ -239,7 +257,7 @@ export default {
               this.TableData.push({
                 Title: MainItem.Title,
                 companyCode: MainItem.CompanyCode,
-                Status:MainItem.Status,
+                Status: this.DisplayName[MainItem.Status],
                 Applicant: MainItem.Applicant,
                 CostCenter: MainItem.CostCenter,
                 ApplicationType: MainItem.ApplicationType,
@@ -248,7 +266,7 @@ export default {
                 Materiel: d.Materiel,
                 Amount: d.Amount,
                 Price: d.Price,
-                Total:Number(d.Total),
+                Total: Number(d.Total),
                 FixedAssetsCode: d.FixedAssetsCode,
                 CostItems: d.CostItems
               });
@@ -257,7 +275,7 @@ export default {
             this.TableData.push({
               Title: MainItem.Title,
               companyCode: MainItem.CompanyCode,
-              Status:MainItem.Status,
+              Status: this.DisplayName[MainItem.Status],
               Applicant: MainItem.Applicant,
               CostCenter: MainItem.CostCenter,
               ApplicationType: MainItem.ApplicationType,
@@ -355,7 +373,7 @@ export default {
       for (var item in this.TableData[0]) {
         tempColumn.push(item);
       }
-      temp=this.TableData
+      temp = this.TableData;
       var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
@@ -365,6 +383,15 @@ export default {
         sheetName: "固资申请"
       };
       efn.toExcel(excelInfo);
+    },
+    viewItem: function(index) {
+      var applicantNumber = this.TableData[index].Title;
+      this.$router.push({
+        path: "/vieweccdetails",
+        query: {
+          ApplicantNumber: applicantNumber
+        }
+      });
     }
   },
   mounted() {

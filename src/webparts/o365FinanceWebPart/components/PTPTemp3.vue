@@ -154,9 +154,9 @@ export default {
                 this.TableData.push({
                   AccountNumber: d.AccountNumber,
                   Applicant: d.Applicant,
-                  Money: sub.Money,
-                  CostNumber: "",
-                  LegalPerson: "",
+                  Money: sub.ConvertMoney,
+                  CostNumber: d.Title,
+                  LegalPerson: d.CompanyCode,
                   Modified: d.Modified
                 });
               });

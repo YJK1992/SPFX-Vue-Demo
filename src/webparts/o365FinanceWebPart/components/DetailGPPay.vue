@@ -986,7 +986,7 @@ export default {
             AmountName.forEach(nameItem => {
               var count = 0;
               nameContainer[nameItem].forEach(item => {
-                count += Number(item.value); // 遍历每种水果中包含的条目计算总数
+                count += Number(item.value); 
                 totalMoney += Number(item.value);
               });
               this.total.push({

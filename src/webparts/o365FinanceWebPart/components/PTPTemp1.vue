@@ -17,7 +17,16 @@
       <el-form-item label="经办人ID：">
         <el-input v-model="Condition.ApplicantEmail" placeholder="经办人ID"></el-input>
       </el-form-item>
-
+      <el-form-item label="状态：">
+        <el-select v-model="Condition.Status" placeholder="请选择">
+          <el-option
+            v-for="item in Status"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
       <el-form-item label="费用条目：">
         <el-input v-model="CostAccount" placeholder="请选择"></el-input>
       </el-form-item>
@@ -120,10 +129,19 @@ export default {
       Condition: {
         Title: "",
         Applicant: "",
+        Status: "",
         ApplicantEmail: "",
         CompanyCode: "",
         CostCenter: "",
         Date: ""
+      },
+      DisplayName: {
+        Draft: "草稿",
+        Submitted: "审批中",
+        Changed: "被驳回并提交",
+        Dumped: "终止",
+        Approved: "审批完成",
+        Rejected: "已拒绝"
       },
       CostAccount: "",
       CompanyCodeArr: [], //公司代码
@@ -143,6 +161,7 @@ export default {
         // "附件",
         "最后签批人",
         "最后签批时间",
+        "状态",
         "公司代码",
         "员工名",
         "员工ITCode",
@@ -191,23 +210,45 @@ export default {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "?$filter=Status eq 'Approved' ";
+      var condition = "";
+      var conditionCount = 0;
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          if (item == "Date") {
-            condition +=
-              " and Created gt datetime" +
-              "'" +
-              this.Condition[item][0] +
-              "T00:00:00Z" +
-              "'" +
-              " and Created lt datetime" +
-              "'" +
-              this.Condition[item][1] +
-              "T00:00:00Z" +
-              "'";
+          conditionCount++;
+          if (conditionCount == 1) {
+            if (item == "Date") {
+              condition +=
+                "?$filter=Created gt datetime" +
+                "'" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
+                "'" +
+                " and Created lt datetime" +
+                "'" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
+                "'";
+            } else {
+              condition +=
+                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
+            }
           } else {
-            condition += " and " + item + " eq '" + this.Condition[item] + "'";
+            if (item == "Date") {
+              condition +=
+                " and Created gt datetime" +
+                "'" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
+                "'" +
+                " and Created lt datetime" +
+                "'" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
+                "'";
+            } else {
+              condition +=
+                " and " + item + " eq '" + this.Condition[item] + "'";
+            }
           }
         }
       }
@@ -241,7 +282,7 @@ export default {
                 if (this.CostAccount == "") {
                   this.TableData.push({
                     Title: d.Title,
-                    ExpenseDate: d.Created.split("T")[0],
+                    ExpenseDate: sub.ExpenseDate,
                     CostAccount: sub.CostAccount,
                     CostCenter: d.CostCenter,
                     Count: sub.Count,
@@ -253,6 +294,7 @@ export default {
                     // File: "",
                     FinanceITCode: d.FinanceITCode,
                     Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
+                    Status: this.DisplayName[d.Status],
                     CompanyCode: d.CompanyCode,
                     Applicant: d.Applicant,
                     ApplicantEmail: d.ApplicantEmail,
@@ -267,7 +309,7 @@ export default {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
                       Title: d.Title,
-                      ExpenseDate: d.Created.split("T")[0],
+                      ExpenseDate: sub.ExpenseDate,
                       CostAccount: sub.CostAccount,
                       CostCenter: d.CostCenter,
                       Count: sub.Count,
@@ -282,6 +324,7 @@ export default {
                         0,
                         d.Modified.indexOf("T")
                       ),
+                      Status: this.DisplayName[d.Status],
                       CompanyCode: d.CompanyCode,
                       Applicant: d.Applicant,
                       ApplicantEmail: d.ApplicantEmail,
@@ -298,8 +341,8 @@ export default {
             } else {
               this.TableData.push({
                 Title: d.Title,
-                ExpenseDate: d.Created.split("T")[0],
-                CostAccount: sub.CostAccount,
+                ExpenseDate: "",
+                CostAccount: "",
                 CostCenter: d.CostCenter,
                 Count: "",
                 Price: "",
@@ -310,6 +353,7 @@ export default {
                 File: "",
                 FinanceITCode: d.FinanceITCode,
                 Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
+                Status: this.DisplayName[d.Status],
                 CompanyCode: d.CompanyCode,
                 Applicant: d.Applicant,
                 ApplicantEmail: d.ApplicantEmail,

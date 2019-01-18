@@ -118,6 +118,7 @@
     <el-table border :data="SubItems" style="width: 100%" max-height="600">
       <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
       <el-table-column prop="CostAccount" label="费用科目"></el-table-column>
+      <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column prop="Count" label="数量"></el-table-column>
       <el-table-column prop="Price" label="单位金额"></el-table-column>
       <el-table-column prop="Total" label="总金额"></el-table-column>
@@ -125,11 +126,9 @@
       <el-table-column prop="Rate" label="汇率"></el-table-column>
       <el-table-column prop="ConvertMoney" label="转换金额"></el-table-column>
       <el-table-column prop="ConvertCurrency" label="转换后的币种"></el-table-column>
-      <el-table-column prop="IsTax" label="是否启用税"></el-table-column>
       <el-table-column prop="TaxCode" label="税码"></el-table-column>
       <el-table-column prop="TaxRate" label="税率"></el-table-column>
       <el-table-column prop="OriginalTaxMoney" label="原币税额"></el-table-column>
-      <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column prop="StartDate" label="出发日期"></el-table-column>
       <el-table-column prop="ArriveDate" label="抵达日期"></el-table-column>
       <el-table-column prop="Destination" label="目的地"></el-table-column>
@@ -196,7 +195,7 @@
         <el-form-item label="费用类别：" :label-width="formLabelWidth">
           <el-select
             filterable
-            @change="SubItem.CostAccount=''"
+            @change="ChangeCostAccount()"
             v-model="SubItem.ExpenseCategory"
             placeholder="请选择"
           >
@@ -220,6 +219,14 @@
               ></el-option>
             </template>
           </el-select>
+        </el-form-item>
+        <el-form-item label="费用日期：" :label-width="formLabelWidth">
+          <el-date-picker
+            value-format="yyyy-MM-dd"
+            v-model="SubItem.ExpenseDate"
+            type="date"
+            placeholder="选择日期"
+          ></el-date-picker>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth">
           <el-input @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
@@ -249,9 +256,6 @@
         <el-form-item label="转换后币种：" :label-width="formLabelWidth">
           <el-input v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
         </el-form-item>
-        <el-form-item label="是否启用税：" :label-width="formLabelWidth">
-          <el-checkbox v-model="SubItem.IsTax"></el-checkbox>
-        </el-form-item>
         <el-form-item label="税码：" :label-width="formLabelWidth">
           <el-select @change="ChangeTaxRate" v-model="SubItem.TaxCode" filterable placeholder="请选择">
             <el-option
@@ -270,6 +274,7 @@
         </el-form-item>
         <el-form-item label="出发/抵达日期：" :label-width="formLabelWidth">
           <el-date-picker
+            :disabled="IsTravelExpense"
             value-format="yyyy-MM-dd"
             type="daterange"
             range-separator="到"
@@ -279,10 +284,11 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="目的地：" :label-width="formLabelWidth">
-          <el-input placeholder="目的地"></el-input>
+          <el-input :disabled="IsTravelExpense" placeholder="目的地"></el-input>
         </el-form-item>
         <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
           <el-date-picker
+            :disabled="IsHotelExpense"
             value-format="yyyy-MM-dd"
             type="daterange"
             v-model="CheckInLeaveData"
@@ -292,7 +298,10 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="酒店名称：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Name" placeholder="酒店名称"></el-input>
+          <el-input :disabled="IsHotelExpense" v-model="SubItem.Name" placeholder="酒店名称"></el-input>
+        </el-form-item>
+        <el-form-item label="天数：" :label-width="formLabelWidth">
+          <el-input :disabled="IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
         </el-form-item>
         <el-form-item label="发票号：" :label-width="formLabelWidth">
           <el-input v-model="SubItem.Number" placeholder="发票号"></el-input>
@@ -325,7 +334,7 @@ export default {
       formLabelWidth: "150px",
       StartArriveDate: "",
       CheckInLeaveData: "",
-      expenseCategoryListName: "ExpenseCategory", //费用类别
+      expenseCategoryListName: "PTPExpenseCategory", //费用类别
       costAccountListName: "CostAccount", //费用科目
       currentUserTitle: "", //当前用户名
       currentUserITCode: "", //邮箱@前的code
@@ -347,9 +356,9 @@ export default {
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
         Remark: "", //备注
-        SpecialApprover: "", //特殊审批人
+        SpecialApprover: "" //特殊审批人
       },
-        FinanceITCode:'',
+      FinanceITCode: "",
       //子表数据
       SubItems: [],
       SubItem: {
@@ -362,7 +371,6 @@ export default {
         Rate: "", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "", //转换后币种
-        IsTax: false, //是否用税
         TaxCode: "", //税码
         TaxRate: "", //税率
         OriginalTaxMoney: "", //原币税额
@@ -432,10 +440,27 @@ export default {
       showEditor: true,
       ApprovalHistory: "", //审批历史
       startNoAttr: true,
-      deleteAttName: ""
+      deleteAttName: "",
+      IsTravelExpense: true,
+      IsHotelExpense: true
     };
   },
   methods: {
+    ChangeCostAccount() {
+      this.costAccountOptions = []; //费用科目
+
+      this.expenseCategoryOptions.forEach(item => {
+        if (item.label == this.SubItem.ExpenseCategory) {
+          this.SubItem.CostAccount = item.Codes;
+          this.IsTravelExpense = item.IsTravelExpense;
+          this.IsHotelExpense = item.IsHotelExpense;
+          this.costAccountOptions.push({
+            label: item.Codes,
+            value: item.Codes
+          });
+        }
+      });
+    },
     removeFile: function(file, fileList, index) {
       this.fileList = fileList;
       var i = 0;
@@ -545,8 +570,8 @@ export default {
                 "," +
                 common.getCurrentDate();
             } else if (this.currentStep == "Approver5") {
-              if(type=="Approved"){
-                  mainItemInfo.FinanceITCode=this.FinanceITCode;
+              if (type == "Approved") {
+                mainItemInfo.FinanceITCode = this.FinanceITCode;
               }
               history.approver5 =
                 this.currentUserTitle +
@@ -642,7 +667,7 @@ export default {
           this.SubItem.TaxRate = item.rate;
         }
       });
-        this.ChangeConvertMoney();
+      this.ChangeConvertMoney();
     },
     //根据汇率和总金额 结算转换后的金额
     ChangeConvertMoney() {
@@ -650,7 +675,7 @@ export default {
         this.SubItem.ConvertMoney =
           Number(this.SubItem.Total) * Number(this.SubItem.Rate);
 
-      //计算原币税额
+        //计算原币税额
         this.SubItem.OriginalTaxMoney =
           (Number(this.SubItem.Total) /
             (1 + Number(this.SubItem.TaxRate.split("%")[0]) / 100)) *
@@ -664,7 +689,7 @@ export default {
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
         ).toString();
       }
-       this.ChangeConvertMoney();
+      this.ChangeConvertMoney();
     },
     uploadAttFileToItem: function(attUrl) {
       var parms = [];
@@ -814,7 +839,6 @@ export default {
         Rate: "", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "", //转换后币种
-        IsTax: false, //是否用税
         TaxCode: "", //税码
         TaxRate: "", //税率
         OriginalTaxMoney: "", //原币税额
@@ -868,7 +892,6 @@ export default {
           Rate: "", //汇率
           ConvertMoney: "", //转换金额
           ConvertCurrency: "", //转换后币种
-          IsTax: false, //是否用税
           TaxCode: "", //税码
           TaxRate: "", //税率
           OriginalTaxMoney: "", //原币税额
@@ -1161,7 +1184,7 @@ export default {
               });
               //默认成本中心
               this.StaffReimbursement.CostCenter = selectedCostCenter;
-              this.FinanceITCode=this.LoginName.split("@")[0]
+              this.FinanceITCode = this.LoginName.split("@")[0];
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;
@@ -1242,8 +1265,11 @@ export default {
           if (data.length > 0) {
             data.forEach(item => {
               that.expenseCategoryOptions.push({
-                label: item.Title,
-                value: item.Title
+                label: item.Category,
+                value: item.Category,
+                Codes: item.Codes,
+                IsTravelExpense: item.IsTravelExpense == "Y" ? false : true,
+                IsHotelExpense: item.IsHotelExpense == "Y" ? false : true
               });
             });
           }
@@ -1253,35 +1279,7 @@ export default {
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
     },
-    //获取费用科目
-    getCostAccount() {
-      var that = this;
-      var parm = {
-        action: "ListItems",
-        type: "get",
-        list: this.costAccountListName,
-        baseUrl: this.hostUrl,
-        condition: ""
-      };
-      var option = common.queryOpt(parm);
-      $.when($.ajax(option))
-        .done(function(req) {
-          var data = req.d.results;
-          if (data.length > 0) {
-            data.forEach(item => {
-              that.costAccountOptions.push({
-                Type: item.ExpenseCategoryTitle,
-                label: item.Title,
-                value: item.Title
-              });
-            });
-          }
-        })
-        .catch(err => {
-          this.loading = false;
-          this.$message(common.message("error", "加载费用科目时候出错!"));
-        });
-    },
+
     //获取费用科目
     getTaxCode() {
       var that = this;
@@ -1324,8 +1322,7 @@ export default {
   mounted: function() {
     //获取费用类别
     this.getExpenseCategory();
-    //获取费用科目
-    this.getCostAccount();
+
     //获取当前信息
     this.getCurrentUser();
     //获取成本中心
@@ -1413,7 +1410,6 @@ export default {
                   Rate: element.Rate, //汇率
                   ConvertMoney: element.ConvertMoney, //转换金额
                   ConvertCurrency: element.ConvertCurrency, //转换后币种
-                  IsTax: element.IsTax, //是否用税
                   TaxCode: element.TaxCode, //税码
                   TaxRate: element.TaxRate, //税率
                   OriginalTaxMoney: element.OriginalTaxMoney, //原币税额

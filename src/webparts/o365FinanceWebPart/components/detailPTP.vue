@@ -33,6 +33,7 @@
       <tr>
         <td colspan="8" align="left">
           <el-upload
+            disabled
             class="upload-demo"
             :action="actionUrl"
             :on-success="uploadSuccess"
@@ -268,7 +269,7 @@ export default {
       },
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       currentStep: "",
-      ApprovalHistory: "", //审批历史
+      ApprovalHistory: "" //审批历史
     };
   },
   methods: {

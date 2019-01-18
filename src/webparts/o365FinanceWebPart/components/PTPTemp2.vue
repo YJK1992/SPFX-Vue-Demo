@@ -59,7 +59,7 @@
     <el-table border :data="TableData" style="width: 100%" max-height="600">
       <el-table-column width="200" prop='CompanyCode' label="公司代码"></el-table-column>
       <el-table-column width="200" prop='CostAccount' label="科目号"></el-table-column>
-      <el-table-column width="200" prop='Total' label="金额"></el-table-column>
+      <el-table-column width="200" prop='Money' label="金额"></el-table-column>
       <el-table-column width="200" prop='CostCenter' label="成本中心"></el-table-column>
       <el-table-column width="200" prop='ProfitCenter' label="利润中心"></el-table-column>
       <el-table-column width="200" prop='BussinessScope' label="业务范围"></el-table-column>
@@ -183,13 +183,13 @@ export default {
                   this.TableData.push({
                     CompanyCode: data[0].CompanyCode,
                     CostAccount: sub.CostAccount,
-                    Money: sub.Money,
+                    Money: sub.ConvertMoney,
                     CostCenter: data[0].CostCenter,
                     ProfitCenter: data[0].ProfitCenter,
                     BussinessScope: data[0].BussinessScope,
                     TXT:
                       d.Applicant +
-                      "报销" +
+                      "-报销-" +
                       d.Created.substring(0, d.Created.indexOf("T")) +
                       sub.ExpenseCategory,
                     Title: d.Title,
@@ -200,13 +200,13 @@ export default {
                     this.TableData.push({
                       CompanyCode: data[0].CompanyCode,
                       CostAccount: sub.CostAccount,
-                      Money: sub.Money,
+                      Money: sub.ConvertMoney,
                       CostCenter: data[0].CostCenter,
                       ProfitCenter: data[0].ProfitCenter,
                     BussinessScope: data[0].BussinessScope,
                       TXT:
                         d.Applicant +
-                        "报销" +
+                        "-报销-" +
                         d.Created.substring(0, d.Created.indexOf("T")) +
                         sub.ExpenseCategory,
                       Title: d.Title,
