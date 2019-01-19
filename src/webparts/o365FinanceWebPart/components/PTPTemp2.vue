@@ -57,15 +57,15 @@
     </el-form>
 
     <el-table border :data="TableData" style="width: 100%" max-height="600">
-      <el-table-column width="200" prop='CompanyCode' label="公司代码"></el-table-column>
-      <el-table-column width="200" prop='CostAccount' label="科目号"></el-table-column>
-      <el-table-column width="200" prop='Money' label="金额"></el-table-column>
-      <el-table-column width="200" prop='CostCenter' label="成本中心"></el-table-column>
-      <el-table-column width="200" prop='ProfitCenter' label="利润中心"></el-table-column>
-      <el-table-column width="200" prop='BussinessScope' label="业务范围"></el-table-column>
-      <el-table-column width="200" prop='TXT' label="文本"></el-table-column>
-      <el-table-column width="200" prop='Title' label="报销单号"></el-table-column>
-      <el-table-column width="200" prop='orderNo' label="订单号"></el-table-column>
+      <el-table-column width="200" prop="CompanyCode" label="公司代码"></el-table-column>
+      <el-table-column width="200" prop="CostAccount" label="科目号"></el-table-column>
+      <el-table-column width="200" prop="Money" label="金额"></el-table-column>
+      <el-table-column width="200" prop="CostCenter" label="成本中心"></el-table-column>
+      <el-table-column width="200" prop="ProfitCenter" label="利润中心"></el-table-column>
+      <el-table-column width="200" prop="BussinessScope" label="业务范围"></el-table-column>
+      <el-table-column width="200" prop="TXT" label="文本"></el-table-column>
+      <el-table-column width="200" prop="Title" label="assignment"></el-table-column>
+      <el-table-column width="200" prop="orderNo" label="订单号"></el-table-column>
     </el-table>
   </div>
 </template>
@@ -101,7 +101,7 @@ export default {
         "利润中心",
         "业务范围",
         "文本",
-        "报销单号",
+        "assignment",
         "订单号"
       ] //excel字段名
     };
@@ -181,12 +181,12 @@ export default {
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
-                    CompanyCode: data[0].CompanyCode,
+                    CompanyCode: d.CompanyCode,
                     CostAccount: sub.CostAccount,
-                    Money: sub.ConvertMoney,
-                    CostCenter: data[0].CostCenter,
-                    ProfitCenter: data[0].ProfitCenter,
-                    BussinessScope: data[0].BussinessScope,
+                    Money: Number(sub.ConvertMoney),
+                    CostCenter: d.CostCenter,
+                    ProfitCenter: d.ProfitCenter,
+                    BussinessScope: d.BussinessScope,
                     TXT:
                       d.Applicant +
                       "-报销-" +
@@ -198,12 +198,12 @@ export default {
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
-                      CompanyCode: data[0].CompanyCode,
+                      CompanyCode: d.CompanyCode,
                       CostAccount: sub.CostAccount,
-                      Money: sub.ConvertMoney,
-                      CostCenter: data[0].CostCenter,
-                      ProfitCenter: data[0].ProfitCenter,
-                    BussinessScope: data[0].BussinessScope,
+                      Money: Number(sub.ConvertMoney),
+                      CostCenter: d.CostCenter,
+                      ProfitCenter: d.ProfitCenter,
+                      BussinessScope: d.BussinessScope,
                       TXT:
                         d.Applicant +
                         "-报销-" +
@@ -214,6 +214,22 @@ export default {
                     });
                   }
                 }
+              });
+            } else {
+              this.TableData.push({
+                CompanyCode: d.CompanyCode,
+                CostAccount: "",
+                Money: "",
+                CostCenter: d.CostCenter,
+                ProfitCenter: d.ProfitCenter,
+                BussinessScope: d.BussinessScope,
+                TXT:
+                  d.Applicant +
+                  "-报销-" +
+                  d.Created.substring(0, d.Created.indexOf("T")) +
+                  sub.ExpenseCategory,
+                Title: d.Title,
+                orderNo: ""
               });
             }
           });

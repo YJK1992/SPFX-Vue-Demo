@@ -7,7 +7,7 @@
         </td>
       </tr>
       <tr>
-        <td>报销单号：</td>
+        <td align='right'>报销单号：</td>
         <td colspan="7">
           <el-input v-model="StaffReimbursement.Title" disabled placeholder="报销单号"></el-input>
         </td>
@@ -31,26 +31,8 @@
         </td>
       </tr>
       <tr>
-        <td colspan="8" align="left">
-          <el-upload
-            disabled
-            class="upload-demo"
-            :action="actionUrl"
-            :on-success="uploadSuccess"
-            :on-error="uploadErr"
-            :beforeUpload="beforeUploadValidate"
-            :on-remove="removeFile"
-            :limit="1"
-            :on-exceed="fileLimit"
-            :file-list="fileList"
-          >
-            <el-button disabled size="medium" type="primary">上传附件</el-button>
-          </el-upload>
-        </td>
-      </tr>
-      <tr v-show="showEditor==false">
-        <td>附件 ：</td>
-        <td colspan="8" style="text-align:left;">
+        <td align='right'>附件 ：</td>
+        <td colspan="7" style="text-align:left;">
           <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
         </td>
       </tr>
@@ -77,7 +59,6 @@
       <el-table-column prop="Rate" label="汇率"></el-table-column>
       <el-table-column prop="ConvertMoney" label="转换金额"></el-table-column>
       <el-table-column prop="ConvertCurrency" label="转换后的币种"></el-table-column>
-      <el-table-column prop="IsTax" label="是否启用税"></el-table-column>
       <el-table-column prop="TaxCode" label="税码"></el-table-column>
       <el-table-column prop="TaxRate" label="税率"></el-table-column>
       <el-table-column prop="OriginalTaxMoney" label="原币税额"></el-table-column>
@@ -273,6 +254,15 @@ export default {
     };
   },
   methods: {
+        loadAttachment: function(attUrl) {
+      var parm = {
+        type: "get",
+        action: "Attachments",
+        attUrl: attUrl
+      };
+      var opt = common.queryOpt(parm);
+      return common.service(opt);
+    },
     //加载主表数据
     loadMainListData: function(guid) {
       var parm = {
@@ -348,7 +338,6 @@ export default {
                 Rate: element.Rate, //汇率
                 ConvertMoney: element.ConvertMoney, //转换金额
                 ConvertCurrency: element.ConvertCurrency, //转换后币种
-                IsTax: element.IsTax, //是否用税
                 TaxCode: element.TaxCode, //税码
                 TaxRate: element.TaxRate, //税率
                 OriginalTaxMoney: element.OriginalTaxMoney, //原币税额

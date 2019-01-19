@@ -96,7 +96,14 @@
         </td>
       </tr>
     </table>
-    <el-table border :data="SubItems" style="width: 100%" max-height="600">
+    <el-table
+      :summary-method="getSummaries"
+      show-summary
+      border
+      :data="SubItems"
+      style="width: 100%"
+      max-height="600"
+    >
       <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
       <el-table-column prop="CostAccount" label="费用科目"></el-table-column>
       <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
@@ -117,7 +124,7 @@
       <el-table-column prop="CheckInDate" label="入住日期"></el-table-column>
       <el-table-column prop="LeaveDate" label="离店日期"></el-table-column>
       <el-table-column prop="Name" label="酒店名称"></el-table-column>
-      <el-table-column prop="Number" label="发票号"></el-table-column>
+      <el-table-column prop="Number" label="发票参考号"></el-table-column>
       <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button
@@ -231,7 +238,7 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="目的地：" :label-width="formLabelWidth">
-          <el-input :disabled="IsTravelExpense" placeholder="目的地"></el-input>
+          <el-input :disabled="IsTravelExpense" v-model="SubItem.Destination" placeholder="目的地"></el-input>
         </el-form-item>
         <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
           <el-date-picker
@@ -250,8 +257,8 @@
         <el-form-item label="天数：" :label-width="formLabelWidth">
           <el-input :disabled="IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
         </el-form-item>
-        <el-form-item label="发票号：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Number" placeholder="发票号"></el-input>
+        <el-form-item label="发票参考号：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）发票号码（右上角）"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -373,10 +380,39 @@ export default {
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       IsTravelExpense: true,
-      IsHotelExpense: true
+      IsHotelExpense: true,
+      message: ""
     };
   },
   methods: {
+    getSummaries(param) {
+      const { columns, data } = param;
+      const sums = [];
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = "总价";
+          return;
+        }
+        const values = data.map(item => Number(item[column.property]));
+        if (!values.every(value => isNaN(value))) {
+          if (index == 8) {
+            sums[index] = values.reduce((prev, curr) => {
+              const value = Number(curr);
+              if (!isNaN(value)) {
+                return prev + curr;
+              } else {
+                return prev;
+              }
+            }, 0);
+            sums[index] += " 元";
+          }
+        } else {
+          //sums[index] = "N/A";
+        }
+      });
+
+      return sums;
+    },
     //费用类别change事件
     ChangeCostAccount() {
       this.costAccountOptions = []; //费用科目
@@ -454,6 +490,9 @@ export default {
           (Number(this.SubItem.Total) /
             (1 + Number(this.SubItem.TaxRate.split("%")[0]) / 100)) *
           (Number(this.SubItem.TaxRate.split("%")[0]) / 100);
+        this.SubItem.OriginalTaxMoney = Number(
+          this.SubItem.OriginalTaxMoney
+        ).toFixed(2);
       }
     },
     //改变数量和单位金额的时候变更总金额
@@ -592,7 +631,6 @@ export default {
           this.SubItem.ArriveDate
         ];
       }
-      this.SubItem = this.SubItems[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
     },
@@ -626,10 +664,59 @@ export default {
         Name: "", //酒店名称
         Number: "" //发票号
       };
+      this.IsTravelExpense = true;
+      this.IsHotelExpense = true;
       this.dialogFormVisible = false;
     },
     handleClick(row) {
       console.log(row);
+    },
+    subVerification() {
+      var isSuccess = false;
+      if (this.SubItem.ExpenseDate == "") {
+        this.message = "请填写费用日期;";
+      } else if (!this.IsTravelExpense && this.IsHotelExpense) {
+        //校验出差日期
+        if (this.SubItem.StartDate == "") {
+          this.message = "请填写出发时间;";
+        } else if (this.SubItem.ArriveDate == "") {
+          this.message = "请填写到达时间;";
+        } else if (this.SubItem.Destination == "") {
+          this.message = "请填写目的地;";
+        } else {
+          isSuccess = true;
+        }
+      } else if (!this.IsHotelExpense && this.IsTravelExpense) {
+        //校验酒店信息
+        if (this.SubItem.CheckInDate == "") {
+          this.message = "请填写入住时间;";
+        } else if (this.SubItem.LeaveDate == "") {
+          this.message = "请填写离店时间;";
+        } else if (this.SubItem.Name == "") {
+          this.message = "请填写酒店名称;";
+        } else {
+          isSuccess = true;
+        }
+      } else if (!this.IsHotelExpense && !this.IsTravelExpense) {
+        if (this.SubItem.StartDate == "") {
+          this.message = "请填写出发时间;";
+        } else if (this.SubItem.ArriveDate == "") {
+          this.message = "请填写到达时间;";
+        } else if (this.SubItem.Destination == "") {
+          this.message = "请填写目的地;";
+        } else if (this.SubItem.CheckInDate == "") {
+          this.message = "请填写入住时间;";
+        } else if (this.SubItem.LeaveDate == "") {
+          this.message = "请填写离店时间;";
+        } else if (this.SubItem.Name == "") {
+          this.message = "请填写酒店名称;";
+        } else {
+          isSuccess = true;
+        }
+      } else {
+        isSuccess = true;
+      }
+      return isSuccess;
     },
     onAddItem() {
       console.log(this.StartArriveDate);
@@ -642,12 +729,12 @@ export default {
         this.SubItem.CheckInDate = this.CheckInLeaveData[0];
         this.SubItem.LeaveDate = this.CheckInLeaveData[1];
       }
-      if (false) {
-        //校验不通过
-        // this.$message({
-        //   message: this.message,
-        //   type: "error"
-        // });
+      if (this.subVerification() == false) {
+        //校验不通过;
+        this.$message({
+          message: this.message,
+          type: "error"
+        });
       } else {
         if (this.editIndex != -1) {
           //编辑
@@ -656,6 +743,8 @@ export default {
           //新增
           this.SubItems.push(this.SubItem);
         }
+        this.IsTravelExpense = true;
+        this.IsHotelExpense = true;
         this.StartArriveDate = "";
         this.CheckInLeaveData = "";
         this.SubItem = {
@@ -757,7 +846,9 @@ export default {
               Remark: this.StaffReimbursement.Remark, //备注
               SpecialApproverTitle: this.StaffReimbursement.SpecialApprover, //特殊审批人
               DetailInvoiceJSON: JSON.stringify(this.SubItems),
-              ApplicantEmail: this.LoginName.split("@")[0]
+              ApplicantEmail: this.LoginName.split("@")[0],
+              BussinessScope: this.StaffReimbursement.BussinessScope,
+              ProfitCenter: this.StaffReimbursement.ProfitCenter
             };
             //总计发票金额
             var total = 0;
@@ -967,6 +1058,9 @@ export default {
             var data = req.d.results;
             if (data.length > 0) {
               //默认业务范围
+              console.log("默认业务范围");
+              console.log(data);
+              console.log(this.StaffReimbursement);
               this.StaffReimbursement.CostCenter = data[0].CostCenter;
               this.costCenterChange();
               this.StaffReimbursement.BussinessScope = data[0].BusinessScope;
@@ -1054,7 +1148,7 @@ export default {
                 label: item.Category,
                 value: item.Category,
                 Codes: item.Codes,
-                IsTravelExpense: item.IsTravelExpense == 'Y' ? false : true,
+                IsTravelExpense: item.IsTravelExpense == "Y" ? false : true,
                 IsHotelExpense: item.IsHotelExpense == "Y" ? false : true
               });
             });

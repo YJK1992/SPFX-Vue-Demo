@@ -277,8 +277,8 @@
 
     <!-- 打印模板 -->
     <!-- 打印模板 -->
-    <div style="display:none" id="printBox">
-      <div style="margin-top:20px;" id="myPrintArea">
+    <div style="display:none;page-break-before: auto;" id="printBox">
+      <div style="margin-top:20px;page-break-before: auto;" id="myPrintArea">
         <!--startprint1-->
         <table
           style=" width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
@@ -477,7 +477,7 @@
             >Notes(Usage/Others) Time:{{this.PublicPayment.Remark}}</td>
           </tr>-->
         </table>
-        <div :hidden="ExpenseAllocationList.length==0" style="margin-top:10px">
+        <div :hidden="ExpenseAllocationList.length==0" style="margin-top:10px;page-break-before: auto;">
           <table
             style="width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
           >
@@ -534,7 +534,7 @@
           </table>
         </div>
 
-        <div :hidden="PublicPayment.ReimbursementType!='资产对公付款'" style="margin-top:10px">
+        <div :hidden="PublicPayment.ReimbursementType!='资产对公付款'" style="margin-top:10px;page-break-before: auto;">
           <table
             style="width:100%; min-height:25px; line-height: 25px;text-align: left;  border-collapse: collapse;  color: gray;  padding: 2px;"
           >
@@ -1063,6 +1063,9 @@ export default {
 </script>
 
 <style>
+body{
+  height: 99%; 
+}
 .view_duigong {
   min-height: 25px;
   line-height: 25px;

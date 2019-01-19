@@ -79,12 +79,11 @@ export default {
     };
   },
   methods: {
-        onExcel: function() {
+    onExcel: function() {
       var temp = [];
       var tempColumn = [];
       for (var item in this.TableData[0]) {
-  
-          tempColumn.push(item);
+        tempColumn.push(item);
       }
       temp = this.TableData;
       var data = temp.map(v => tempColumn.map(k => v[k]));
@@ -150,14 +149,38 @@ export default {
                 : JSON.parse(d.DetailInvoiceJSON);
             console.log(subItems);
             if (subItems != null) {
+              var convertArr = []; //中间需要转换数组
+              var nameContainer = {}; // 针对键name进行归类的容器
               subItems.forEach(sub => {
-                this.TableData.push({
+                convertArr.push({
                   AccountNumber: d.AccountNumber,
                   Applicant: d.Applicant,
-                  Money: sub.ConvertMoney,
+                  Money: Number(sub.ConvertMoney),
                   CostNumber: d.Title,
                   LegalPerson: d.CompanyCode,
                   Modified: d.Modified
+                });
+              });
+              convertArr.forEach(item => {
+                nameContainer[item.CostNumber] =
+                  nameContainer[item.CostNumber] || [];
+                nameContainer[item.CostNumber].push(item);
+              });
+              console.log(nameContainer);
+              var CostNumberName = Object.keys(nameContainer);
+
+              CostNumberName.forEach(nameItem => {
+                var count = 0;
+                nameContainer[nameItem].forEach(item => {
+                  count += Number(item.Money); // 遍历金额
+                });
+                this.TableData.push({
+                  AccountNumber: nameContainer[nameItem][0].AccountNumber,
+                  Applicant: nameContainer[nameItem][0].Applicant,
+                  Money: count,
+                  CostNumber: nameContainer[nameItem][0].CostNumber,
+                  LegalPerson: nameContainer[nameItem][0].LegalPerson,
+                  Modified: nameContainer[nameItem][0].Modified.split("T")[0]
                 });
               });
             }

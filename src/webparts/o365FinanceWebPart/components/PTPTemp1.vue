@@ -14,6 +14,7 @@
           end-placeholder="结束日期"
         ></el-date-picker>
       </el-form-item>
+
       <el-form-item label="经办人ID：">
         <el-input v-model="Condition.ApplicantEmail" placeholder="经办人ID"></el-input>
       </el-form-item>
@@ -285,12 +286,12 @@ export default {
                     ExpenseDate: sub.ExpenseDate,
                     CostAccount: sub.CostAccount,
                     CostCenter: d.CostCenter,
-                    Count: sub.Count,
+                    Count: Number(sub.Count),
                     Price: sub.Price,
-                    Total: sub.Total,
+                    Total: Number(sub.Total),
                     Currency: sub.Currency,
                     Rate: sub.Rate,
-                    ConvertMoney: sub.ConvertMoney,
+                    ConvertMoney: Number(sub.ConvertMoney),
                     // File: "",
                     FinanceITCode: d.FinanceITCode,
                     Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
@@ -303,7 +304,7 @@ export default {
                     Destination: sub.Destination,
                     CheckInDate: sub.CheckInDate,
                     LeaveDate: sub.LeaveDate,
-                    Days: d.Days
+                    Days: Number(sub.Days)
                   });
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
@@ -312,12 +313,12 @@ export default {
                       ExpenseDate: sub.ExpenseDate,
                       CostAccount: sub.CostAccount,
                       CostCenter: d.CostCenter,
-                      Count: sub.Count,
+                      Count: Number(sub.Count),
                       Price: sub.Price,
-                      Total: sub.Total,
+                      Total: Number(sub.Total),
                       Currency: sub.Currency,
                       Rate: sub.Rate,
-                      ConvertMoney: sub.ConvertMoney,
+                      ConvertMoney: Number(sub.ConvertMoney),
                       File: "",
                       FinanceITCode: d.FinanceITCode,
                       Modified: d.Modified.substring(
@@ -331,7 +332,7 @@ export default {
                       StartDate: sub.StartDate,
                       ArriveDate: sub.ArriveDate,
                       Destination: sub.Destination,
-                      Days: d.Days,
+                      Days: sub.Days,
                       CheckInDate: sub.CheckInDate,
                       LeaveDate: sub.LeaveDate
                     });
@@ -360,7 +361,7 @@ export default {
                 StartDate: "",
                 ArriveDate: "",
                 Destination: "",
-                Days: d.Days,
+                Days: sub.Days,
                 CheckInDate: "",
                 LeaveDate: ""
               });
