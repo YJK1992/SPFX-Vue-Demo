@@ -56,7 +56,7 @@
           </el-select>
         </td>
       </tr>
-      <tr>
+      <tr  v-show="showEditor">
         <td colspan="8" align="left">
           <el-upload
             class="upload-demo"
@@ -69,22 +69,22 @@
             :on-exceed="fileLimit"
             :file-list="fileList"
           >
-            <el-button :disabled="showApprover==true" size="medium" type="primary">上传附件</el-button>
+            <el-button  v-show="showEditor" size="medium" type="primary">上传附件</el-button>
           </el-upload>
         </td>
       </tr>
       <tr v-show="showEditor==false">
-        <td>附件 ：</td>
+        <td align='right'>附件 ：</td>
         <td colspan="8" style="text-align:left;">
           <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
         </td>
       </tr>
       <tr>
-        <td align="right">备注：</td>
+        <td align="right">订单号：</td>
         <td colspan="7">
           <el-input
             :disabled="showApprover==true"
-            v-model="StaffReimbursement.Remark"
+            v-model="StaffReimbursement.OrderNo"
             placeholder="请输入内容"
           ></el-input>
         </td>
@@ -95,6 +95,7 @@
           <el-input
             :disabled="showApprover==true"
             v-model="StaffReimbursement.SpecialApprover"
+            @change="speApprChange"
             placeholder="特殊审批人"
           ></el-input>
         </td>
@@ -143,18 +144,20 @@
       <el-table-column prop="CheckInDate" label="入住日期"></el-table-column>
       <el-table-column prop="LeaveDate" label="离店日期"></el-table-column>
       <el-table-column prop="Name" label="酒店名称"></el-table-column>
-      <el-table-column prop="Number" label="发票参考号"></el-table-column>
+      <el-table-column prop="Number" label="参考号"></el-table-column>
       <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button
             @click.native.prevent="deleteRow(scope.$index, SubItems)"
             type="text"
             size="small"
+           :disabled="showApprover==true"
           >移除</el-button>
           <el-button
             type="text"
             @click.native.prevent="onEditItem(scope.$index, SubItems)"
             size="small"
+            :disabled="showFA==true?false:showApprover==true"
           >编辑</el-button>
         </template>
       </el-table-column>
@@ -167,11 +170,11 @@
           <el-button
             type="primary"
             @click="onSaveOrSubmmit(buttonType.Submit)"
-            v-show="showEditor"
+            v-show="requestIsReject==true?false:showEditor"
           >提交</el-button>
           <el-button
             @click="onSaveOrSubmmit(buttonType.Save)"
-            v-show="showEditor"
+            v-show="requestIsReject==true?false:showEditor"
             type="primary"
             plain
           >保存</el-button>
@@ -205,6 +208,7 @@
             @change="ChangeCostAccount()"
             v-model="SubItem.ExpenseCategory"
             placeholder="请选择"
+            :disabled="showFA==true"
           >
             <el-option
               v-for="item in expenseCategoryOptions"
@@ -216,7 +220,7 @@
           </el-select>
         </el-form-item>
         <el-form-item label="费用科目：" :label-width="formLabelWidth">
-          <el-select v-model="SubItem.CostAccount" placeholder="请选择">
+          <el-select :disabled="showFA==true" v-model="SubItem.CostAccount" placeholder="请选择">
             <template v-for="item in costAccountOptions">
               <el-option
                 v-if="SubItem.ExpenseCategory==item.Type"
@@ -229,6 +233,7 @@
         </el-form-item>
         <el-form-item label="费用日期：" :label-width="formLabelWidth">
           <el-date-picker
+          :disabled="showFA==true"
             value-format="yyyy-MM-dd"
             v-model="SubItem.ExpenseDate"
             type="date"
@@ -236,16 +241,16 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
+          <el-input :disabled="showFA==true"  @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
         </el-form-item>
-        <el-form-item label="单位金额：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Price" placeholder="单位金额"></el-input>
+        <el-form-item  label="单位金额：" :label-width="formLabelWidth">
+          <el-input :disabled="showFA==true" @change="ChangeTotalMoney" v-model="SubItem.Price" placeholder="单位金额"></el-input>
         </el-form-item>
         <el-form-item label="总金额：" :label-width="formLabelWidth">
-          <el-input @change="ChangeConvertMoney" v-model="SubItem.Total" placeholder="总金额" disabled></el-input>
+          <el-input :disabled="showFA==true" @change="ChangeConvertMoney" v-model="SubItem.Total" placeholder="总金额"></el-input>
         </el-form-item>
         <el-form-item label="币种：" :label-width="formLabelWidth">
-          <el-select v-model="SubItem.Currency" filterable placeholder="请选择">
+          <el-select :disabled="showFA==true" v-model="SubItem.Currency" filterable placeholder="请选择">
             <el-option
               v-for="item in Currency"
               :key="item.value"
@@ -255,16 +260,16 @@
           </el-select>
         </el-form-item>
         <el-form-item label="汇率：" :label-width="formLabelWidth">
-          <el-input @change="ChangeConvertMoney" v-model="SubItem.Rate" placeholder="汇率"></el-input>
+          <el-input :disabled="showFA==true" @change="ChangeConvertMoney" v-model="SubItem.Rate" placeholder="汇率"></el-input>
         </el-form-item>
         <el-form-item label="转换金额：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.ConvertMoney" placeholder="转换金额" disabled></el-input>
+          <el-input :disabled="showFA==true" v-model="SubItem.ConvertMoney" placeholder="转换金额"></el-input>
         </el-form-item>
         <el-form-item label="转换后币种：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
+          <el-input :disabled="showFA==true"  v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
         </el-form-item>
         <el-form-item label="税码：" :label-width="formLabelWidth">
-          <el-select @change="ChangeTaxRate" v-model="SubItem.TaxCode" filterable placeholder="请选择">
+          <el-select :disabled="showFA==true?false:showApprover==true" @change="ChangeTaxRate" v-model="SubItem.TaxCode" filterable placeholder="请选择">
             <el-option
               v-for="item in taxCodeOptions"
               :key="item.value"
@@ -281,7 +286,7 @@
         </el-form-item>
         <el-form-item label="出发/抵达日期：" :label-width="formLabelWidth">
           <el-date-picker
-            :disabled="IsTravelExpense"
+            :disabled="showApprover==true?true:IsTravelExpense"
             value-format="yyyy-MM-dd"
             type="daterange"
             range-separator="到"
@@ -291,11 +296,11 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="目的地：" :label-width="formLabelWidth">
-          <el-input :disabled="IsTravelExpense" v-model="SubItem.Destination" placeholder="目的地"></el-input>
+          <el-input :disabled="showApprover==true?true:IsTravelExpense" v-model="SubItem.Destination" placeholder="目的地"></el-input>
         </el-form-item>
         <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
           <el-date-picker
-            :disabled="IsHotelExpense"
+            :disabled="showApprover==true?true:IsHotelExpense"
             value-format="yyyy-MM-dd"
             type="daterange"
             v-model="CheckInLeaveData"
@@ -305,13 +310,16 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="酒店名称：" :label-width="formLabelWidth">
-          <el-input :disabled="IsHotelExpense" v-model="SubItem.Name" placeholder="酒店名称"></el-input>
+          <el-input :disabled="showApprover==true?true:IsHotelExpense" v-model="SubItem.Name" placeholder="酒店名称"></el-input>
         </el-form-item>
         <el-form-item label="天数：" :label-width="formLabelWidth">
-          <el-input :disabled="IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
+          <el-input :disabled="showApprover==true?true:IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
         </el-form-item>
-        <el-form-item label="发票参考号：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）发票号码（右上角）"></el-input>
+        <el-form-item label="参考号：" :label-width="formLabelWidth">
+          <el-input :disabled="showFA==true?false:showApprover==true" v-model="SubItem.Number" placeholder="发票号码（左上角）+ 发票号码（右上角）"></el-input>
+        </el-form-item>
+        <el-form-item label="备注：" :label-width="formLabelWidth">
+          <el-input :disabled="showFA==true"  v-model="SubItem.Remark" placeholder="备注信息"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -362,7 +370,7 @@ export default {
         AccountNumber: "", //账户号
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
-        Remark: "", //备注
+        OrderNo: "", //订单号
         SpecialApprover: "" //特殊审批人
       },
       FinanceITCode: "",
@@ -389,7 +397,8 @@ export default {
         CheckInDate: "", //入住日期
         LeaveDate: "", //离店日期
         Name: "", //酒店名称
-        Number: "" //发票号
+        Number: "", //发票号
+        Remark: ""
       },
       Currency: [
         //币种
@@ -450,6 +459,8 @@ export default {
       deleteAttName: "",
       IsTravelExpense: true,
       IsHotelExpense: true,
+      EmployeeCode: "",
+      showFA: false,
       message: ""
     };
   },
@@ -459,7 +470,7 @@ export default {
       const sums = [];
       columns.forEach((column, index) => {
         if (index === 0) {
-          sums[index] = "总价";
+          sums[index] = "合计";
           return;
         }
         const values = data.map(item => Number(item[column.property]));
@@ -494,7 +505,7 @@ export default {
           this.message = "请填写到达时间;";
         } else if (this.SubItem.Destination == "") {
           this.message = "请填写目的地;";
-        } else {
+        }  else {
           isSuccess = true;
         }
       } else if (!this.IsHotelExpense && this.IsTravelExpense) {
@@ -582,8 +593,12 @@ export default {
           var opt = common.queryOpt(parm);
           $.when($.ajax(opt))
             .done(req => {
-              this.$message(common.message("success", "终止流程成功!"));
-              this.$router.push("/home");
+              if (type == "reject") {
+                this.onApproval(type);
+              } else {
+                this.$message(common.message("success", "终止流程成功!"));
+                this.$router.push("/home");
+              }
             })
             .catch(err => {
               this.$message(common.message("error", "终止流程失败!"));
@@ -655,6 +670,8 @@ export default {
             } else if (this.currentStep == "Approver5") {
               if (type == "Approved") {
                 mainItemInfo.FinanceITCode = this.FinanceITCode;
+                mainItemInfo.SettlingTime = common.getCurrentDate();
+                mainItemInfo.DetailInvoiceJSON=JSON.stringify(this.SubItems);
               }
               history.approver5 =
                 this.currentUserTitle +
@@ -935,7 +952,8 @@ export default {
         CheckInDate: "", //入住日期
         LeaveDate: "", //离店日期
         Name: "", //酒店名称
-        Number: "" //发票号
+        Number: "", //发票号
+        Remark: ""
       };
       this.dialogFormVisible = false;
     },
@@ -992,7 +1010,8 @@ export default {
           CheckInDate: "", //入住日期
           LeaveDate: "", //离店日期
           Name: "", //酒店名称
-          Number: "" //发票号
+          Number: "", //发票号
+          Remark: ""
         };
         this.dialogFormVisible = false;
       }
@@ -1027,7 +1046,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1042,7 +1065,7 @@ export default {
               AccountNumber: this.StaffReimbursement.AccountNumber, //账户号
               CostCenter: this.StaffReimbursement.CostCenter, //成本中心
               CompanyCode: this.StaffReimbursement.CompanyCode, //公司代码
-              Remark: this.StaffReimbursement.Remark, //备注
+              OrderNo: this.StaffReimbursement.OrderNo, //订单号
               SpecialApproverTitle: this.StaffReimbursement.SpecialApprover, //特殊审批人
               DetailInvoiceJSON: JSON.stringify(this.SubItems)
             };
@@ -1264,6 +1287,7 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
+              this.EmployeeCode = data[0].EmployeeCode;
               var selectedCostCenter = "";
               data.forEach(d => {
                 selectedCostCenter = d.CostCenter;
@@ -1431,6 +1455,9 @@ export default {
       if (tId > 0 && step != "Application") {
         this.showEditor = false;
         this.showApprover = true;
+        if (step == "Approver5") {
+          this.showFA = true;
+        }
       } else if (tId == 0) {
         console.log("用户点击的是保存");
       } else if (tId > 0 && step == "Application") {
@@ -1452,7 +1479,7 @@ export default {
             this.StaffReimbursement.AccountNumber = data[0].AccountNumber;
             this.StaffReimbursement.CostCenter = data[0].CostCenter;
             this.StaffReimbursement.CompanyCode = data[0].CompanyCode;
-            this.StaffReimbursement.Remark = data[0].Remark;
+            this.StaffReimbursement.OrderNo = data[0].OrderNo;
             this.StaffReimbursement.SpecialApprover = data[0].SpecialApprover;
             this.currentItemId = data[0].Id;
 

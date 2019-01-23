@@ -73,15 +73,19 @@
         </td>
       </tr>
       <tr>
-        <td align="right">备注：</td>
+        <td align="right">订单号：</td>
         <td colspan="7">
-          <el-input v-model="StaffReimbursement.Remark" placeholder="请输入内容"></el-input>
+          <el-input v-model="StaffReimbursement.OrderNo" placeholder="请输入内容"></el-input>
         </td>
       </tr>
       <tr>
-        <td align="right">特殊审批人</td>
+        <td align="right">特殊审批人：</td>
         <td colspan="7">
-          <el-input v-model="StaffReimbursement.SpecialApprover" placeholder="特殊审批人"></el-input>
+          <el-input
+            @change="speApprChange"
+            v-model="StaffReimbursement.SpecialApprover"
+            placeholder="特殊审批人"
+          ></el-input>
         </td>
       </tr>
       <!-- <tr>
@@ -124,7 +128,7 @@
       <el-table-column prop="CheckInDate" label="入住日期"></el-table-column>
       <el-table-column prop="LeaveDate" label="离店日期"></el-table-column>
       <el-table-column prop="Name" label="酒店名称"></el-table-column>
-      <el-table-column prop="Number" label="发票参考号"></el-table-column>
+      <el-table-column prop="Number" label="参考号"></el-table-column>
       <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button
@@ -257,8 +261,11 @@
         <el-form-item label="天数：" :label-width="formLabelWidth">
           <el-input :disabled="IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
         </el-form-item>
-        <el-form-item label="发票参考号：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）发票号码（右上角）"></el-input>
+        <el-form-item label="参考号：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）+ 发票号码（右上角）"></el-input>
+        </el-form-item>
+        <el-form-item label="备注：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Remark" placeholder="备注信息"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -304,10 +311,11 @@ export default {
         AccountNumber: "", //账户号
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
-        Remark: "", //备注
+        OrderNo: "", //备注
         SpecialApprover: "", //特殊审批人
         BussinessScope: "", //业务范围
-        ProfitCenter: "" //利润中心
+        ProfitCenter: "", //利润中心
+        EmployeeCode: "" //员工编号
       },
       //子表数据
       SubItems: [],
@@ -332,7 +340,8 @@ export default {
         CheckInDate: "", //入住日期
         LeaveDate: "", //离店日期
         Name: "", //酒店名称
-        Number: "" //发票号
+        Number: "", //发票号
+        Remark: "" //备注信息
       },
       Currency: [
         //币种
@@ -381,6 +390,7 @@ export default {
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       IsTravelExpense: true,
       IsHotelExpense: true,
+
       message: ""
     };
   },
@@ -390,7 +400,7 @@ export default {
       const sums = [];
       columns.forEach((column, index) => {
         if (index === 0) {
-          sums[index] = "总价";
+          sums[index] = "合计";
           return;
         }
         const values = data.map(item => Number(item[column.property]));
@@ -662,7 +672,8 @@ export default {
         CheckInDate: "", //入住日期
         LeaveDate: "", //离店日期
         Name: "", //酒店名称
-        Number: "" //发票号
+        Number: "", //发票号
+        Remark: "" //备注信息
       };
       this.IsTravelExpense = true;
       this.IsHotelExpense = true;
@@ -768,7 +779,8 @@ export default {
           CheckInDate: "", //入住日期
           LeaveDate: "", //离店日期
           Name: "", //酒店名称
-          Number: "" //发票号
+          Number: "", //发票号
+          Remark: "" //备注信息
         };
         this.dialogFormVisible = false;
       }
@@ -827,7 +839,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -843,7 +859,7 @@ export default {
               AccountNumber: this.StaffReimbursement.AccountNumber, //账户号
               CostCenter: this.StaffReimbursement.CostCenter, //成本中心
               CompanyCode: this.StaffReimbursement.CompanyCode, //公司代码
-              Remark: this.StaffReimbursement.Remark, //备注
+              OrderNo: this.StaffReimbursement.OrderNo, //备注
               SpecialApproverTitle: this.StaffReimbursement.SpecialApprover, //特殊审批人
               DetailInvoiceJSON: JSON.stringify(this.SubItems),
               ApplicantEmail: this.LoginName.split("@")[0],
@@ -1058,6 +1074,7 @@ export default {
             var data = req.d.results;
             if (data.length > 0) {
               //默认业务范围
+              this.EmployeeCode = data[0].EmployeeCode;
               console.log("默认业务范围");
               console.log(data);
               console.log(this.StaffReimbursement);
@@ -1065,6 +1082,7 @@ export default {
               this.costCenterChange();
               this.StaffReimbursement.BussinessScope = data[0].BusinessScope;
               this.StaffReimbursement.ProfitCenter = data[0].ProfitCenter;
+              this.StaffReimbursement.EmployeeCode = data[0].EmployeeCode;
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;

@@ -325,7 +325,8 @@ export default {
       loading: true,
       baseApplicantNumber: 0,
       GPRBaseFormat:"GPR",
-      appliantNumberItemId:0
+      appliantNumberItemId:0,
+      loginName:''
     };
   },
   methods: {
@@ -420,7 +421,7 @@ export default {
         condition:
           "?$filter=ContractNumber eq '" +
           this.purchaseRequestData.ContractNumber +
-          "' and Status eq 'Approved' "
+          "' and Status eq 'Approved' and  SettlementType ne '清账'"
       };
       var option = common.queryOpt(parm);
       console.log(option);
@@ -648,7 +649,7 @@ export default {
         type: "get",
         list: this.approverList,
         baseUrl: this.hostUrl,
-        condition: "?$filter=CostCenter eq  '" + costcenter + "'"
+        condition: "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
       };
       var option = common.queryOpt(parm); //获取审批节点请求
       $.when($.ajax(option)).done(r => {
@@ -782,19 +783,8 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             this.purchaseRequestData.CostCenter=data[0].CostCenter
+                this.EmployeeCode=data[0].EmployeeCode;
             this.costCenterChange()
-            // var selectedCostCenter = "";
-            // data.forEach(d => {
-            //   // this.costCenterArr.push({
-            //   //   CostCenter: d.CostCenter,
-            //   //   CostCenterName: d.CostCenterName
-            //   // });
-            //   selectedCostCenter = d.CostCenter;
-            //   this.companyCodeArr.push({
-            //     CompanyCode: d.CompanyCode
-            //   });
-            // });
-            // this.purchaseRequestData.CostCenter = selectedCostCenter;
           } else {
             this.$message(
               common.message(
@@ -898,6 +888,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName=loginName.split("@")[0],
           this.purchaseRequestData.Consignor = c.d.Title;
           this.search(loginName);
         })

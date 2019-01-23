@@ -49,6 +49,7 @@ import PTPTemp2 from "./components/PTPTemp2.vue";
 import PTPTemp3 from "./components/PTPTemp3.vue";
 import detailPTP from "./components/detailPTP.vue";
 import ViewECCDetails from "./components/ViewECCDetails.vue";
+import DetailPurchaseTask from "./components/DetailPurchaseTask.vue";
 
 export interface IO365FinanceWebPartWebPartProps {
   description: string;
@@ -111,7 +112,7 @@ export default class O365FinanceWebPartWebPart extends BaseClientSideWebPart<IO3
       { path: '/ptptemp3', component: PTPTemp3 },
       { path: '/detailptp', component: detailPTP },
       { path: '/vieweccdetails', component: ViewECCDetails },
-      
+      { path: '/detailPurchaseReport', component: DetailPurchaseTask },
       { path: '*', redirect: '/home' }   /*默认跳转路由*/
     ]
 

@@ -297,7 +297,8 @@ export default {
       formLabelWidth: "150px", //dialog lable
       baseApplicantNumber: 0, //ECC流水号，由申请单号列表获取
       ECCBaseFormat: "FAA", //ECC申请号前缀规则
-      appliantNumberItemId: 0 //ECC申请单号在申请单号列表中item的ID
+      appliantNumberItemId: 0, //ECC申请单号在申请单号列表中item的ID
+      loginName: "" //员工编码
     };
   },
   methods: {
@@ -384,7 +385,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costCenter + "' and Type eq 'FA'"
+          "?$filter=CostCenter eq  '" +
+          costCenter +
+          "' and EmployeeId eq '" +
+          this.loginName +
+          "'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
@@ -460,7 +465,11 @@ export default {
               list: this.approverList,
               baseUrl: this.hostUrl,
               condition:
-                "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
+                "?$filter=CostCenter eq  '" +
+                costcenter +
+                "' and EmployeeId eq '" +
+                this.loginName +
+                "'"
             };
             var option = common.queryOpt(parm); //获取审批节点请求
             $.when($.ajax(option))
@@ -568,7 +577,8 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             this.ECCTaskForm.costcenter = data[0].CostCenter;
-            this.ECCTaskForm.companycode=data[0].CompanyCode
+            this.ECCTaskForm.companycode = data[0].CompanyCode;
+            this.EmployeeCode = data[0].EmployeeCode;
           } else {
             this.$message(
               common.message(
@@ -932,6 +942,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName = loginName.split("@")[0];
           this.ECCTaskForm.applicant = c.d.Title;
           this.search(loginName);
         })

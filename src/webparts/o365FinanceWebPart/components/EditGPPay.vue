@@ -704,7 +704,9 @@ export default {
       loading: false,
       GPDocumentLibrary: "GPDocument",
       TaxExcelUrl: "",
-      ExpenseExcelUrl: ""
+      ExpenseExcelUrl: "",
+      EmployeeCode: "",
+      LoginName:''
     };
   },
   methods: {
@@ -1305,8 +1307,12 @@ export default {
           var opt = common.queryOpt(parm);
           $.when($.ajax(opt))
             .done(req => {
-              this.$message(common.message("success", "终止流程成功!"));
-              this.$router.push("/home");
+                    if (type == "reject") {
+                this.onApproval(type);
+              } else {
+                this.$message(common.message("success", "终止流程成功!"));
+                this.$router.push("/home");
+              }
             })
             .catch(err => {
               this.$message(common.message("error", "终止流程失败!"));
@@ -1421,6 +1427,8 @@ export default {
               //       CompanyCode: d.CompanyCode
               //     });
               //});
+
+              this.EmployeeCode = data[0].EmployeeCode;
               console.log("load user success");
             } else {
               this.$message(
@@ -1459,6 +1467,11 @@ export default {
         this.message = "发票金额不合法;";
       } else if (this.PublicPayment.Currency == "") {
         this.message = "请选择币种;";
+      } else if (
+        this.PublicPayment.SettlementType == "清账" &&
+        this.PublicPayment.LoanNumber == ""
+      ) {
+        this.message = "结算方式为清账时，必须填写借款单号;";
       } else if (isNaN(this.PublicPayment.AmountInlowercase)) {
         this.message = "小写金额不合法;";
       } else if (
@@ -1620,7 +1633,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq'" +
+          this.LoginName.split("@")[0] +
+          "'"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1815,6 +1832,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
+          this.LoginName=loginName;
           this.currentUserITCode = loginName.split("@")[0];
           this.currentUserTitle = c.d.Title;
           this.currentUserId = c.d.Id;
@@ -2165,7 +2183,7 @@ export default {
         condition:
           "?$filter=ContractNumber eq '" +
           this.PublicPayment.ContractNumber +
-          "' and Status eq 'Approved'"
+          "' and Status eq 'Approved' and  SettlementType ne '清账'"
       };
       var option = common.queryOpt(parm);
       console.log(option);

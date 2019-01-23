@@ -67,7 +67,12 @@
         </td>
         <td align="right">成本中心：</td>
         <td align="left">
-          <el-select v-model="PublicPayment.CostCenter" placeholder="请选择" size="medium" @change="costCenterChange">
+          <el-select
+            v-model="PublicPayment.CostCenter"
+            placeholder="请选择"
+            size="medium"
+            @change="costCenterChange"
+          >
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -78,11 +83,7 @@
         </td>
         <td align="right">公司代码 ：</td>
         <td align="left" colspan="2">
-          <el-select
-            v-model="PublicPayment.CompanyCode"
-            placeholder="请选择"
-            size="medium"
-          >
+          <el-select v-model="PublicPayment.CompanyCode" placeholder="请选择" size="medium">
             <el-option
               v-for="item in companyCodeArr"
               :key="item.CompanyCode"
@@ -479,7 +480,7 @@ export default {
         CompanyCode: "", //公司代码
         EmployeeCode: "", //人员编号
         BussinessScope: "", //业务范围
-        PhoneNumber:""
+        PhoneNumber: ""
       },
       TaxReceiptList: [], //税票清单
       TaxFileId: "",
@@ -588,12 +589,13 @@ export default {
       GPJBaseFormat: "GPJ",
       GPBBaseFormat: "GPB",
       GPJAppliantNumberItemId: 0,
-      GPBAppliantNumberItemId: 0
+      GPBAppliantNumberItemId: 0,
+      EmployeeCode: ""
     };
   },
   methods: {
     costCenterChange: function() {
-      this.companyCodeArr=[]
+      this.companyCodeArr = [];
       var parm = {
         type: "get",
         action: "ListItems",
@@ -606,27 +608,27 @@ export default {
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
-          if(data.length>0){
-            this.PublicPayment.CompanyCode=data[0].CompanyCode
+          if (data.length > 0) {
+            this.PublicPayment.CompanyCode = data[0].CompanyCode;
             var companyCode = [];
-          data.forEach(d => {
-            companyCode.push(d.CompanyCode);
-          });
-          console.log("未去重公司代码");
-          console.log(companyCode);
-          var companyCodeUnique = companyCode.filter(function(
-            element,
-            index,
-            array
-          ) {
-            return array.indexOf(element) === index;
-          });
-          companyCodeUnique.forEach(element => {
-            this.companyCodeArr.push({
-              CompanyCode: element
+            data.forEach(d => {
+              companyCode.push(d.CompanyCode);
             });
-          });
-          }else{
+            console.log("未去重公司代码");
+            console.log(companyCode);
+            var companyCodeUnique = companyCode.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            companyCodeUnique.forEach(element => {
+              this.companyCodeArr.push({
+                CompanyCode: element
+              });
+            });
+          } else {
             this.$message(common.message("error", "未能找到对应的公司代码"));
           }
         })
@@ -1160,7 +1162,7 @@ export default {
         this.$message(common.message("error", "请选择币种!"));
       } else {
         //计算
-          this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
+        this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
         this.convertMoney();
       }
     },
@@ -1262,10 +1264,11 @@ export default {
           .done(req => {
             var data = req.d.results;
             if (data.length > 0) {
-                this.PublicPayment.CostCenter=data[0].CostCenter;
-                this.costCenterChange()
-                this.PublicPayment.BussinessScope = data[0].BusinessScope;
-                this.PublicPayment.EmployeeCode = data[0].EmployeeCode;
+              this.EmployeeCode = data[0].EmployeeCode;
+              this.PublicPayment.CostCenter = data[0].CostCenter;
+              this.costCenterChange();
+              this.PublicPayment.BussinessScope = data[0].BusinessScope;
+              this.PublicPayment.EmployeeCode = data[0].EmployeeCode;
             } else {
               this.$message(
                 common.message(
@@ -1291,7 +1294,7 @@ export default {
       var isSuccess = false;
       if (this.PublicPayment.ReimbursementType == "") {
         this.message = "请选择报销类型;";
-      }else if(this.PublicPayment.PhoneNumber == ""){
+      } else if (this.PublicPayment.PhoneNumber == "") {
         this.message = "请输入联系电话;";
       } else if (this.PublicPayment.SettlementType == "") {
         this.message = "请选择结算方式;";
@@ -1303,6 +1306,11 @@ export default {
         this.message = "发票金额不合法;";
       } else if (this.PublicPayment.Currency == "") {
         this.message = "请选择币种;";
+      } else if (
+        this.PublicPayment.SettlementType == "清账" &&
+        this.PublicPayment.LoanNumber == ""
+      ) {
+        this.message = "结算方式为清账时，必须填写借款单号;";
       } else if (
         (this.PublicPayment.SettlementType == "汇款" ||
           this.PublicPayment.SettlementType == "支票") &&
@@ -1516,7 +1524,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1566,7 +1578,7 @@ export default {
               TaxFileItemId: Number(this.TaxFileId),
               ExpenseFileId: Number(this.ExpenseFileId),
               TaxFileJsonString: JSON.stringify(this.TaxFileJson),
-              PhoneNumber:this.PublicPayment.PhoneNumber,
+              PhoneNumber: this.PublicPayment.PhoneNumber,
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
             if (total > 0 && total < 1000) {
@@ -1790,8 +1802,8 @@ export default {
           if (data.length > 0) {
             data.forEach(item => {
               that.ContractNumbers.push({
-                supplier:item.Supplier,
-                legalPerson:item.LegalPerson,
+                supplier: item.Supplier,
+                legalPerson: item.LegalPerson,
                 label: item.Number,
                 value: item.Number,
                 money: item.Money
@@ -1809,11 +1821,11 @@ export default {
       that.ContractList = []; //还原
       that.AccountPaid = ""; //还原
       that.UnPaid = ""; //还原
-      this.ContractNumbers.forEach(item=>{
-          if(this.PublicPayment.ContractNumber==item.label){
-              this.ContractSupplier=item.supplier;
-              this.ContractLegal=item.legalPerson;
-          } 
+      this.ContractNumbers.forEach(item => {
+        if (this.PublicPayment.ContractNumber == item.label) {
+          this.ContractSupplier = item.supplier;
+          this.ContractLegal = item.legalPerson;
+        }
       });
       //获取合同列表
       var parm = {
@@ -1852,7 +1864,7 @@ export default {
         condition:
           "?$filter=ContractNumber eq '" +
           this.PublicPayment.ContractNumber +
-          "' and Status eq 'Approved' "
+          "' and Status eq 'Approved' and  SettlementType ne '清账' "
       };
       var option = common.queryOpt(parm);
       console.log(option);
@@ -1922,7 +1934,7 @@ export default {
   border: 1px solid #cfcfcf;
   padding: 5px;
 }
-#ContractInfoPart{
+#ContractInfoPart {
   background-color: #409eff;
   font-weight: bold;
   color: white;

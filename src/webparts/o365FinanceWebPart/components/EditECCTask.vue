@@ -405,7 +405,8 @@ export default {
       currentItemId: 0,
       deleteAttName: "",
       deleteSubListId: [],
-      startNoAttr: true
+      startNoAttr: true,
+      loginName:''
     };
   },
   methods: {
@@ -451,7 +452,7 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costCenter + "' and Type eq 'FA'"
+         "?$filter=CostCenter eq  '" + costCenter + "' and EmployeeId eq '"+this.loginName+"'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
@@ -736,7 +737,7 @@ export default {
               list: this.approverList,
               baseUrl: this.hostUrl,
               condition:
-                "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'FA'"
+                 "?$filter=CostCenter eq  '" + costCenter + "' and EmployeeId eq '"+this.loginName+"'"
             };
             var option = common.queryOpt(parm); //获取审批节点请求
             $.when($.ajax(option))
@@ -908,6 +909,7 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
+                this.EmployeeCode=data[0].EmployeeCode;
             data.forEach(d => {
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
@@ -1278,6 +1280,7 @@ export default {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.OTCMember = loginName.split("@")[0];
           this.currentUserITCode = loginName.split("@")[0];
+          this.loginName=loginName.split("@")[0];
           this.currentUserTitle = c.d.Title;
           this.search(loginName);
         })

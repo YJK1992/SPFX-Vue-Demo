@@ -50,6 +50,10 @@
         <el-input v-model="Condition.Applicant" placeholder="员工"></el-input>
       </el-form-item>
 
+      <el-form-item label>
+        <el-checkbox v-model="IsPrint">可打印</el-checkbox>
+      </el-form-item>
+
       <el-form-item>
         <el-button type="primary" @click="clearCondition">重置</el-button>
         <el-button type="primary" @click="onSubmit">查询</el-button>
@@ -57,7 +61,7 @@
       </el-form-item>
     </el-form>
 
-    <el-table border :data="TableData" style="width: 100%" max-height="600">
+    <el-table border :data="PrintData" style="width: 100%" max-height="600">
       <el-table-column width="200" prop="Title" label="报销单号"></el-table-column>
       <el-table-column width="200" prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column width="200" prop="CostAccount" label="费用科目"></el-table-column>
@@ -68,7 +72,7 @@
       <el-table-column width="200" prop="Currency" label="币种"></el-table-column>
       <el-table-column width="200" prop="Rate" label="汇率"></el-table-column>
       <el-table-column width="200" prop="ConvertMoney" label="转换金额"></el-table-column>
-      <!-- <el-table-column width="200" prop label="附件"></el-table-column> -->
+      <el-table-column width="200" prop="OriginalTaxMoney" label="原币税额"></el-table-column>
       <el-table-column width="200" prop="FinanceITCode" label="最后签批人"></el-table-column>
       <el-table-column width="200" prop="Modified" label="最后签批时间"></el-table-column>
       <el-table-column width="200" prop="Status" label="状态"></el-table-column>
@@ -159,7 +163,7 @@ export default {
         "币种",
         "汇率",
         "转换金额",
-        // "附件",
+        "原币税额",
         "最后签批人",
         "最后签批时间",
         "状态",
@@ -172,12 +176,14 @@ export default {
         "入住日期",
         "离店日期",
         "出差天数"
-      ] //excel字段名
+      ], //excel字段名
+      IsPrint: false, //是否可以打印
+      PrintData: []
     };
   },
   methods: {
     viewItem: function(index) {
-      var applicantNumber = this.TableData[index].Title;
+      var applicantNumber = this.PrintData[index].Title;
       this.$router.push({
         path: "/detailptp",
         query: {
@@ -188,9 +194,12 @@ export default {
     onExcel: function() {
       var temp = [];
       var tempColumn = [];
-      for (var item in this.TableData[0]) {
+      for (var item in this.PrintData[0]) {
         console.log(item);
-        tempColumn.push(item);
+        if (item != "IsPrint") {
+          console.log(item);
+          tempColumn.push(item);
+        }
       }
       temp = this.TableData;
       var data = temp.map(v => tempColumn.map(k => v[k]));
@@ -257,6 +266,7 @@ export default {
       this.getMainList(condition);
     },
     getMainList(condition) {
+      var that = this;
       var parm = {
         type: "get",
         action: "ListItems",
@@ -282,6 +292,11 @@ export default {
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
+                    IsPrint:
+                      d.StaffReimbursementApproval["Description"] ==
+                        "Approver5" ||
+                      (d.StaffReimbursementApproval["Description"] == "End" &&
+                        d.Status == "Approved"),
                     Title: d.Title,
                     ExpenseDate: sub.ExpenseDate,
                     CostAccount: sub.CostAccount,
@@ -292,7 +307,7 @@ export default {
                     Currency: sub.Currency,
                     Rate: sub.Rate,
                     ConvertMoney: Number(sub.ConvertMoney),
-                    // File: "",
+                    OriginalTaxMoney: Number(sub.OriginalTaxMoney),
                     FinanceITCode: d.FinanceITCode,
                     Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
                     Status: this.DisplayName[d.Status],
@@ -309,6 +324,11 @@ export default {
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
+                      IsPrint:
+                        d.StaffReimbursementApproval["Description"] ==
+                          "Approver5" ||
+                        (d.StaffReimbursementApproval["Description"] == "End" &&
+                          d.Status == "Approved"),
                       Title: d.Title,
                       ExpenseDate: sub.ExpenseDate,
                       CostAccount: sub.CostAccount,
@@ -319,7 +339,7 @@ export default {
                       Currency: sub.Currency,
                       Rate: sub.Rate,
                       ConvertMoney: Number(sub.ConvertMoney),
-                      File: "",
+                      OriginalTaxMoney: Number(sub.OriginalTaxMoney),
                       FinanceITCode: d.FinanceITCode,
                       Modified: d.Modified.substring(
                         0,
@@ -341,6 +361,10 @@ export default {
               });
             } else {
               this.TableData.push({
+                IsPrint:
+                  d.StaffReimbursementApproval["Description"] == "Approver5" ||
+                  (d.StaffReimbursementApproval["Description"] == "End" &&
+                    d.Status == "Approved"),
                 Title: d.Title,
                 ExpenseDate: "",
                 CostAccount: "",
@@ -351,7 +375,7 @@ export default {
                 Currency: "",
                 Rate: "",
                 ConvertMoney: "",
-                File: "",
+                OriginalTaxMoney: Number(sub.OriginalTaxMoney),
                 FinanceITCode: d.FinanceITCode,
                 Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
                 Status: this.DisplayName[d.Status],
@@ -367,6 +391,29 @@ export default {
               });
             }
           });
+
+          if (that.IsPrint === true) {
+            console.log("勾选了打印");
+
+            that.TableData.forEach(item => {
+              console.log(item);
+              console.log(item.IsPrint == true);
+              console.log(item.IsPrint.toString() == "true");
+              //已可以打印的数据
+              if (item.IsPrint === true) {
+                console.log("pushPrintDataTrue");
+                console.log(item);
+                that.PrintData.push(item);
+              }
+            });
+          } else {
+            console.log("没有勾选打印");
+            that.TableData.forEach(item => {
+              that.PrintData.push(item);
+            });
+          }
+
+          console.log(that.PrintData);
         }
       });
     },

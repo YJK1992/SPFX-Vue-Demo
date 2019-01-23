@@ -7,7 +7,7 @@
         </td>
       </tr>
       <tr>
-        <td align='right'>报销单号：</td>
+        <td align="right">报销单号：</td>
         <td colspan="7">
           <el-input v-model="StaffReimbursement.Title" disabled placeholder="报销单号"></el-input>
         </td>
@@ -31,7 +31,7 @@
         </td>
       </tr>
       <tr>
-        <td align='right'>附件 ：</td>
+        <td align="right">附件 ：</td>
         <td colspan="7" style="text-align:left;">
           <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
         </td>
@@ -49,9 +49,17 @@
         </td>
       </tr>
     </table>
-    <el-table border :data="SubItems" style="width: 100%" max-height="600">
-      <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
+    <el-table
+      :summary-method="getSummaries"
+      show-summary
+      border
+      :data="SubItems"
+      style="width: 100%"
+      max-height="600"
+    >
+         <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
       <el-table-column prop="CostAccount" label="费用科目"></el-table-column>
+      <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column prop="Count" label="数量"></el-table-column>
       <el-table-column prop="Price" label="单位金额"></el-table-column>
       <el-table-column prop="Total" label="总金额"></el-table-column>
@@ -62,7 +70,6 @@
       <el-table-column prop="TaxCode" label="税码"></el-table-column>
       <el-table-column prop="TaxRate" label="税率"></el-table-column>
       <el-table-column prop="OriginalTaxMoney" label="原币税额"></el-table-column>
-      <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column prop="StartDate" label="出发日期"></el-table-column>
       <el-table-column prop="ArriveDate" label="抵达日期"></el-table-column>
       <el-table-column prop="Destination" label="目的地"></el-table-column>
@@ -70,7 +77,7 @@
       <el-table-column prop="CheckInDate" label="入住日期"></el-table-column>
       <el-table-column prop="LeaveDate" label="离店日期"></el-table-column>
       <el-table-column prop="Name" label="酒店名称"></el-table-column>
-      <el-table-column prop="Number" label="发票号"></el-table-column>
+      <el-table-column prop="Number" label="参考号"></el-table-column>
     </el-table>
     <table class="detailyuangong" style="border-collapse: collapse;width:100%"></table>
     <!-- 新增税票 -->
@@ -177,8 +184,8 @@
         <el-form-item label="酒店名称：" :label-width="formLabelWidth">
           <el-input v-model="SubItem.Name" placeholder="酒店名称"></el-input>
         </el-form-item>
-        <el-form-item label="发票号：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Number" placeholder="发票号"></el-input>
+        <el-form-item label="参考号：" :label-width="formLabelWidth">
+          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）+ 发票号码（右上角）"></el-input>
         </el-form-item>
       </el-form>
     </el-dialog>
@@ -254,7 +261,35 @@ export default {
     };
   },
   methods: {
-        loadAttachment: function(attUrl) {
+    getSummaries(param) {
+      const { columns, data } = param;
+      const sums = [];
+      columns.forEach((column, index) => {
+        if (index === 0) {
+          sums[index] = "合计";
+          return;
+        }
+        const values = data.map(item => Number(item[column.property]));
+        if (!values.every(value => isNaN(value))) {
+          if (index == 8) {
+            sums[index] = values.reduce((prev, curr) => {
+              const value = Number(curr);
+              if (!isNaN(value)) {
+                return prev + curr;
+              } else {
+                return prev;
+              }
+            }, 0);
+            sums[index] += " 元";
+          }
+        } else {
+          //sums[index] = "N/A";
+        }
+      });
+
+      return sums;
+    },
+    loadAttachment: function(attUrl) {
       var parm = {
         type: "get",
         action: "Attachments",

@@ -57,15 +57,28 @@
     </el-form>
 
     <el-table border :data="TableData" style="width: 100%" max-height="600">
-      <el-table-column width="200" prop="CompanyCode" label="公司代码"></el-table-column>
-      <el-table-column width="200" prop="CostAccount" label="科目号"></el-table-column>
+      <el-table-column width="200" prop="SettlingTime" label="审核日期"></el-table-column>
+      <el-table-column width="200" prop="CreateDate" label="创建日期"></el-table-column>
+      <el-table-column width="200" prop="OrderType" label="订单类型"></el-table-column>
+      <el-table-column width="200" prop="CostCenter" label="公司代码"></el-table-column>
+      <el-table-column width="200" prop="ExpenseDate" label="费用日期"></el-table-column>
+      <el-table-column width="200" prop="Assignment" label="Assignment"></el-table-column>
+      <el-table-column width="200" prop="CorrelationNo" label="关联单据"></el-table-column>
+      <el-table-column width="200" prop="Zero" label="0"></el-table-column>
+      <el-table-column width="200" prop="TitleRemark" label="单头描述"></el-table-column>
+      <el-table-column width="200" prop="CostAccount" label="科目"></el-table-column>
+      <el-table-column width="200" prop="Code" label="过账码"></el-table-column>
       <el-table-column width="200" prop="Money" label="金额"></el-table-column>
       <el-table-column width="200" prop="CostCenter" label="成本中心"></el-table-column>
-      <el-table-column width="200" prop="ProfitCenter" label="利润中心"></el-table-column>
-      <el-table-column width="200" prop="BussinessScope" label="业务范围"></el-table-column>
+      <el-table-column width="200" prop="EmployeeID" label="员工ID"></el-table-column>
+      <el-table-column width="200" prop="EmployeeNo" label="员工编号"></el-table-column>
+      <el-table-column width="200" prop="No" label="序号"></el-table-column>
       <el-table-column width="200" prop="TXT" label="文本"></el-table-column>
-      <el-table-column width="200" prop="Title" label="assignment"></el-table-column>
-      <el-table-column width="200" prop="orderNo" label="订单号"></el-table-column>
+      <el-table-column width="200" prop="Number" label="参考号"></el-table-column>
+      <el-table-column width="200" prop="TaxCode" label="税码"></el-table-column>
+      <el-table-column width="200" prop="OrderNo" label="订单号"></el-table-column>
+      <el-table-column width="200" prop="Remark" label="备注"></el-table-column>
+      <el-table-column width="200" prop="FinanceITCode" label="审核人"></el-table-column>
     </el-table>
   </div>
 </template>
@@ -181,55 +194,93 @@ export default {
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
-                    CompanyCode: d.CompanyCode,
-                    CostAccount: sub.CostAccount,
-                    Money: Number(sub.ConvertMoney),
-                    CostCenter: d.CostCenter,
-                    ProfitCenter: d.ProfitCenter,
-                    BussinessScope: d.BussinessScope,
+                    SettlingTime: d.SettlingTime, //审核日期
+                    CreateDate: "", //创建日期
+                    OrderType: "Sb", //订单类型
+                    CompanyCode: d.CompanyCode, //公司代码
+                    ExpenseDate: sub.ExpenseDate, //费用日期
+                    Assignment: d.Title, //报销单号
+                    CorrelationNo: "", //关联单号
+                    Zero: "CNY", //0
+                    TitleRemark: "", //单头描述
+                    CostAccount: sub.CostAccount, //费用科目
+                    Code: "40", //过账码
+                    Money: Number(sub.ConvertMoney), //转换金额
+                    CostCenter: d.CostCenter, //成本中心
+                    EmployeeID: d.ApplicantEmail, //员工id
+                    EmployeeNo: d.EmployeeCode, //员工编号
+                    No: "", //序号
                     TXT:
                       d.Applicant +
                       "-报销-" +
                       d.Created.substring(0, d.Created.indexOf("T")) +
                       sub.ExpenseCategory,
-                    Title: d.Title,
-                    orderNo: ""
+                    Number: sub.Number, //参考号
+                    TaxCode: sub.TaxCode, //税码
+                    OrderNo: d.OrderNo, //订单号
+                    Remark: sub.Remark, //备注
+                    FinanceITCode: d.FinanceITCode //审核人
                   });
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
-                      CompanyCode: d.CompanyCode,
-                      CostAccount: sub.CostAccount,
-                      Money: Number(sub.ConvertMoney),
-                      CostCenter: d.CostCenter,
-                      ProfitCenter: d.ProfitCenter,
-                      BussinessScope: d.BussinessScope,
+                      SettlingTime: d.SettlingTime, //审核日期
+                      CreateDate: "", //创建日期
+                      OrderType: "Sb", //订单类型
+                      CompanyCode: d.CompanyCode, //公司代码
+                      ExpenseDate: sub.ExpenseDate, //费用日期
+                      Assignment: d.Title, //报销单号
+                      CorrelationNo: "", //关联单号
+                      Zero: "CNY", //0
+                      TitleRemark: "", //单头描述
+                      CostAccount: sub.CostAccount, //费用科目
+                      Code: "40", //过账码
+                      Money: Number(sub.ConvertMoney), //转换金额
+                      CostCenter: d.CostCenter, //成本中心
+                      EmployeeID: d.ApplicantEmail, //员工id
+                      EmployeeNo: d.EmployeeCode, //员工编号
+                      No: "", //序号
                       TXT:
                         d.Applicant +
                         "-报销-" +
                         d.Created.substring(0, d.Created.indexOf("T")) +
                         sub.ExpenseCategory,
-                      Title: d.Title,
-                      orderNo: ""
+                      Number: sub.Number, //参考号
+                      TaxCode: sub.TaxCode, //税码
+                      OrderNo: d.OrderNo, //订单号
+                      Remark: sub.Remark, //备注
+                      FinanceITCode: d.FinanceITCode //审核人
                     });
                   }
                 }
               });
             } else {
               this.TableData.push({
-                CompanyCode: d.CompanyCode,
-                CostAccount: "",
-                Money: "",
-                CostCenter: d.CostCenter,
-                ProfitCenter: d.ProfitCenter,
-                BussinessScope: d.BussinessScope,
+                SettlingTime: d.SettlingTime, //审核日期
+                CreateDate: "", //创建日期
+                OrderType: "Sb", //订单类型
+                CompanyCode: d.CompanyCode, //公司代码
+                ExpenseDate: "", //费用日期
+                Assignment: d.Title, //报销单号
+                CorrelationNo: "", //关联单号
+                Zero: "CNY", //0
+                TitleRemark: "", //单头描述
+                CostAccount: "", //费用科目
+                Code: "40", //过账码
+                Money: "", //转换金额
+                CostCenter: d.CostCenter, //成本中心
+                EmployeeID: d.ApplicantEmail, //员工id
+                EmployeeNo: d.EmployeeCode, //员工编号
+                No: "", //序号
                 TXT:
                   d.Applicant +
                   "-报销-" +
-                  d.Created.substring(0, d.Created.indexOf("T")) +
-                  sub.ExpenseCategory,
-                Title: d.Title,
-                orderNo: ""
+                  d.Created.substring(0, d.Created.indexOf("T")),
+                Number: "", //参考号
+                TaxCode: "", //税码
+                OrderNo: d.OrderNo, //订单号
+                Remark: "", //备注
+                FinanceITCode: d.FinanceITCode //审核人
               });
             }
           });

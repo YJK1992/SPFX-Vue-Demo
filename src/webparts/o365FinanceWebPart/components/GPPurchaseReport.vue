@@ -30,6 +30,17 @@
         </el-select>
       </el-form-item>
 
+      <el-form-item label="状态：">
+        <el-select v-model="Condition.Status" placeholder="请选择">
+          <el-option
+            v-for="item in Status"
+            :key="item.value"
+            :label="item.label"
+            :value="item.value"
+          ></el-option>
+        </el-select>
+      </el-form-item>
+
       <!-- <el-form-item label="结算方式：" v-show="false">
         <el-select v-model="Condition.SettlementType" placeholder="请选择">
           <el-option
@@ -54,11 +65,12 @@
       <el-table-column prop="SupplierParts" label="供应商部件"></el-table-column>
       <el-table-column prop="Amount" label="总金额"></el-table-column>
       <el-table-column prop="Taxation" label="税金"></el-table-column>
-      <!-- <el-table-column fixed="right" label="操作" width="100">
+      <el-table-column prop="Status" label="状态"></el-table-column>
+      <el-table-column fixed="right" label="操作" width="100">
         <template slot-scope="scope">
           <el-button @click="viewItem(scope.$index)" size="small">查看</el-button>
         </template>
-      </el-table-column>-->
+      </el-table-column>
     </el-table>
   </div>
 </template>
@@ -77,7 +89,6 @@ export default {
       ApplicationTypeArr: [], //申请类别
       CompanyCodeArr: [], //公司代码
       SettlementType: [
-        
         {
           value: "清帐",
           label: "清帐"
@@ -98,15 +109,16 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],//结算方式
+      ], //结算方式
       Condition: {
         ApplicationDate: "", //申请日期
         ApplicationNumber: "", //申请单号
         CompanyCode: "", //公司代码
         SettlementType: "", //结算类型
-        Consignor: "" //经办人
-      },//筛选条件
-      TableData: [],//主表数据
+        Consignor: "", //经办人
+        Status: "" //状态
+      }, //筛选条件
+      TableData: [], //主表数据
       excelColumns: [
         "申请单号",
         "标题",
@@ -115,17 +127,60 @@ export default {
         "供应商部件",
         "总金额",
         "税金"
-      ],//excle字段名
+      ], //excle字段名
+      Status: [
+        {
+          value: "Draft",
+          label: "草稿"
+        },
+        {
+          value: "Submitted",
+          label: "审批中"
+        },
+        {
+          value: "Changed",
+          label: "被驳回并提交"
+        },
+        {
+          value: "Dumped",
+          label: "终止"
+        },
+        {
+          value: "Rejected",
+          label: "已拒绝"
+        },
+        {
+          value: "Approved",
+          label: "审批完成"
+        }
+      ],
+      DisplayName: {
+        Draft: "草稿",
+        Submitted: "审批中",
+        Changed: "被驳回并提交",
+        Dumped: "终止",
+        Approved: "审批完成",
+        Rejected: "已拒绝"
+      }
     };
   },
   methods: {
+    viewItem: function(index) {
+      var applicantNumber = this.TableData[index].ApplicationNumber;
+      this.$router.push({
+        path: "/detailPurchaseReport",
+        query: {
+          ApplicantNumber: applicantNumber
+        }
+      });
+    },
     onExcel: function() {
       var temp = [];
       var tempColumn = [];
       for (var item in this.TableData[0]) {
         tempColumn.push(item);
       }
-      temp=this.TableData
+      temp = this.TableData;
       var data = temp.map(v => tempColumn.map(k => v[k]));
       var excelInfo = {
         excelColumns: this.excelColumns,
@@ -231,8 +286,9 @@ export default {
                 Consignor: mainItem.Consignor,
                 Supplier: d.Supplier,
                 SupplierParts: d.SupplierParts,
-                Amount:Number(d.Amount),
-                Taxation:Number(d.Taxation) 
+                Amount: Number(d.Amount),
+                Taxation: Number(d.Taxation),
+                Status: this.DisplayName[mainItem.Status]
               });
             });
           } else {
@@ -243,7 +299,8 @@ export default {
               Supplier: "",
               SupplierParts: "",
               Amount: "",
-              Taxation: ""
+              Taxation: "",
+              Status: this.DisplayName[mainItem.Status]
             });
           }
         })

@@ -394,7 +394,8 @@ export default {
       AccountPaid: "", //已付款
       UnPaid: "", //未付款
       ContractHistory: [], //合同历史信息,
-      Body: ""
+      Body: "",
+      loginName:''
     };
   },
   methods: {
@@ -480,7 +481,7 @@ export default {
         condition:
           "?$filter=ContractNumber eq '" +
           this.purchaseRequestData.ContractNumber +
-          "' and Status eq 'Approved' "
+          "' and Status eq 'Approved'  and  SettlementType ne '清账' "
       };
       var option = common.queryOpt(parm);
       console.log(option);
@@ -732,7 +733,7 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and Type eq 'GP'"
+          "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
       };
       var option = common.queryOpt(parm); //获取审批节点请求
       $.when($.ajax(option)).done(r => {
@@ -905,6 +906,7 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
+                this.EmployeeCode=data[0].EmployeeCode;
             data.forEach(d => {
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
@@ -1011,6 +1013,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName=loginName.split("@")[0];
           this.purchaseRequestData.Consignor = c.d.Title;
           this.search(loginName);
         })
