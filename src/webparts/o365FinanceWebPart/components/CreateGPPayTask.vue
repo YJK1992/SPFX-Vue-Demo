@@ -1622,6 +1622,10 @@ export default {
                 this.loading = false;
                 this.$message(common.message("error", "对公付款添加失败!"));
               });
+          }else{
+                   this.$message(
+                    common.message("error", "未找到对应的审批节点!")
+                  );
           }
         })
         .catch(err => {

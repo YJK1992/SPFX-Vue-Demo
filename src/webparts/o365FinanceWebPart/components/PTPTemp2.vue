@@ -2,7 +2,7 @@
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
       <el-form-item label="申请单号：">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
+        <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
       <el-form-item label="完成日期：">
         <el-date-picker
@@ -60,11 +60,11 @@
       <el-table-column width="200" prop="SettlingTime" label="审核日期"></el-table-column>
       <el-table-column width="200" prop="CreateDate" label="创建日期"></el-table-column>
       <el-table-column width="200" prop="OrderType" label="订单类型"></el-table-column>
-      <el-table-column width="200" prop="CostCenter" label="公司代码"></el-table-column>
+      <el-table-column width="200" prop="CompanyCode" label="公司代码"></el-table-column>
       <el-table-column width="200" prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column width="200" prop="Assignment" label="Assignment"></el-table-column>
       <el-table-column width="200" prop="CorrelationNo" label="关联单据"></el-table-column>
-      <el-table-column width="200" prop="Zero" label="0"></el-table-column>
+      <el-table-column width="200" prop="Zero" label="本位币"></el-table-column>
       <el-table-column width="200" prop="TitleRemark" label="单头描述"></el-table-column>
       <el-table-column width="200" prop="CostAccount" label="科目"></el-table-column>
       <el-table-column width="200" prop="Code" label="过账码"></el-table-column>
@@ -95,7 +95,7 @@ export default {
       mainListName: "StaffReimbursement", //员工报销
       //筛选条件
       Condition: {
-        ApplicationNumber: "", //申请单号
+        Title: "", //申请单号
         Applicant: "", //员工
         ApplicantEmail: "", //ITcode
         CompanyCode: "", //公司代码
@@ -107,15 +107,28 @@ export default {
       CostCenterArr: [], //成本中心
       TableData: [], //主表数据
       excelColumns: [
+        "审核日期",
+        "创建日期",
+        "订单类型",
         "公司代码",
-        "科目号",
+        "费用日期",
+        "Assignment",
+        "关联单据",
+        "本位币",
+        "单头描述",
+        "科目",
+        "过账码",
         "金额",
         "成本中心",
-        "利润中心",
-        "业务范围",
+        "员工ID",
+        "员工编号",
+        "序号",
         "文本",
-        "assignment",
-        "订单号"
+        "参考号",
+        "税码",
+        "订单号",
+        "备注",
+        "审核人"
       ] //excel字段名
     };
   },
@@ -132,9 +145,9 @@ export default {
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
-        fileName: "PTP2",
+        fileName: "入帐表",
         fileType: "xls",
-        sheetName: "PTP2"
+        sheetName: "入帐表"
       };
       efn.toExcel(excelInfo);
     },
@@ -190,11 +203,12 @@ export default {
                 ? null
                 : JSON.parse(d.DetailInvoiceJSON);
             console.log(subItems);
+            var newTime= d.SettlingTime.split('T')[0].split('-');
             if (subItems != null) {
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
-                    SettlingTime: d.SettlingTime, //审核日期
+                    SettlingTime: newTime[2]+newTime[1]+newTime[0], //审核日期
                     CreateDate: "", //创建日期
                     OrderType: "Sb", //订单类型
                     CompanyCode: d.CompanyCode, //公司代码
@@ -224,7 +238,7 @@ export default {
                 } else {
                   if (sub.CostAccount == this.CostAccount) {
                     this.TableData.push({
-                      SettlingTime: d.SettlingTime, //审核日期
+                      SettlingTime: newTime[2]+newTime[1]+newTime[0], //审核日期
                       CreateDate: "", //创建日期
                       OrderType: "Sb", //订单类型
                       CompanyCode: d.CompanyCode, //公司代码
@@ -256,7 +270,7 @@ export default {
               });
             } else {
               this.TableData.push({
-                SettlingTime: d.SettlingTime, //审核日期
+                SettlingTime: newTime[2]+newTime[1]+newTime[0], //审核日期
                 CreateDate: "", //创建日期
                 OrderType: "Sb", //订单类型
                 CompanyCode: d.CompanyCode, //公司代码

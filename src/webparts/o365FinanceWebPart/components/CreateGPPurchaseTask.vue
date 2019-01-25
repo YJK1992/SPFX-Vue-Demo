@@ -726,7 +726,7 @@ export default {
             });
         } else {
           this.loading = false;
-          this.$message(common.message("warning", "未找到审批用户!"));
+          this.$message(common.message("warning", "未找到对应的审批节点!"));
         }
       }).catch(err=>{
         this.loading = false;

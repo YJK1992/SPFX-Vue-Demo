@@ -2,7 +2,7 @@
   <div>
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
       <el-form-item label="申请单号：">
-        <el-input placeholder="申请单号"></el-input>
+        <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
       <el-form-item label="完成日期：">
         <el-date-picker
@@ -15,19 +15,19 @@
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="财务审批人：">
-        <el-input placeholder="财务审批人"></el-input>
+        <el-input v-model="Condition.Finance"  placeholder="财务审批人"></el-input>
       </el-form-item>
 
       <el-form-item label="员工">
-        <el-input placeholder="员工"></el-input>
+        <el-input v-model="Condition.Applicant"  placeholder="员工"></el-input>
       </el-form-item>
 
       <el-form-item label="员工ITcode">
-        <el-input placeholder="员工ITcode"></el-input>
+        <el-input v-model="Condition.ApplicantEmail" placeholder="员工ITcode"></el-input>
       </el-form-item>
 
       <el-form-item label="公司代码：">
-        <el-select placeholder="请选择">
+        <el-select v-model="Condition.CompanyCode" placeholder="请选择">
           <el-option
             v-for="item in CompanyCodeArr"
             :key="item.CompanyCode"
@@ -66,7 +66,7 @@ export default {
       mainListName: "StaffReimbursement", //员工报销
       //筛选条件
       Condition: {
-        ApplicationNumber: "", //申请单号
+        Title: "", //申请单号
         Applicant: "", //员工
         Finance: "", //财务审批人
         ApplicantEmail: "", //ITcode
@@ -90,9 +90,9 @@ export default {
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
-        fileName: "PTP3",
+        fileName: "付款表",
         fileType: "xls",
-        sheetName: "PTP3"
+        sheetName: "付款表"
       };
       efn.toExcel(excelInfo);
     },

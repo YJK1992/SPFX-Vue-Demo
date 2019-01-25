@@ -4,6 +4,9 @@
       <tr>
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">员工报销模板</span>
+          <div style="float:right">
+            <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button>
+          </div>
         </td>
       </tr>
       <tr>
@@ -57,7 +60,7 @@
       style="width: 100%"
       max-height="600"
     >
-         <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
+      <el-table-column prop="ExpenseCategory" label="费用类型"></el-table-column>
       <el-table-column prop="CostAccount" label="费用科目"></el-table-column>
       <el-table-column prop="ExpenseDate" label="费用日期"></el-table-column>
       <el-table-column prop="Count" label="数量"></el-table-column>
@@ -79,116 +82,115 @@
       <el-table-column prop="Name" label="酒店名称"></el-table-column>
       <el-table-column prop="Number" label="参考号"></el-table-column>
     </el-table>
-    <table class="detailyuangong" style="border-collapse: collapse;width:100%"></table>
-    <!-- 新增税票 -->
-    <el-dialog title="新增票据信息" :visible.sync="dialogFormVisible">
-      <el-form :model="SubItem">
-        <el-form-item label="费用类别：" :label-width="formLabelWidth">
-          <el-select
-            filterable
-            @change="SubItem.CostAccount=''"
-            v-model="SubItem.ExpenseCategory"
-            placeholder="请选择"
-          >
-            <el-option
-              v-for="item in expenseCategoryOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-            <!-- <el-option></el-option> -->
-          </el-select>
-        </el-form-item>
-        <el-form-item label="费用科目：" :label-width="formLabelWidth">
-          <el-select v-model="SubItem.CostAccount" placeholder="请选择">
-            <template v-for="item in costAccountOptions">
-              <el-option
-                v-if="SubItem.ExpenseCategory==item.Type"
-                :key="item.value"
-                :label="item.label"
-                :value="item.value"
-              ></el-option>
-            </template>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="数量：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
-        </el-form-item>
-        <el-form-item label="单位金额：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Price" placeholder="单位金额"></el-input>
-        </el-form-item>
-        <el-form-item label="总金额：" :label-width="formLabelWidth">
-          <el-input @change="ChangeConvertMoney" v-model="SubItem.Total" placeholder="总金额" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="币种：" :label-width="formLabelWidth">
-          <el-select v-model="SubItem.Currency" filterable placeholder="请选择">
-            <el-option
-              v-for="item in Currency"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="汇率：" :label-width="formLabelWidth">
-          <el-input @change="ChangeConvertMoney" v-model="SubItem.Rate" placeholder="汇率"></el-input>
-        </el-form-item>
-        <el-form-item label="转换金额：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.ConvertMoney" placeholder="转换金额" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="转换后币种：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
-        </el-form-item>
-        <el-form-item label="是否启用税：" :label-width="formLabelWidth">
-          <el-checkbox v-model="SubItem.IsTax"></el-checkbox>
-        </el-form-item>
-        <el-form-item label="税码：" :label-width="formLabelWidth">
-          <el-select @change="ChangeTaxRate" v-model="SubItem.TaxCode" filterable placeholder="请选择">
-            <el-option
-              v-for="item in taxCodeOptions"
-              :key="item.value"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>
-        </el-form-item>
-        <el-form-item label="税率：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.TaxRate" placeholder="税率" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="原币税额：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.OriginalTaxMoney" placeholder="原币税额" disabled></el-input>
-        </el-form-item>
-        <el-form-item label="出发/抵达日期：" :label-width="formLabelWidth">
-          <el-date-picker
-            value-format="yyyy-MM-dd"
-            type="daterange"
-            range-separator="到"
-            v-model="StartArriveDate"
-            start-placeholder="出发日期"
-            end-placeholder="抵达日期"
-          ></el-date-picker>
-        </el-form-item>
-        <el-form-item label="目的地：" :label-width="formLabelWidth">
-          <el-input placeholder="目的地"></el-input>
-        </el-form-item>
-        <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
-          <el-date-picker
-            value-format="yyyy-MM-dd"
-            type="daterange"
-            v-model="CheckInLeaveData"
-            range-separator="到"
-            start-placeholder="出发日期"
-            end-placeholder="抵达日期"
-          ></el-date-picker>
-        </el-form-item>
-        <el-form-item label="酒店名称：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Name" placeholder="酒店名称"></el-input>
-        </el-form-item>
-        <el-form-item label="参考号：" :label-width="formLabelWidth">
-          <el-input v-model="SubItem.Number" placeholder="发票号码（左上角）+ 发票号码（右上角）"></el-input>
-        </el-form-item>
-      </el-form>
-    </el-dialog>
+    <div style="display:none;" id="printBox">
+      <table class="printTable">
+        <tr class="printTableTh">
+          <td align="center" colspan="6">
+            <h2>{{this.CompanyName}}</h2>
+          </td>
+        </tr>
+        <tr>
+          <td>费用报告编号：</td>
+          <td colspan="5">{{this.StaffReimbursement.Title}}</td>
+        </tr>
+        <tr>
+          <td>付款对象：</td>
+          <td colspan="2">Yong Xu(徐勇)</td>
+          <td>报销金额：</td>
+          <td colspan="2">{{this.TotalMoney}}CNY</td>
+        </tr>
+        <tr>
+          <td colspan="3">员工信息</td>
+          <td colspan="3">银行信息</td>
+        </tr>
+        <tr>
+          <td>姓名：</td>
+          <td>{{this.StaffReimbursement.Applicant}}</td>
+          <td>工作电话：</td>
+          <td></td>
+          <td>户名：</td>
+          <td>工资</td>
+        </tr>
+        <tr>
+          <td>员工编号：</td>
+          <td></td>
+          <td>手机：</td>
+          <td></td>
+          <td>账号：</td>
+          <td>{{this.StaffReimbursement.AccountNumber}}</td>
+        </tr>
+        <tr>
+          <td>工作地址：</td>
+          <td></td>
+          <td>邮件地址：</td>
+          <td></td>
+          <td>银行名称：</td>
+          <td></td>
+        </tr>
+      </table>
+
+      <table class="printTable">
+        <tr class="printTableTh">
+          <td colspan="6">费用报告信息</td>
+        </tr>
+        <tr>
+          <td>提交报告日期：</td>
+          <td>{{this.StaffReimbursement.Created}}</td>
+          <td>成本中心：</td>
+          <td>{{this.StaffReimbursement.CostCenter}}</td>
+          <td>备忘：</td>
+          <td></td>
+        </tr>
+        <tr>
+          <td>完成审批日期：</td>
+          <td>{{this.StaffReimbursement.SettlingTime}}</td>
+          <td>增值税条目：</td>
+          <td>No(元)</td>
+          <td>文出授权：</td>
+          <td></td>
+        </tr>
+      </table>
+
+      <table class="printTable">
+        <tr class="printTableTh">
+          <td colspan="11">费用报告明细行</td>
+        </tr>
+        <tr>
+          <td>税码</td>
+          <td>日期</td>
+          <td>费用名称</td>
+          <td>报销金额</td>
+          <td>兑换后金额</td>
+          <td>内部订单</td>
+          <td>备忘</td>
+          <td>税码</td>
+          <td>参考号</td>
+          <td>逐条列单</td>
+        </tr>
+        <template v-for="(subItem,cindex) in PrintSubItems">
+          <tr>
+            <td>{{subItem}}</td>
+          </tr>
+        </template>
+      </table>
+
+      <table class="printTable">
+        <tr class="printTableTh">
+          <td colspan="5">审批记录</td>
+        </tr>
+        <tr class="printTableTh">
+          <td>审批人</td>
+          <td>审批人级别</td>
+          <td>审批状态</td>
+          <td>审批日期</td>
+        </tr>
+        <template v-for="(subItem,cindex) in ApprovalHistory">
+          <tr>
+            <td>{{subItem}}</td>
+          </tr>
+        </template>
+      </table>
+    </div>
   </div>
 </template>
 <script>
@@ -203,7 +205,6 @@ export default {
       userListName: "EmployeeList", //员工详细信息列表名称
       SpecApproId: 0, //特殊审批人ID
       LoginName: "", //登录名
-      dialogFormVisible: false,
       formLabelWidth: "150px",
       StartArriveDate: "",
       CheckInLeaveData: "",
@@ -219,12 +220,14 @@ export default {
         AccountNumber: "", //账户号
         CostCenter: "", //成本中心
         CompanyCode: "", //公司代码
-        Remark: "", //备注
-        SpecialApprover: "" //特殊审批人
+        OrderNo: "", //订单号
+        SpecialApprover: "", //特殊审批人
+        SettlingTime: "" //审批完成时间
       },
       FinanceITCode: "",
       //子表数据
       SubItems: [],
+      PrintSubItems: [],
       SubItem: {
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
@@ -257,10 +260,54 @@ export default {
       },
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       currentStep: "",
-      ApprovalHistory: "" //审批历史
+      ApprovalHistory: "", //审批历史
+      IsDisable: false,
+      CompanyName: "", //公司名称
+      TotalMoney: 0 //报销金额
     };
   },
   methods: {
+    printDeal() {
+      var printBox = document.getElementById("printBox");
+      //拿到打印的区域的html内容
+      var newContent = printBox.innerHTML;
+      //将旧的页面储存起来，当打印完成后返给给页面。
+      var oldContent = document.body.innerHTML;
+      //赋值给body
+      document.body.innerHTML = newContent;
+      //执行window.print打印功能
+      window.print();
+      // 重新加载页面，以刷新数据。以防打印完之后，页面不能操作的问题
+      window.location.reload();
+      document.body.innerHTML = oldContent;
+      return false;
+    },
+    getCompanyName(code) {
+      var that = this;
+
+      //获取合同列表
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.EmployeeName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=CompanyCode eq '" + code + "'&$top=1"
+      }; //Completed 已完成
+      console.log(parm.condition);
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            console.log("公司名称:" + data[0].CompanyName);
+            console.log(data);
+            that.CompanyName = data[0].CompanyName;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取公司名称失败!"));
+        });
+    },
     getSummaries(param) {
       const { columns, data } = param;
       const sums = [];
@@ -320,6 +367,10 @@ export default {
         console.log(data);
         if (data.length > 0) {
           //加载主表
+          this.IsDisable =
+            data[0].StaffReimbursementApproval["Description"] == "Approver5" ||
+            (data[0].StaffReimbursementApproval["Description"] == "End" &&
+              data[0].Status == "Approved");
           this.ApprovalHistory = data[0].ApproverHistory;
           this.StaffReimbursement.Title = data[0].Title;
           this.StaffReimbursement.Applicant = data[0].Applicant;
@@ -329,7 +380,24 @@ export default {
           this.StaffReimbursement.Remark = data[0].Remark;
           this.StaffReimbursement.SpecialApprover = data[0].SpecialApprover;
           this.currentItemId = data[0].Id;
-
+          this.StaffReimbursement.Created = data[0].Created.substring(
+            0,
+            data[0].Created.indexOf("T")
+          );
+          this.StaffReimbursement.SettlingTime = data[0].SettlingTime;
+          this.getCompanyName(this.StaffReimbursement.CompanyCode);
+          var approvalHistory = JSON.parse(this.ApprovalHistory);
+          var keys = Object.keys(approvalHistory);
+          var result = [];
+          keys.forEach(key => {
+            result.push({
+              Approver: approvalHistory[key].split(",")[0],
+              ApproverLevel: key,
+              Status: "已批准",
+              ApproverDate: approvalHistory[key].split(",")[1]
+            });
+          });
+          this.ApprovalHistory = result;
           if (data[0].Attachments) {
             var attUrl = data[0].AttachmentFiles.__deferred.uri;
             var getAtt = this.loadAttachment(attUrl);
@@ -362,7 +430,9 @@ export default {
               : JSON.parse(data[0].DetailInvoiceJSON);
           console.log(subItems);
           if (subItems != null) {
+            var totalMoney = 0;
             subItems.forEach(element => {
+              totalMoney += element.ConvertMoney;
               this.SubItems.push({
                 ExpenseCategory: element.ExpenseCategory, //费用类别
                 CostAccount: element.CostAccount, //费用科目
@@ -386,7 +456,21 @@ export default {
                 Name: element.Name, //酒店名称
                 Number: element.Number //发票号
               });
+
+              this.PrintSubItems.push({
+                TaxCode: element.TaxCode, //税码
+                ExpenseDate: element.ExpenseDate, //费用日期
+                ExpenseCategory: element.ExpenseCategory, //费用类别
+                ConvertMoney: element.ConvertMoney, //转换金额
+                OrderNo: "",
+                Remark: element.Remark, //备注
+                File: "",
+                TaxCode: element.TaxCode, //税码
+                Number: element.Number, //发票号
+                tiaomu: ""
+              });
             });
+            this.TotalMoney = totalMoney;
           }
         } else {
           this.$message(

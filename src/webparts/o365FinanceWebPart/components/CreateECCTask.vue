@@ -547,8 +547,8 @@ export default {
                     });
                 } else {
                   this.loading = false;
-                  this.$message(
-                    common.message("error", "未找到对应成本中心的审批节点!")
+                      this.$message(
+                    common.message("error", "未找到对应的审批节点!")
                   );
                 }
               })

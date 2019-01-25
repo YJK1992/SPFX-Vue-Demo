@@ -43,7 +43,14 @@
         </el-select>
       </el-form-item>
       <el-form-item label="成本中心">
-        <el-select v-model="Condition.CostCenter" placeholder="请选择"></el-select>
+        <el-select v-model="Condition.CostCenter" placeholder="请选择">
+          <el-option
+            v-for="item in CostCenterArr"
+            :key="item.CostCenter"
+            :label="item.CostCenter"
+            :value="item.CostCenter"
+          ></el-option>
+        </el-select>
       </el-form-item>
 
       <el-form-item label="员工">
@@ -206,9 +213,9 @@ export default {
       var excelInfo = {
         excelColumns: this.excelColumns,
         excelData: data,
-        fileName: "PTP1",
+        fileName: "费用明细表",
         fileType: "xls",
-        sheetName: "PTP1"
+        sheetName: "费用明细表"
       };
       efn.toExcel(excelInfo);
     },
@@ -218,6 +225,7 @@ export default {
     },
     onSubmit() {
       this.TableData = [];
+      this.PrintData = [];
       console.log("筛选条件");
       console.log(this.Condition);
       var condition = "";
