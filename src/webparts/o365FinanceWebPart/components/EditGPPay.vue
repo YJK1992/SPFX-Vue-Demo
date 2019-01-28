@@ -442,7 +442,7 @@
           >批准</el-button>
           <el-button type="danger" @click="onEnd(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
           <el-button
-            @click="onApproval(buttonType.Return)"
+            @click="onEnd(buttonType.Return)"
             v-show="showApprover"
             type="danger"
             plain
@@ -1307,12 +1307,9 @@ export default {
           var opt = common.queryOpt(parm);
           $.when($.ajax(opt))
             .done(req => {
-                    if (type == "reject") {
+                    
                 this.onApproval(type);
-              } else {
-                this.$message(common.message("success", "终止流程成功!"));
-                this.$router.push("/home");
-              }
+         
             })
             .catch(err => {
               this.$message(common.message("error", "终止流程失败!"));

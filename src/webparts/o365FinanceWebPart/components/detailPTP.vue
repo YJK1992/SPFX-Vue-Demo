@@ -5,7 +5,7 @@
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">员工报销模板</span>
           <div style="float:right">
-            <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button>
+            <!-- <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button> -->
           </div>
         </td>
       </tr>
@@ -167,11 +167,11 @@
           <td>参考号</td>
           <td>逐条列单</td>
         </tr>
-        <template v-for="(subItem,cindex) in PrintSubItems">
-          <tr>
+        <tr v-for="(subItems,index) in  PrintSubItems">
+          <template v-for="(subItem,cindex) in subItems">
             <td>{{subItem}}</td>
-          </tr>
-        </template>
+          </template>
+        </tr>
       </table>
 
       <table class="printTable">
@@ -184,11 +184,11 @@
           <td>审批状态</td>
           <td>审批日期</td>
         </tr>
-        <template v-for="(subItem,cindex) in ApprovalHistory">
-          <tr>
+        <tr v-for="(subItems,index) in  ApprovalHistory">
+          <template v-for="(subItem,cindex) in subItems">
             <td>{{subItem}}</td>
-          </tr>
-        </template>
+          </template>
+        </tr>
       </table>
     </div>
   </div>
@@ -289,7 +289,7 @@ export default {
       var parm = {
         action: "ListItems",
         type: "get",
-        list: this.EmployeeName,
+        list: this.userListName,
         baseUrl: this.hostUrl,
         condition: "?$filter=CompanyCode eq '" + code + "'&$top=1"
       }; //Completed 已完成
@@ -461,13 +461,13 @@ export default {
                 TaxCode: element.TaxCode, //税码
                 ExpenseDate: element.ExpenseDate, //费用日期
                 ExpenseCategory: element.ExpenseCategory, //费用类别
+                Money:element.Total,
                 ConvertMoney: element.ConvertMoney, //转换金额
-                OrderNo: "",
+                OrderNo:data[0].OrderNo ,
                 Remark: element.Remark, //备注
-                File: "",
-                TaxCode: element.TaxCode, //税码
+                TaxCode1: element.TaxCode, //税码
                 Number: element.Number, //发票号
-                tiaomu: ""
+                tiaomu: "xxxx"
               });
             });
             this.TotalMoney = totalMoney;
@@ -497,5 +497,24 @@ export default {
 .detailyuangong tr td {
   border: 1px solid #cfcfcf;
   padding: 5px;
+}
+.printTable {
+  width: 100%;
+  min-height: 25px;
+  line-height: 25px;
+  text-align: left;
+  border-collapse: collapse;
+  color: gray;
+  padding: 2px;
+  margin-top: 20px;
+}
+.printTableTh {
+  background-color: #cfcfcf;
+  color: black;
+}
+.printTable td {
+  border: 1px solid black;
+  padding: 5px;
+  font-size: 12px;
 }
 </style>
