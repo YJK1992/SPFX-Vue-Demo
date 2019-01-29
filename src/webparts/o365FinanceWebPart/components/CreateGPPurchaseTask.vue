@@ -342,8 +342,10 @@ export default {
         action: "ListItems",
         list: this.userListName,
         condition:
-          "?$filter=CostCenter eq '" +
+          "?$filter=CostCenter eq  '" +
           this.purchaseRequestData.CostCenter +
+          "' and EmployeeId eq '" +
+          this.loginName +
           "'",
         baseUrl: this.hostUrl
       };

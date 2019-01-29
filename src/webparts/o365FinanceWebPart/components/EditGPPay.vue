@@ -801,13 +801,31 @@ export default {
       this.loading = true;
       var fileInfo = file.raw;
       var fileName = file.name;
-      this.getfile(fileInfo, fileName, "Tax");
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.getfile(fileInfo, fileName, "Tax");
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
     }, //上传成功后回调函数
     uploadExpenseSuccess: function(response, file, fileList) {
       this.loading = true;
       var fileInfo = file.raw;
       var fileName = file.name;
-      this.getfile(fileInfo, fileName, "Expense");
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          this.getfile(fileInfo, fileName, "Expense");
+        })
+        .catch(error => {
+          this.loading = false;
+          this.$message(common.message("error", "获取Digest失败"));
+        });
     },
     getfile: function(fileInfo, fileName, type) {
       var fileToArr = common.getFileBuffer(fileInfo);
@@ -1092,25 +1110,16 @@ export default {
       });
     },
     addFileToFolder: function(arrayBuffer, fileName, listName) {
-      var getDigst = common.getRequestDigest(this.hostUrl);
       var opt = "";
-      getDigst
-        .done(data => {
-          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
-          var parm = {
-            type: "post",
-            action: "AddFile",
-            baseUrl: this.hostUrl,
-            list: listName,
-            fileName: this.FileGUID + "_" + fileName,
-            digest: this.requestDigest
-          };
-          opt = common.queryOpt(parm);
-        })
-        .catch(error => {
-          this.loading = false;
-          this.$message(common.message("error", "获取Digest失败"));
-        });
+      var parm = {
+        type: "post",
+        action: "AddFile",
+        baseUrl: this.hostUrl,
+        list: listName,
+        fileName: this.FileGUID + "_" + fileName,
+        digest: this.requestDigest
+      };
+      opt = common.queryOpt(parm);
       return common.service(opt);
     },
     fileLimit: function(files, fileList) {

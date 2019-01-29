@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div  v-loading="loading">
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
       <el-form-item label="申请单号：">
         <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
@@ -161,7 +161,8 @@ export default {
         Dumped: "终止",
         Approved: "审批完成",
         Rejected: "已拒绝"
-      }
+      },
+            loading: false, //控制页面是否加载
     };
   },
   methods: {
@@ -192,6 +193,7 @@ export default {
       efn.toExcel(excelInfo);
     },
     onSubmit() {
+      this.loading=true;
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
@@ -303,6 +305,7 @@ export default {
               Status: this.DisplayName[mainItem.Status]
             });
           }
+          this.loading=false;
         })
         .catch(err => {
           this.$message(common.message("error", "获取物料数据失败!"));

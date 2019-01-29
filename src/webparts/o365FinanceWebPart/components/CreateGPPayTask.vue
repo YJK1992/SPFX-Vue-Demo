@@ -601,7 +601,11 @@ export default {
         action: "ListItems",
         list: this.userListName,
         condition:
-          "?$filter=CostCenter eq '" + this.PublicPayment.CostCenter + "'",
+          "?$filter=CostCenter eq  '" +
+          this.PublicPayment.CostCenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);

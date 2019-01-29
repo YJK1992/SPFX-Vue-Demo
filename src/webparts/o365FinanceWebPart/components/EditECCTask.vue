@@ -692,7 +692,7 @@ export default {
       $.when($.ajax(opt))
         .done(req => {
           this.loading = false;
-          this.$message(common.message("success", "审批成功!"));
+          this.$message(common.message("success", "操作成功!"));
           if ((taskOutcome = "已批准")) {
             if (this.currentStep == "Approver5") {
               this.deleteSubListItems();
@@ -702,7 +702,7 @@ export default {
         })
         .catch(err => {
           this.loading = false;
-          this.$message(common.message("error", "审批失败!"));
+          this.$message(common.message("error", "操作失败!"));
           this.$router.push("/home");
         });
     },

@@ -1198,14 +1198,14 @@ export default {
         .done(req => {
           console.log(req);
           this.loading = false;
-          this.$message(common.message("success", "审批成功!"));
+          this.$message(common.message("success", "操作成功!"));
 
           this.$router.push("/home");
         })
         .catch(err => {
           console.log(err);
           this.loading = false;
-          this.$message(common.message("error", "审批失败!"));
+          this.$message(common.message("error", "操作失败!"));
           this.$router.push("/home");
         });
         }).catch(err=>{

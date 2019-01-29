@@ -446,7 +446,11 @@ export default {
         action: "ListItems",
         list: this.userListName,
         condition:
-          "?$filter=CostCenter eq '" + this.StaffReimbursement.CostCenter + "'",
+          "?$filter=CostCenter eq '" +
+          this.StaffReimbursement.CostCenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);
@@ -906,12 +910,12 @@ export default {
               .done(req => {
                 var attUrl = req.d.AttachmentFiles.__deferred.uri;
                 this.uploadAttFileToItem(attUrl);
-                        this.$message({
-                        showClose: true,
-                        message: "员工报销添加成功!" + applicantNumber,
-                        type: "success",
-                        duration: 0
-                      });
+                this.$message({
+                  showClose: true,
+                  message: "员工报销添加成功!" + applicantNumber,
+                  type: "success",
+                  duration: 0
+                });
                 this.updateApplicantBaseNumber();
                 this.loading = false;
                 this.$router.push("/home");
@@ -920,10 +924,8 @@ export default {
                 this.loading = false;
                 this.$message(common.message("error", "员工报销添加失败!"));
               });
-          }else{
-               this.$message(
-                    common.message("error", "未找到对应的审批节点!")
-                  );
+          } else {
+            this.$message(common.message("error", "未找到对应的审批节点!"));
           }
         })
         .catch(err => {
