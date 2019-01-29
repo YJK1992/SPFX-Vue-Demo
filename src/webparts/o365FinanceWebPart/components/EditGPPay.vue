@@ -441,12 +441,7 @@
             v-show="showApprover"
           >批准</el-button>
           <el-button type="danger" @click="onEnd(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
-          <el-button
-            @click="onEnd(buttonType.Return)"
-            v-show="showApprover"
-            type="danger"
-            plain
-          >退回</el-button>
+          <el-button @click="onEnd(buttonType.Return)" v-show="showApprover" type="danger" plain>退回</el-button>
           <el-button
             @click="onEnd(buttonType.Return)"
             v-show="requestIsReject"
@@ -706,7 +701,7 @@ export default {
       TaxExcelUrl: "",
       ExpenseExcelUrl: "",
       EmployeeCode: "",
-      LoginName:''
+      LoginName: ""
     };
   },
   methods: {
@@ -883,6 +878,7 @@ export default {
                       console.log(
                         "加载税票清单成功，请点击税票清单按钮进行再次校验!"
                       );
+                      console.log(fd);
                       var getFile = this.getFileItem(
                         fd.d.ListItemAllFields.__deferred.uri
                       );
@@ -1307,9 +1303,7 @@ export default {
           var opt = common.queryOpt(parm);
           $.when($.ajax(opt))
             .done(req => {
-                    
-                this.onApproval(type);
-         
+              this.onApproval(type);
             })
             .catch(err => {
               this.$message(common.message("error", "终止流程失败!"));
@@ -1735,10 +1729,8 @@ export default {
                 this.loading = false;
                 this.$message(common.message("error", "对公付款添加失败!"));
               });
-          }else{
-                   this.$message(
-                    common.message("error", "未找到对应的审批节点!")
-                  );
+          } else {
+            this.$message(common.message("error", "未找到对应的审批节点!"));
           }
         })
         .catch(err => {
@@ -1833,7 +1825,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
-          this.LoginName=loginName;
+          this.LoginName = loginName;
           this.currentUserITCode = loginName.split("@")[0];
           this.currentUserTitle = c.d.Title;
           this.currentUserId = c.d.Id;

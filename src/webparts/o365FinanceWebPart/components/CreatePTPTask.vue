@@ -906,7 +906,12 @@ export default {
               .done(req => {
                 var attUrl = req.d.AttachmentFiles.__deferred.uri;
                 this.uploadAttFileToItem(attUrl);
-                this.$message(common.message("success", "员工报销添加成功!"));
+                        this.$message({
+                        showClose: true,
+                        message: "员工报销添加成功!" + applicantNumber,
+                        type: "success",
+                        duration: 0
+                      });
                 this.updateApplicantBaseNumber();
                 this.loading = false;
                 this.$router.push("/home");

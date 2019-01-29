@@ -737,7 +737,7 @@ export default {
               list: this.approverList,
               baseUrl: this.hostUrl,
               condition:
-                 "?$filter=CostCenter eq  '" + costCenter + "' and EmployeeId eq '"+this.loginName+"'"
+                 "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
             };
             var option = common.queryOpt(parm); //获取审批节点请求
             $.when($.ajax(option))

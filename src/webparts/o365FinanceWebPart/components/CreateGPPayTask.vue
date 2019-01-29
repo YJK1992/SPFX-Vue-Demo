@@ -1613,7 +1613,12 @@ export default {
             option = common.queryOpt(parm);
             $.when($.ajax(option))
               .done(req => {
-                this.$message(common.message("success", "对公付款添加成功!"));
+                this.$message({
+                  showClose: true,
+                  message: "对公付款添加成功!" + applicantNumber,
+                  type: "success",
+                  duration: 0
+                });
                 this.updateApplicantBaseNumber();
                 this.loading = false;
                 this.$router.push("/home");
@@ -1622,10 +1627,9 @@ export default {
                 this.loading = false;
                 this.$message(common.message("error", "对公付款添加失败!"));
               });
-          }else{
-                   this.$message(
-                    common.message("error", "未找到对应的审批节点!")
-                  );
+          } else {
+            this.loading = false;
+            this.$message(common.message("error", "未找到对应的审批节点!"));
           }
         })
         .catch(err => {

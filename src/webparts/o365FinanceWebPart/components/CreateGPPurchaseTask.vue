@@ -25,7 +25,12 @@
         </td>
         <td align="right">成本中心：</td>
         <td>
-          <el-select v-model="purchaseRequestData.CostCenter" placeholder="请选择" size="medium" @change="costCenterChange">
+          <el-select
+            v-model="purchaseRequestData.CostCenter"
+            placeholder="请选择"
+            size="medium"
+            @change="costCenterChange"
+          >
             <el-option
               v-for="item in costCenterArr"
               :key="item.CostCenter"
@@ -324,47 +329,49 @@ export default {
       message: "",
       loading: true,
       baseApplicantNumber: 0,
-      GPRBaseFormat:"GPR",
-      appliantNumberItemId:0,
-      loginName:''
+      GPRBaseFormat: "GPR",
+      appliantNumberItemId: 0,
+      loginName: ""
     };
   },
   methods: {
     costCenterChange: function() {
-      this.companyCodeArr=[]
+      this.companyCodeArr = [];
       var parm = {
         type: "get",
         action: "ListItems",
         list: this.userListName,
         condition:
-          "?$filter=CostCenter eq '" + this.purchaseRequestData.CostCenter + "'",
+          "?$filter=CostCenter eq '" +
+          this.purchaseRequestData.CostCenter +
+          "'",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
         .done(req => {
           var data = req.d.results;
-          if(data.length>0){
-            this.purchaseRequestData.CompanyCode=data[0].CompanyCode
+          if (data.length > 0) {
+            this.purchaseRequestData.CompanyCode = data[0].CompanyCode;
             var companyCode = [];
-          data.forEach(d => {
-            companyCode.push(d.CompanyCode);
-          });
-          console.log("未去重公司代码");
-          console.log(companyCode);
-          var companyCodeUnique = companyCode.filter(function(
-            element,
-            index,
-            array
-          ) {
-            return array.indexOf(element) === index;
-          });
-          companyCodeUnique.forEach(element => {
-            this.companyCodeArr.push({
-              CompanyCode: element
+            data.forEach(d => {
+              companyCode.push(d.CompanyCode);
             });
-          });
-          }else{
+            console.log("未去重公司代码");
+            console.log(companyCode);
+            var companyCodeUnique = companyCode.filter(function(
+              element,
+              index,
+              array
+            ) {
+              return array.indexOf(element) === index;
+            });
+            companyCodeUnique.forEach(element => {
+              this.companyCodeArr.push({
+                CompanyCode: element
+              });
+            });
+          } else {
             this.$message(common.message("error", "未能找到对应的公司代码"));
           }
         })
@@ -625,13 +632,16 @@ export default {
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
-          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
-          this.createPurchaseRequestData(type);
-        }).catch(err=>{
-          this.$message(common.message("error", "获取Digest失败"));
-          this.loading = false;
-        })
+        getDigst
+          .done(data => {
+            this.requestDigest =
+              data.d.GetContextWebInformation.FormDigestValue;
+            this.createPurchaseRequestData(type);
+          })
+          .catch(err => {
+            this.$message(common.message("error", "获取Digest失败"));
+            this.loading = false;
+          });
       }
     },
     createPurchaseRequestData(type) {
@@ -640,98 +650,110 @@ export default {
       this.subListData.forEach(element => {
         total += Number(element.Amount);
       });
-      var currentTime=common.getCurrentDate_NoLine()
-      var baseAppNumber=this.formatAppNumber()
-      var applicantNumber=this.GPRBaseFormat+currentTime+baseAppNumber
+      var currentTime = common.getCurrentDate_NoLine();
+      var baseAppNumber = this.formatAppNumber();
+      var applicantNumber = this.GPRBaseFormat + currentTime + baseAppNumber;
       var costcenter = this.purchaseRequestData.CostCenter;
       var parm = {
         action: "ListItems",
         type: "get",
         list: this.approverList,
         baseUrl: this.hostUrl,
-        condition: "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
+        condition:
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.loginName +
+          "'"
       };
       var option = common.queryOpt(parm); //获取审批节点请求
-      $.when($.ajax(option)).done(r => {
-        console.log("Get Approve node success");
-        console.log(r);
-        if (r.d.results.length > 0) {
-          var data1 = r.d.results[0];
-          var itemInfo = {
-            __metadata: {
-              type: this.mainListType
-            },
-            Title: this.purchaseRequestData.Title,
-            Consignor: this.purchaseRequestData.Consignor,
-            CostCenter: this.purchaseRequestData.CostCenter,
-            CompanyCode: this.purchaseRequestData.CompanyCode,
-            DeliveryAddress: this.purchaseRequestData.DeliveryAddress,
-            IsContract: this.purchaseRequestData.IsContract.toString(),
-            ContractNumber: this.purchaseRequestData.IsContract
-              ? this.purchaseRequestData.ContractNumber
-              : "",
-            Money: this.purchaseRequestData.Money,
-            ApplicationType: this.purchaseRequestData.ApplicationType,
-            ExpenseCategory: this.purchaseRequestData.ExpenseCategory,
-            CostAccount: this.purchaseRequestData.CostAccount,
-            CodeOfFixedAssets: this.purchaseRequestData.CodeOfFixedAssets,
-            ApplicationNumber: applicantNumber,
-            SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
-          };
-          console.log("kkkkkk");
-          console.log(itemInfo);
-          if (total > 0 && total < 1000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-          } else if (total >= 1000 && total < 20000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-          } else if (total >= 20000 && total < 50000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
+      $.when($.ajax(option))
+        .done(r => {
+          console.log("Get Approve node success");
+          console.log(r);
+          if (r.d.results.length > 0) {
+            var data1 = r.d.results[0];
+            var itemInfo = {
+              __metadata: {
+                type: this.mainListType
+              },
+              Title: this.purchaseRequestData.Title,
+              Consignor: this.purchaseRequestData.Consignor,
+              CostCenter: this.purchaseRequestData.CostCenter,
+              CompanyCode: this.purchaseRequestData.CompanyCode,
+              DeliveryAddress: this.purchaseRequestData.DeliveryAddress,
+              IsContract: this.purchaseRequestData.IsContract.toString(),
+              ContractNumber: this.purchaseRequestData.IsContract
+                ? this.purchaseRequestData.ContractNumber
+                : "",
+              Money: this.purchaseRequestData.Money,
+              ApplicationType: this.purchaseRequestData.ApplicationType,
+              ExpenseCategory: this.purchaseRequestData.ExpenseCategory,
+              CostAccount: this.purchaseRequestData.CostAccount,
+              CodeOfFixedAssets: this.purchaseRequestData.CodeOfFixedAssets,
+              ApplicationNumber: applicantNumber,
+              SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
+            };
+            console.log("kkkkkk");
+            console.log(itemInfo);
+            if (total > 0 && total < 1000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+            } else if (total >= 1000 && total < 20000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+            } else if (total >= 20000 && total < 50000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+            } else {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+              itemInfo.Approver4Id = data1.Approver4Id;
+            }
+            if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
+              itemInfo.SpecialApproverId = this.SpecApproId;
+            }
+            if (type == "submit") {
+              itemInfo.Status = "Submitted";
+            }
+            var parm = {
+              type: "post",
+              action: "AddInList",
+              baseUrl: this.hostUrl,
+              list: this.mainListName,
+              item: itemInfo,
+              digest: this.requestDigest
+            };
+            console.log(parm);
+            var options = common.queryOpt(parm);
+            console.log(options);
+            $.when($.ajax(options))
+              .done(req => {
+                this.$message({
+                  showClose: true,
+                  message: "采购申请添加成功!" + applicantNumber,
+                  type: "success",
+                  duration: 0
+                });
+                this.updateApplicantBaseNumber();
+                this.createSubInfoItem(applicantNumber);
+                this.loading = false;
+                this.$router.push("/home");
+              })
+              .catch(err => {
+                this.loading = false;
+                this.$message(common.message("error", "提交数据时出现了错误!"));
+              });
           } else {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-            itemInfo.Approver4Id = data1.Approver4Id;
+            this.loading = false;
+            this.$message(common.message("warning", "未找到对应的审批节点!"));
           }
-          if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
-            itemInfo.SpecialApproverId = this.SpecApproId;
-          }
-          if (type == "submit") {
-            itemInfo.Status = "Submitted";
-          }
-          var parm = {
-            type: "post",
-            action: "AddInList",
-            baseUrl: this.hostUrl,
-            list: this.mainListName,
-            item: itemInfo,
-            digest: this.requestDigest
-          };
-          console.log(parm);
-          var options = common.queryOpt(parm);
-          console.log(options);
-          $.when($.ajax(options))
-            .done(req => {
-              this.$message(common.message("success", "采购申请添加成功!"));
-              this.updateApplicantBaseNumber()
-              this.createSubInfoItem(applicantNumber);
-              this.loading = false;
-              this.$router.push("/home");
-            })
-            .catch(err => {
-              this.loading = false;
-              this.$message(common.message("error", "提交数据时出现了错误!"));
-            });
-        } else {
+        })
+        .catch(err => {
           this.loading = false;
-          this.$message(common.message("warning", "未找到对应的审批节点!"));
-        }
-      }).catch(err=>{
-        this.loading = false;
-        this.$message(common.message("error","创建主表数据失败"))
-      });
+          this.$message(common.message("error", "创建主表数据失败"));
+        });
     },
     createSubInfoItem(applicantNumber) {
       //添加附表数据
@@ -782,9 +804,9 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-            this.purchaseRequestData.CostCenter=data[0].CostCenter
-                this.EmployeeCode=data[0].EmployeeCode;
-            this.costCenterChange()
+            this.purchaseRequestData.CostCenter = data[0].CostCenter;
+            this.EmployeeCode = data[0].EmployeeCode;
+            this.costCenterChange();
           } else {
             this.$message(
               common.message(
@@ -888,8 +910,8 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
-          this.loginName=loginName.split("@")[0],
-          this.purchaseRequestData.Consignor = c.d.Title;
+          (this.loginName = loginName.split("@")[0]),
+            (this.purchaseRequestData.Consignor = c.d.Title);
           this.search(loginName);
         })
         .catch(err => {
@@ -1035,37 +1057,37 @@ export default {
         .done(req => {
           var data = req.d.results;
           this.baseApplicantNumber = data[0].Number;
-          this.appliantNumberItemId=data[0].ID
+          this.appliantNumberItemId = data[0].ID;
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
     },
-    formatAppNumber:function(){
-      var formatAppNumber=""
-      var number=this.baseApplicantNumber
-      if(number.toString().length==1){
-        formatAppNumber="00000"+number.toString()
-      }else if(number.toString().length==2){
-          formatAppNumber="0000"+number.toString()
-      }else if(number.toString().length==3){
-          formatAppNumber="000"+number.toString()
-      }else if(number.toString().length==4){
-          formatAppNumber="00"+number.toString()
-      }else if(number.toString().length==5){
-          formatAppNumber="0"+number.toString()
-      }else if(number.toString().length==6){
-          formatAppNumber=number.toString()
+    formatAppNumber: function() {
+      var formatAppNumber = "";
+      var number = this.baseApplicantNumber;
+      if (number.toString().length == 1) {
+        formatAppNumber = "00000" + number.toString();
+      } else if (number.toString().length == 2) {
+        formatAppNumber = "0000" + number.toString();
+      } else if (number.toString().length == 3) {
+        formatAppNumber = "000" + number.toString();
+      } else if (number.toString().length == 4) {
+        formatAppNumber = "00" + number.toString();
+      } else if (number.toString().length == 5) {
+        formatAppNumber = "0" + number.toString();
+      } else if (number.toString().length == 6) {
+        formatAppNumber = number.toString();
       }
-      return formatAppNumber
+      return formatAppNumber;
     },
-    updateApplicantBaseNumber:function(){
-      var baseNumber= this.baseApplicantNumber
+    updateApplicantBaseNumber: function() {
+      var baseNumber = this.baseApplicantNumber;
       var itemInfo = {
         __metadata: {
           type: this.applicantNumberListType
         },
-        Number: baseNumber+1
+        Number: baseNumber + 1
       };
       var parm = {
         type: "post",
@@ -1077,11 +1099,13 @@ export default {
         digest: this.requestDigest
       };
       var opt = common.queryOpt(parm);
-      $.when($.ajax(opt)).done(req=>{
-        console.log("更新流水号成功")
-      }).catch(err=>{
-        this.$message(common.message("error","更新流水号失败"))
-      })
+      $.when($.ajax(opt))
+        .done(req => {
+          console.log("更新流水号成功");
+        })
+        .catch(err => {
+          this.$message(common.message("error", "更新流水号失败"));
+        });
     }
   },
   mounted: function() {

@@ -25,7 +25,6 @@
 import $ from "jquery";
 import efn from "../js/json2excel.js";
 import common from "../js/common.js";
-import sprestlib from "sprestlib/dist/sprestlib.js"
 export default {
   data() {
     return {
@@ -130,7 +129,7 @@ export default {
           Accept: "application/json;odata=verbose",
           "Content-Type": "application/json;odata=verbose",
           "X-RequestDigest":
-            "0xEA711C20F34DBF9BE511D27053F4B88DDA7A685A131954FC2A57E40701DBE26FC78EF27DE5C925126598F460CFF0E784B746C4F367402C9BDA9669580C2AFEBD,04 Jan 2019 09:18:36 -0000"
+            "0xA3A0E269313D91618F5873729255814BF2F9B271A0EC8E530D6A580E556E1135B33E5E08D7A28BD907FFCB6B0F37EDA7835ADC406DDEE5C2B19F4A10A0486DBA,28 Jan 2019 10:14:04 -0000"
         }
       });
     },
