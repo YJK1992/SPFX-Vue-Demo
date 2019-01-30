@@ -790,20 +790,16 @@ export default {
             SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
           };
           console.log(itemInfo);
-          if (total > 0 && total < 1000) {
+          if (total > 0 && total <= 5000) {
             itemInfo.Approver1Id = data1.Approver1Id;
-          } else if (total >= 1000 && total < 20000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-          } else if (total >= 20000 && total < 50000) {
+          } else if (total > 5000 && total <= 20000) {
             itemInfo.Approver1Id = data1.Approver1Id;
             itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
           } else {
             itemInfo.Approver1Id = data1.Approver1Id;
             itemInfo.Approver2Id = data1.Approver2Id;
             itemInfo.Approver3Id = data1.Approver3Id;
-            itemInfo.Approver4Id = data1.Approver4Id;
+            //itemInfo.Approver4Id = data1.Approver4Id;
           }
           if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
             itemInfo.SpecialApproverId = this.SpecApproId;
@@ -1020,14 +1016,13 @@ export default {
     },
     itemCalculate() {
       //计算附表金额
-      if (
-        !isNaN(this.item.Price) &&
-        this.item.Price != "" &&
-        !isNaN(this.item.Taxation)
-      ) {
+      if (!isNaN(this.item.Price) && this.item.Price != "") {
         //计算 净额 税款 金额
         this.item.Money =
           parseFloat(this.item.Number) * parseFloat(this.item.Price);
+            this.item.Amount =this.item.Money ;
+      }
+      if (!isNaN(this.item.Taxation) && this.item.Taxation != "" && !isNaN(this.item.Price) && this.item.Price != "") {
         this.item.Amount =
           parseFloat(this.item.Money) + parseFloat(this.item.Taxation);
       }

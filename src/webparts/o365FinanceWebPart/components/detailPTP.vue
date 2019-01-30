@@ -386,6 +386,7 @@ export default {
           );
           this.StaffReimbursement.SettlingTime = data[0].SettlingTime;
           this.getCompanyName(this.StaffReimbursement.CompanyCode);
+          if(this.ApprovalHistory!=null && this.ApprovalHistory!=""){
           var approvalHistory = JSON.parse(this.ApprovalHistory);
           var keys = Object.keys(approvalHistory);
           var result = [];
@@ -398,6 +399,8 @@ export default {
             });
           });
           this.ApprovalHistory = result;
+          }
+
           if (data[0].Attachments) {
             var attUrl = data[0].AttachmentFiles.__deferred.uri;
             var getAtt = this.loadAttachment(attUrl);

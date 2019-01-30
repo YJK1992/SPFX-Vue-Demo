@@ -261,8 +261,8 @@ export default {
           data.forEach(d => {
             this.getSubList(d);
           });
-        }else{
-                this.loading = false;
+        } else {
+          this.loading = false;
         }
       });
     },
@@ -360,11 +360,22 @@ export default {
           this.loginName = loginName.split("@")[0];
           this.userId = c.d.Id;
           this.defaultCondition =
-            "?$filter=(AuthorId eq " +
+            "?$filter=AuthorId eq " +
             this.userId +
-            " or substringof('" +
-            this.loginName +
-            "',ApprovalHistory))";
+            " or Approver1 eq " +
+            this.userId +
+            " or Approver2 eq " +
+            this.userId +
+            " or Approver3 eq " +
+            this.userId +
+            " or Approver4 eq " +
+            this.userId +
+            " or SpecialApprover eq '" +
+            loginName +
+            "'";
+          // " or substringof('" +
+          // this.loginName +
+          // "',ApprovalHistory))";
         })
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));

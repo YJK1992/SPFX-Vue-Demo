@@ -56,7 +56,7 @@
           </el-select>
         </td>
       </tr>
-      <tr  v-show="showEditor">
+      <tr v-show="showEditor">
         <td colspan="8" align="left">
           <el-upload
             class="upload-demo"
@@ -69,12 +69,12 @@
             :on-exceed="fileLimit"
             :file-list="fileList"
           >
-            <el-button  v-show="showEditor" size="medium" type="primary">上传附件</el-button>
+            <el-button v-show="showEditor" size="medium" type="primary">上传附件</el-button>
           </el-upload>
         </td>
       </tr>
       <tr v-show="showEditor==false">
-        <td align='right'>附件 ：</td>
+        <td align="right">附件 ：</td>
         <td colspan="8" style="text-align:left;">
           <a :href="attrFileInfo.url" target="_blank">{{this.attrFileInfo.name}}</a>
         </td>
@@ -151,7 +151,7 @@
             @click.native.prevent="deleteRow(scope.$index, SubItems)"
             type="text"
             size="small"
-           :disabled="showApprover==true"
+            :disabled="showApprover==true"
           >移除</el-button>
           <el-button
             type="text"
@@ -184,12 +184,7 @@
             v-show="showApprover"
           >批准</el-button>
           <el-button type="danger" @click="onEnd(buttonType.Rejected)" v-show="showApprover">拒绝</el-button>
-          <el-button
-            @click="onEnd(buttonType.Return)"
-            v-show="showApprover"
-            type="danger"
-            plain
-          >退回</el-button>
+          <el-button @click="onEnd(buttonType.Return)" v-show="showApprover" type="danger" plain>退回</el-button>
           <el-button
             @click="onEnd(buttonType.Return)"
             v-show="requestIsReject"
@@ -233,7 +228,7 @@
         </el-form-item>
         <el-form-item label="费用日期：" :label-width="formLabelWidth">
           <el-date-picker
-          :disabled="showFA==true"
+            :disabled="showFA==true"
             value-format="yyyy-MM-dd"
             v-model="SubItem.ExpenseDate"
             type="date"
@@ -241,16 +236,36 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true"  @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
+          <el-input
+            :disabled="showFA==true"
+            @change="ChangeTotalMoney"
+            v-model="SubItem.Count"
+            placeholder="数量"
+          ></el-input>
         </el-form-item>
-        <el-form-item  label="单位金额：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true" @change="ChangeTotalMoney" v-model="SubItem.Price" placeholder="单位金额"></el-input>
+        <el-form-item label="单位金额：" :label-width="formLabelWidth">
+          <el-input
+            :disabled="showFA==true"
+            @change="ChangeTotalMoney"
+            v-model="SubItem.Price"
+            placeholder="单位金额"
+          ></el-input>
         </el-form-item>
         <el-form-item label="总金额：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true" @change="ChangeConvertMoney" v-model="SubItem.Total" placeholder="总金额"></el-input>
+          <el-input
+            :disabled="showFA==true"
+            @change="ChangeConvertMoney"
+            v-model="SubItem.Total"
+            placeholder="总金额"
+          ></el-input>
         </el-form-item>
         <el-form-item label="币种：" :label-width="formLabelWidth">
-          <el-select :disabled="showFA==true" v-model="SubItem.Currency" filterable placeholder="请选择">
+          <el-select
+            :disabled="showFA==true"
+            v-model="SubItem.Currency"
+            filterable
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in Currency"
               :key="item.value"
@@ -260,16 +275,27 @@
           </el-select>
         </el-form-item>
         <el-form-item label="汇率：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true" @change="ChangeConvertMoney" v-model="SubItem.Rate" placeholder="汇率"></el-input>
+          <el-input
+            :disabled="showFA==true"
+            @change="ChangeConvertMoney"
+            v-model="SubItem.Rate"
+            placeholder="汇率"
+          ></el-input>
         </el-form-item>
         <el-form-item label="转换金额：" :label-width="formLabelWidth">
           <el-input :disabled="showFA==true" v-model="SubItem.ConvertMoney" placeholder="转换金额"></el-input>
         </el-form-item>
         <el-form-item label="转换后币种：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true"  v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
+          <el-input :disabled="showFA==true" v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
         </el-form-item>
         <el-form-item label="税码：" :label-width="formLabelWidth">
-          <el-select :disabled="showFA==true?false:showApprover==true" @change="ChangeTaxRate" v-model="SubItem.TaxCode" filterable placeholder="请选择">
+          <el-select
+            :disabled="showFA==true?false:showApprover==true"
+            @change="ChangeTaxRate"
+            v-model="SubItem.TaxCode"
+            filterable
+            placeholder="请选择"
+          >
             <el-option
               v-for="item in taxCodeOptions"
               :key="item.value"
@@ -296,7 +322,11 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="目的地：" :label-width="formLabelWidth">
-          <el-input :disabled="showApprover==true?true:IsTravelExpense" v-model="SubItem.Destination" placeholder="目的地"></el-input>
+          <el-input
+            :disabled="showApprover==true?true:IsTravelExpense"
+            v-model="SubItem.Destination"
+            placeholder="目的地"
+          ></el-input>
         </el-form-item>
         <el-form-item label="入住/离店日期：" :label-width="formLabelWidth">
           <el-date-picker
@@ -310,16 +340,28 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="酒店名称：" :label-width="formLabelWidth">
-          <el-input :disabled="showApprover==true?true:IsHotelExpense" v-model="SubItem.Name" placeholder="酒店名称"></el-input>
+          <el-input
+            :disabled="showApprover==true?true:IsHotelExpense"
+            v-model="SubItem.Name"
+            placeholder="酒店名称"
+          ></el-input>
         </el-form-item>
         <el-form-item label="天数：" :label-width="formLabelWidth">
-          <el-input :disabled="showApprover==true?true:IsHotelExpense" v-model="SubItem.Days" placeholder="天数"></el-input>
+          <el-input
+            :disabled="showApprover==true?true:IsHotelExpense"
+            v-model="SubItem.Days"
+            placeholder="天数"
+          ></el-input>
         </el-form-item>
         <el-form-item label="参考号：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true?false:showApprover==true" v-model="SubItem.Number" placeholder="发票号码（左上角）+ 发票号码（右上角）"></el-input>
+          <el-input
+            :disabled="showFA==true?false:showApprover==true"
+            v-model="SubItem.Number"
+            placeholder="发票号码（左上角）+ 发票号码（右上角）"
+          ></el-input>
         </el-form-item>
         <el-form-item label="备注：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true"  v-model="SubItem.Remark" placeholder="备注信息"></el-input>
+          <el-input :disabled="showFA==true" v-model="SubItem.Remark" placeholder="备注信息"></el-input>
         </el-form-item>
       </el-form>
       <div slot="footer" class="dialog-footer">
@@ -505,7 +547,7 @@ export default {
           this.message = "请填写到达时间;";
         } else if (this.SubItem.Destination == "") {
           this.message = "请填写目的地;";
-        }  else {
+        } else {
           isSuccess = true;
         }
       } else if (!this.IsHotelExpense && this.IsTravelExpense) {
@@ -593,9 +635,7 @@ export default {
           var opt = common.queryOpt(parm);
           $.when($.ajax(opt))
             .done(req => {
-              
-                this.onApproval(type);
-           
+              this.onApproval(type);
             })
             .catch(err => {
               this.$message(common.message("error", "终止流程失败!"));
@@ -668,7 +708,7 @@ export default {
               if (type == "Approved") {
                 mainItemInfo.FinanceITCode = this.FinanceITCode;
                 mainItemInfo.SettlingTime = common.getCurrentDate();
-                mainItemInfo.DetailInvoiceJSON=JSON.stringify(this.SubItems);
+                mainItemInfo.DetailInvoiceJSON = JSON.stringify(this.SubItems);
               }
               history.approver5 =
                 this.currentUserTitle +
@@ -1071,20 +1111,16 @@ export default {
             this.SubItems.forEach(item => {
               total += Number(item.ConvertMoney);
             });
-            if (total > 0 && total < 1000) {
+            if (total > 0 && total <= 5000) {
               itemInfo.Approver1Id = data1.Approver1Id;
-            } else if (total >= 1000 && total < 20000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-            } else if (total >= 20000 && total < 50000) {
+            } else if (total > 5000 && total <= 20000) {
               itemInfo.Approver1Id = data1.Approver1Id;
               itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
             } else {
               itemInfo.Approver1Id = data1.Approver1Id;
               itemInfo.Approver2Id = data1.Approver2Id;
               itemInfo.Approver3Id = data1.Approver3Id;
-              itemInfo.Approver4Id = data1.Approver4Id;
+              //itemInfo.Approver4Id = data1.Approver4Id;
             }
             if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
               itemInfo.SpecialApproverId = this.SpecApproId;
@@ -1170,10 +1206,8 @@ export default {
                 this.loading = false;
                 this.$message(common.message("error", "员工报销添加失败!"));
               });
-          }else{
-                   this.$message(
-                    common.message("error", "未找到对应的审批节点!")
-                  );
+          } else {
+            this.$message(common.message("error", "未找到对应的审批节点!"));
           }
         })
         .catch(err => {
