@@ -321,7 +321,7 @@ export default {
       payMainListName: "PublicPayment", //付款申请
       mainListType: "SP.Data.PurchaseRequestListItem", //采购申请列表类型，用于post请求
       SubInfoListType: "SP.Data.PurchaseRequestSubInfoListItem", //采购申请供应商列表类型，用于post请求
-      GPPRTaskListType: "SP.Data.PurchaseApproval_x0020_任务ListItem", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
+      GPPRTaskListType: "", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
       GpPRTaskListName: "PurchaseApproval 任务",
       userListName: "EmployeeList", //员工详细信息列表名称
       contractListName: "ContractList", //合同列表
@@ -395,42 +395,60 @@ export default {
       UnPaid: "", //未付款
       ContractHistory: [], //合同历史信息,
       Body: "",
-      loginName:''
+      loginName: ""
     };
   },
   methods: {
-    UpdateMain(type) {
-      var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
-          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
-          var itemInfo = {
-        __metadata: {
-          type: this.mainListType
-        },
-        Status: type
-      };
+    getListType: function() {
       var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.mainListName,
-        itemID: this.currentItemId,
-        item: itemInfo,
-        digest: this.requestDigest
+        action: "ListEntity",
+        type: "get",
+        list: this.GpPRTaskListName,
+        baseUrl: this.hostUrl
       };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
         .done(req => {
-          this.onApproval(type);
+          this.GPPRTaskListType = req.d.ListItemEntityTypeFullName;
         })
         .catch(err => {
-          this.$message(common.message("error", "终止流程失败!"));
-          this.$router.push("/home");
+          this.$message(common.message("error", "获取任务列表类型失败"));
         });
-        }).catch(err=>{
+    },
+    UpdateMain(type) {
+      var getDigst = common.getRequestDigest(this.hostUrl);
+      getDigst
+        .done(data => {
+          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
+          var itemInfo = {
+            __metadata: {
+              type: this.mainListType
+            },
+            Status: type
+          };
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          $.when($.ajax(opt))
+            .done(req => {
+              this.onApproval(type);
+            })
+            .catch(err => {
+              this.$message(common.message("error", "终止流程失败!"));
+              this.$router.push("/home");
+            });
+        })
+        .catch(err => {
           this.$message(common.message("error", "获取Digest失败"));
           this.loading = false;
-        })
+        });
     },
     clearContract() {
       if (!this.purchaseRequestData.IsContract) {
@@ -508,9 +526,9 @@ export default {
             that.UnPaid =
               parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
               accountPaid;
-          }else{
-             that.AccountPaid =0;
-             that.UnPaid=mainItem[0].Money
+          } else {
+            that.AccountPaid = 0;
+            that.UnPaid = mainItem[0].Money;
           }
         })
         .catch(err => {
@@ -563,37 +581,39 @@ export default {
     },
     onEnd: function() {
       var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
+      getDigst
+        .done(data => {
           this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           var itemInfo = {
-        __metadata: {
-          type: this.mainListType
-        },
-        Status: "Dumped"
-      };
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.mainListName,
-        itemID: this.currentItemId,
-        item: itemInfo,
-        digest: this.requestDigest
-      };
-      var opt = common.queryOpt(parm);
-      $.when($.ajax(opt))
-        .done(req => {
-          this.$message(common.message("success", "终止流程成功!"));
-          this.$router.push("/home");
+            __metadata: {
+              type: this.mainListType
+            },
+            Status: "Dumped"
+          };
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.mainListName,
+            itemID: this.currentItemId,
+            item: itemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          $.when($.ajax(opt))
+            .done(req => {
+              this.$message(common.message("success", "终止流程成功!"));
+              this.$router.push("/home");
+            })
+            .catch(err => {
+              this.$message(common.message("error", "终止流程失败!"));
+              this.$router.push("/home");
+            });
         })
         .catch(err => {
-          this.$message(common.message("error", "终止流程失败!"));
-          this.$router.push("/home");
-        });
-        }).catch(err=>{
           this.$message(common.message("error", "获取Digest失败"));
           this.loading = false;
-        })
+        });
     },
     getExpenseCategory() {
       //获取费用类别
@@ -714,13 +734,16 @@ export default {
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
-          this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
-          this.createPurchaseRequestData(type);
-        }).catch(err=>{
-          this.$message(common.message("error", "获取Digest失败"));
-          this.loading = false;
-        })
+        getDigst
+          .done(data => {
+            this.requestDigest =
+              data.d.GetContextWebInformation.FormDigestValue;
+            this.createPurchaseRequestData(type);
+          })
+          .catch(err => {
+            this.$message(common.message("error", "获取Digest失败"));
+            this.loading = false;
+          });
       }
     },
     createPurchaseRequestData(type) {
@@ -733,7 +756,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-          "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
+          "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.loginName +
+          "'"
       };
       var option = common.queryOpt(parm); //获取审批节点请求
       $.when($.ajax(option)).done(r => {
@@ -817,10 +844,8 @@ export default {
             .catch(err => {
               this.$message(common.message("error", "提交数据时出现了错误!"));
             });
-        }else{
-                 this.$message(
-                    common.message("error", "未找到对应的审批节点!")
-                  );
+        } else {
+          this.$message(common.message("error", "未找到对应的审批节点!"));
         }
       });
     },
@@ -910,7 +935,7 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-                this.EmployeeCode=data[0].EmployeeCode;
+            this.EmployeeCode = data[0].EmployeeCode;
             data.forEach(d => {
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
@@ -1017,7 +1042,7 @@ export default {
       $.when($.ajax(option))
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
-          this.loginName=loginName.split("@")[0];
+          this.loginName = loginName.split("@")[0];
           this.purchaseRequestData.Consignor = c.d.Title;
           this.search(loginName);
         })
@@ -1161,57 +1186,59 @@ export default {
     onApproval: function(type) {
       this.loading = true;
       var getDigst = common.getRequestDigest(this.hostUrl);
-        getDigst.done(data=>{
+      getDigst
+        .done(data => {
           this.requestDigest = data.d.GetContextWebInformation.FormDigestValue;
           var mainItemInfo = {
-        __metadata: {
-          type: this.mainListType
-        }
-      };
-      var taskOutcome;
-      if (type == "Approved") {
-        taskOutcome = "已批准"; //Approved 已批准
-      } else {
-        taskOutcome = "已拒绝"; //已拒绝 Rejected
-      }
-      var taskItemInfo = {
-        __metadata: {
-          type: this.GPPRTaskListType
-        },
-        TaskOutcome: taskOutcome,
-        PercentComplete: 1,
-        Body: this.Body,
-        Status: "已完成" //Completed 已完成
-      };
-      var parm = {
-        type: "post",
-        action: "EditListItem",
-        baseUrl: this.hostUrl,
-        list: this.GpPRTaskListName,
-        itemID: this.taskId,
-        item: taskItemInfo,
-        digest: this.requestDigest
-      };
-      var opt = common.queryOpt(parm);
-      console.log(opt);
-      $.when($.ajax(opt))
-        .done(req => {
-          console.log(req);
-          this.loading = false;
-          this.$message(common.message("success", "操作成功!"));
+            __metadata: {
+              type: this.mainListType
+            }
+          };
+          var taskOutcome;
+          if (type == "Approved") {
+            taskOutcome = "已批准"; //Approved 已批准
+          } else {
+            taskOutcome = "已拒绝"; //已拒绝 Rejected
+          }
+          var taskItemInfo = {
+            __metadata: {
+              type: this.GPPRTaskListType
+            },
+            TaskOutcome: taskOutcome,
+            PercentComplete: 1,
+            Body: this.Body,
+            Status: "已完成" //Completed 已完成
+          };
+          var parm = {
+            type: "post",
+            action: "EditListItem",
+            baseUrl: this.hostUrl,
+            list: this.GpPRTaskListName,
+            itemID: this.taskId,
+            item: taskItemInfo,
+            digest: this.requestDigest
+          };
+          var opt = common.queryOpt(parm);
+          console.log(opt);
+          $.when($.ajax(opt))
+            .done(req => {
+              console.log(req);
+              this.loading = false;
+              this.$message(common.message("success", "操作成功!"));
 
-          this.$router.push("/home");
+              this.$router.push("/home");
+            })
+            .catch(err => {
+              console.log(err);
+              this.loading = false;
+              this.$message(common.message("error", "操作失败!"));
+              this.$router.push("/home");
+            });
         })
         .catch(err => {
-          console.log(err);
-          this.loading = false;
-          this.$message(common.message("error", "操作失败!"));
-          this.$router.push("/home");
-        });
-        }).catch(err=>{
           this.$message(common.message("error", "获取Digest失败"));
           this.loading = false;
-        })
+        });
     },
     updateTaskStatus(mainItemInfo, taskOutcome) {
       var mainParm = {
@@ -1259,6 +1286,7 @@ export default {
   mounted: function() {
     //onload
     this.loading = true;
+    this.getListType();
     //this.requestDigest = common.getRequestDigest();
     this.getCostCenter();
     this.getExpenseCategory();

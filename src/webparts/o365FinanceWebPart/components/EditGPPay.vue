@@ -526,7 +526,7 @@ export default {
       currentUserITCode: "", //邮箱@前的code
       mainListName: "PublicPayment", //对公付款
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
-      GPPPTaskListType: "SP.Data.PaymentApproval_x0020_任务ListItem", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
+      GPPPTaskListType: "", //SP.Data.PurchaseApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
       GpPPTaskListName: "PaymentApproval 任务",
       userListName: "EmployeeList", //员工详细信息列表名称
       GpPRListName: "PurchaseRequest",
@@ -705,6 +705,22 @@ export default {
     };
   },
   methods: {
+    getListType: function() {
+      var parm = {
+        action: "ListEntity",
+        type: "get",
+        list: this.GpPPTaskListName,
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          this.GPPPTaskListType = req.d.ListItemEntityTypeFullName;
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取任务列表类型失败"));
+        });
+    },
     costCenterChange: function() {
       this.companyCodeArr = [];
       var parm = {
@@ -2140,13 +2156,13 @@ export default {
         .done(req => {
           console.log(req);
           this.loading = false;
-          this.$message(common.message("success", "审批成功!"));
+          this.$message(common.message("success", "操作成功!"));
           this.$router.push("/home");
         })
         .catch(err => {
           console.log(err);
           this.loading = false;
-          this.$message(common.message("error", "审批失败!"));
+          this.$message(common.message("error", "操作失败!"));
           this.$router.push("/home");
         });
     },
@@ -2224,6 +2240,7 @@ export default {
   },
   mounted: function() {
     this.loading = true;
+    this.getListType();
     this.FileGUID = common.generateUUID();
     //this.requestDigest = common.getRequestDigest();
     this.getContractNumber();

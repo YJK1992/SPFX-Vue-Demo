@@ -330,7 +330,7 @@ export default {
       fixedAssetsInfoListName: "FixedAssetsInfo", //固定资产物料列表名
       approverList: "ApproveNode", //审批节点列表名
       eccTaskList: "ECCApproval 任务", //Workflow Tasks  ECCApproval 任务
-      eccTaskListType: "SP.Data.ECCApproval_x0020_任务ListItem", //SP.Data.ECCApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
+      eccTaskListType: "", //SP.Data.ECCApproval_x0020_任务ListItem  SP.Data.WorkflowTasksItem
       costCenterArr: [], //成本中心数组
       companyCodeArr: [], //公司代码数组
       dialogFormVisible: false, //控制是否出现dialog
@@ -410,6 +410,22 @@ export default {
     };
   },
   methods: {
+    getListType: function() {
+      var parm = {
+        action: "ListEntity",
+        type: "get",
+        list: this.eccTaskList,
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          this.eccTaskListType = req.d.ListItemEntityTypeFullName;
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取任务列表类型失败"));
+        });
+    },
     applicantTypeChange: function() {
       this.productTypeOpts = [];
       this.ECCTaskForm.productType = "";
@@ -1444,6 +1460,7 @@ export default {
   },
   mounted: function() {
     this.loading = true;
+    this.getListType()
     this.getCostCenter();
     this.getAppTypeAndProType();
     this.getCurrentUser();

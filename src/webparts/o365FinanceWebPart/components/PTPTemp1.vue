@@ -185,7 +185,10 @@ export default {
         "出差天数"
       ], //excel字段名
       IsPrint: false, //是否可以打印
-      PrintData: []
+      PrintData: [],
+      defaultCondition: "", //默认条件
+      loginName: "", //当前用户
+      userId: 0
     };
   },
   methods: {
@@ -228,45 +231,44 @@ export default {
       this.PrintData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "";
-      var conditionCount = 0;
+      var condition = this.defaultCondition;
+      // var condition = "";
+      // var conditionCount = 0;
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          conditionCount++;
-          if (conditionCount == 1) {
-            if (item == "Date") {
-              condition +=
-                "?$filter=Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
-            }
+          // conditionCount++;
+          // if (conditionCount == 1) {
+          //   if (item == "Date") {
+          //     condition +=
+          //       "?$filter=Created gt datetime" +
+          //       "'" +
+          //       this.Condition[item][0] +
+          //       "T00:00:00Z" +
+          //       "'" +
+          //       " and Created lt datetime" +
+          //       "'" +
+          //       this.Condition[item][1] +
+          //       "T00:00:00Z" +
+          //       "'";
+          //   } else {
+          //     condition +=
+          //       "?$filter=" + item + " eq '" + this.Condition[item] + "'";
+          //   }
+          // } else {
+          if (item == "Date") {
+            condition +=
+              " and Created gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Created lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
           } else {
-            if (item == "Date") {
-              condition +=
-                " and Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                " and " + item + " eq '" + this.Condition[item] + "'";
-            }
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
           }
         }
       }
@@ -476,10 +478,34 @@ export default {
           });
         }
       });
-    }
+    },
+    getCurrentUser: function() {
+      var parm = {
+        action: "CurrentUser",
+        type: "get",
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(c => {
+          var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName = loginName.split("@")[0];
+          this.userId = c.d.Id;
+          this.defaultCondition =
+            "?$filter=(AuthorId eq " +
+            this.userId +
+            " or substringof('" +
+            this.loginName +
+            "',ApproverHistory))";
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载当前用户出错!"));
+        });
+    } //获取当前用户并验证员工表是否存在当前用户
   },
   mounted() {
     this.getCompanyCodeAndCostCenter();
+    this.getCurrentUser();
   }
 };
 </script>

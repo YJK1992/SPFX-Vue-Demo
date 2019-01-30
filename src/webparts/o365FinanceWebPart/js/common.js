@@ -62,7 +62,7 @@ var common = {
           queryUrl = baseUrl + "/siteusers(@v)?@v='" + encodeURIComponent(parm.accountName) + "'"
           break
         case 'UserGroup':
-          queryUrl = baseUrl + "/GetUserById(" + parm.userID + ")/currentuser/groups"
+          queryUrl = baseUrl + "/GetUserById(" + parm.userID + ")/groups"
           break
         case 'ListFields':
           queryUrl = baseUrl + "/lists/getbytitle('" + parm.list + "')/fields";

@@ -40,11 +40,11 @@
           <el-menu-item index="/viewgppay">我的待办</el-menu-item>
           <el-menu-item index="/mygppaydraft">我的草稿</el-menu-item>
           <el-menu-item index="/gppayreport">GP付款总表</el-menu-item>
-          <el-menu-item index="/gppayremittancereport">汇款</el-menu-item>
-          <el-menu-item index="/gppaytaxbillreport1">税票清单数据导出F43</el-menu-item>
-          <el-menu-item index="/gppaytaxbillreport2">税票清单数据导出F53</el-menu-item>
-          <el-menu-item index="/gppaybillreport">Paybill</el-menu-item>
-          <el-menu-item index="/gppayassetreport">资产对公付款报表</el-menu-item>
+          <el-menu-item index="/gppayremittancereport" v-show="GPShow">汇款</el-menu-item>
+          <el-menu-item index="/gppaytaxbillreport1" v-show="GPShow">税票清单数据导出F43</el-menu-item>
+          <el-menu-item index="/gppaytaxbillreport2" v-show="GPShow">税票清单数据导出F53</el-menu-item>
+          <el-menu-item index="/gppaybillreport" v-show="GPShow">Paybill</el-menu-item>
+          <el-menu-item index="/gppayassetreport" v-show="GPShow">资产对公付款报表</el-menu-item>
           <!-- <el-menu-item index="/myapplication">我的申请</el-menu-item> -->
         </el-menu-item-group>
       </el-submenu>
@@ -58,8 +58,8 @@
           <el-menu-item index="/viewptptasks">我的待办</el-menu-item>
           <el-menu-item index="/myptpdraft">我的草稿</el-menu-item>
           <el-menu-item index="/ptptemp1">费用明细表</el-menu-item>
-          <el-menu-item index="/ptptemp2">入账表</el-menu-item>
-          <el-menu-item index="/ptptemp3">付款表</el-menu-item>
+          <el-menu-item index="/ptptemp2" v-show="PTPShow">入账表</el-menu-item>
+          <el-menu-item index="/ptptemp3" v-show="PTPShow">付款表</el-menu-item>
         </el-menu-item-group>
       </el-submenu>
     </el-menu>
@@ -71,7 +71,11 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
-      msg: this.GLOBAL.URL
+      hostUrl: this.GLOBAL.URL,
+      userId: 0,
+      loginName: "",
+      GPShow: false,
+      PTPShow: false
     };
   },
   methods: {
@@ -84,11 +88,56 @@ export default {
     handleSelect(key, keyPath) {
       console.log(keyPath);
       this.$router.push(keyPath[1]);
-    }
+    },
+    getCurrentUser: function() {
+      var parm = {
+        action: "CurrentUser",
+        type: "get",
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(c => {
+          var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName = loginName.split("@")[0];
+          this.userId = c.d.Id;
+          var parm2 = {
+            action: "UserGroup",
+            type: "get",
+            userID: this.userId,
+            baseUrl: this.hostUrl
+          };
+          var opt = common.queryOpt(parm2);
+          $.when($.ajax(opt))
+            .done(req => {
+              var data = req.d.results;
+              if (data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                  if (
+                    data[i].Title == "GPSettlement" ||
+                    data[i].Title == "GPSignApprove"
+                  ) {
+                    this.GPShow = true;
+                  }
+                  if (data[i].Title == "PTPAccounting") {
+                    this.PTPShow = true;
+                  }
+                }
+              }
+            })
+            .catch(err => {
+              this.$message(common.message("error", "加载当前用户组出错!"));
+            });
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载当前用户出错!"));
+        });
+    } //获取当前用户并验证员工表是否存在当前用户
   },
   mounted: function() {
     //this.$router.push("/createecctask");
     //:default-active="$router.path"
+    this.getCurrentUser();
   }
 };
 </script>

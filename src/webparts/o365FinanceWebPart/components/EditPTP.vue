@@ -1114,7 +1114,7 @@ export default {
                 if (type == "submit") {
                   console.log("Is submit");
                   if (this.currentStep == "Application" && this.taskId != 0) {
-                    this.onApproval("approve");
+                    this.onApproval("Approved");
                   }
                 }
                 if (this.startNoAttr) {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <el-form :inline="true" :model="Condition" class="demo-form-inline">
       <el-form-item label="成本中心：">
         <el-select v-model="Condition.CostCenter" placeholder="请选择">
@@ -95,6 +95,10 @@ export default {
   data() {
     return {
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
+      loginName: "",
+      userId: 0,
+      defaultCondition: "",
+      loading: false,
       //列表名称
       mainListName: "ECC", //ECC列表名
       subListName: "ECCSubInfo", //ECC物料信息列表名称
@@ -171,50 +175,50 @@ export default {
   },
   methods: {
     onSubmit() {
+      this.loading = true;
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "";
-      var conditionCount = 0;
+      var condition = this.defaultCondition;
+      //var conditionCount = 0;
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          conditionCount++;
-          if (conditionCount == 1) {
-            if (item == "applicationDate") {
-              condition +=
-                "?$filter=Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
-            }
+          //conditionCount++;
+          //if (conditionCount == 1) {
+          // if (item == "applicationDate") {
+          //   condition +=
+          //     "?$filter=Created gt datetime" +
+          //     "'" +
+          //     this.Condition[item][0] +
+          //     "T00:00:00Z" +
+          //     "'" +
+          //     " and Created lt datetime" +
+          //     "'" +
+          //     this.Condition[item][1] +
+          //     "T00:00:00Z" +
+          //     "'";
+          // } else {
+          //   condition +=
+          //     "?$filter=" + item + " eq '" + this.Condition[item] + "'";
+          // }
+          // } else {
+          if (item == "applicationDate") {
+            condition +=
+              " and Created gt datetime" +
+              "'" +
+              this.Condition[item][0] +
+              "T00:00:00Z" +
+              "'" +
+              " and Created lt datetime" +
+              "'" +
+              this.Condition[item][1] +
+              "T00:00:00Z" +
+              "'";
           } else {
-            if (item == "applicationDate") {
-              condition +=
-                " and Created gt datetime" +
-                "'" +
-                this.Condition[item][0] +
-                "T00:00:00Z" +
-                "'" +
-                " and Created lt datetime" +
-                "'" +
-                this.Condition[item][1] +
-                "T00:00:00Z" +
-                "'";
-            } else {
-              condition +=
-                " and " + item + " eq '" + this.Condition[item] + "'";
-            }
+            condition += " and " + item + " eq '" + this.Condition[item] + "'";
           }
+          // }
         }
       }
       console.log(condition);
@@ -228,16 +232,22 @@ export default {
         baseUrl: this.hostUrl,
         condition: condition
       };
-
       var option = common.queryOpt(parm);
-      $.when($.ajax(option)).done(req => {
-        var data = req.d.results;
-        if (data.length > 0) {
-          data.forEach(d => {
-            this.getSubList(d);
-          });
-        }
-      });
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            data.forEach(d => {
+              this.getSubList(d);
+            });
+          } else {
+            this.loading = false;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取主表数据失败"));
+          this.loading = false;
+        });
     },
     getSubList(MainItem) {
       var applicationNumber = MainItem.Title;
@@ -289,9 +299,11 @@ export default {
               CostItems: ""
             });
           }
+          this.loading = false;
         })
         .catch(err => {
           this.$message(common.message("error", "获取物料数据失败!"));
+          this.loading = false;
         });
     },
     getApplicationType() {
@@ -392,11 +404,35 @@ export default {
           ApplicantNumber: applicantNumber
         }
       });
-    }
+    },
+    getCurrentUser: function() {
+      var parm = {
+        action: "CurrentUser",
+        type: "get",
+        baseUrl: this.hostUrl
+      };
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(c => {
+          var loginName = c.d.LoginName.split("|membership|")[1];
+          this.loginName = loginName.split("@")[0];
+          this.userId = c.d.Id;
+          this.defaultCondition =
+            "?$filter=(AuthorId eq " +
+            this.userId +
+            " or substringof('" +
+            this.loginName +
+            "',ApprovalHistory))";
+        })
+        .catch(err => {
+          this.$message(common.message("error", "加载当前用户出错!"));
+        });
+    } //获取当前用户并验证员工表是否存在当前用户
   },
   mounted() {
     this.getCompanyCodeAndCostCenter();
     this.getApplicationType();
+    this.getCurrentUser();
   }
 };
 </script>

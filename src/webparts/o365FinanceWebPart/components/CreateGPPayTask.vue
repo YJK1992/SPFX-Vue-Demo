@@ -71,7 +71,7 @@
             v-model="PublicPayment.CostCenter"
             placeholder="请选择"
             size="medium"
-            @change="costCenterChange"
+            @change="checkCostCenter"
           >
             <el-option
               v-for="item in costCenterArr"
@@ -594,6 +594,34 @@ export default {
     };
   },
   methods: {
+        checkCostCenter: function() {
+      var costcenter = this.PublicPayment.CostCenter;
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.approverList,
+        baseUrl: this.hostUrl,
+        condition:    "?$filter=CostCenter eq  '" +
+          costcenter +
+          "' and EmployeeId eq '" +
+          this.LoginName.split("@")[0] +
+          "'"
+      };
+      var opt = common.queryOpt(parm);
+      $.when($.ajax(opt))
+        .done(req => {
+          if (req.d.results.length > 0) {
+            this.costCenterChange();
+          } else {
+            this.$message(
+              common.message("error", "未找到对应成本中心的审批节点!")
+            );
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "校验成本中心出错!"));
+        });
+    },
     costCenterChange: function() {
       this.companyCodeArr = [];
       var parm = {
@@ -601,11 +629,7 @@ export default {
         action: "ListItems",
         list: this.userListName,
         condition:
-          "?$filter=CostCenter eq  '" +
-          this.PublicPayment.CostCenter +
-          "' and EmployeeId eq '" +
-          this.LoginName.split("@")[0] +
-          "'",
+          "?$filter=CostCenter eq  '" + this.PublicPayment.CostCenter + "'",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);
@@ -1585,21 +1609,17 @@ export default {
               PhoneNumber: this.PublicPayment.PhoneNumber,
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
-            if (total > 0 && total < 1000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-            } else if (total >= 1000 && total < 20000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-            } else if (total >= 20000 && total < 50000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
-            } else {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
-              itemInfo.Approver4Id = data1.Approver4Id;
-            }
+                  if (total > 0 && total <=5000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                  } else if (total > 5000 && total <=20000) {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                  }  else {
+                    itemInfo.Approver1Id = data1.Approver1Id;
+                    itemInfo.Approver2Id = data1.Approver2Id;
+                    itemInfo.Approver3Id = data1.Approver3Id;
+                    //itemInfo.Approver4Id = data1.Approver4Id;
+                  }
             if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
               itemInfo.SpecialApproverId = this.SpecApproId;
             }
