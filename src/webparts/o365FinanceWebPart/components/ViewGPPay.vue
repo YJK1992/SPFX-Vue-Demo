@@ -95,8 +95,8 @@ export default {
       //结算方式
       SettlementType: [
         {
-          value: "清帐",
-          label: "清帐"
+          value: "清账",
+          label: "清账"
         },
         {
           value: "支票",
@@ -201,7 +201,7 @@ export default {
     },
     onViewItem(index) {
       console.log(index);
-      var item = this.gpItems[index];
+      var item = this.newArr[index];
       var ApplicantNumber = item.ApplicationNumber;
       var TaskId = item.TaskId;
       console.log(ApplicantNumber);
