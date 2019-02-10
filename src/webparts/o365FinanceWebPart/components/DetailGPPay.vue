@@ -817,7 +817,7 @@ export default {
         condition:
           "?$filter=ContractNumber eq '" +
           this.PublicPayment.ContractNumber +
-          "' and Status eq 'Approved'"
+          "' and Status eq 'Approved' and  SettlementType ne '清账' "
       };
       var option = common.queryOpt(parm);
       console.log(option);

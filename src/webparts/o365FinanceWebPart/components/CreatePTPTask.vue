@@ -416,7 +416,7 @@ export default {
             this.costCenterChange();
           } else {
             this.$message(
-              common.message("error", "未找到对应成本中心的审批节点!")
+              common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。")
             );
           }
         })
@@ -946,7 +946,7 @@ export default {
                 this.$message(common.message("error", "员工报销添加失败!"));
               });
           } else {
-            this.$message(common.message("error", "未找到对应的审批节点!"));
+            this.$message(common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"));
           }
         })
         .catch(err => {

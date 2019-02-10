@@ -217,41 +217,40 @@ export default {
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //conditionCount++;
-          // if (conditionCount == 1) {
-          //   if (item == "Date") {
-          //     condition +=
-          //       "?$filter=Created gt datetime" +
-          //       "'" +
-          //       this.Condition[item][0] +
-          //       "T00:00:00Z" +
-          //       "'" +
-          //       " and Created lt datetime" +
-          //       "'" +
-          //       this.Condition[item][1] +
-          //       "T00:00:00Z" +
-          //       "'";
-          //   } else if (item == "TrusteesEmail") {
-          //     condition +=
-          //       "?$filter=TrusteesEmail eq '" + this.Condition[item] + "'";
-          //   } else {
-          //     condition +=
-          //       "?$filter=" + item + " eq '" + this.Condition[item] + "'";
-          //   }
-          // } else {
-          if (item == "Date") {
-            condition +=
-              " and Created gt datetime" +
-              "'" +
-              this.Condition[item][0] +
-              "T00:00:00Z" +
-              "'" +
-              " and Created lt datetime" +
-              "'" +
-              this.Condition[item][1] +
-              "T00:00:00Z" +
-              "'";
+          if (condition == "") {
+            if (item == "Date") {
+              condition +=
+                "?$filter=Created gt datetime" +
+                "'" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
+                "'" +
+                " and Created lt datetime" +
+                "'" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
+                "'";
+            } else {
+              condition +=
+                "?$filter=" + item + " eq '" + this.Condition[item] + "'";
+            }
           } else {
-            condition += " and " + item + " eq '" + this.Condition[item] + "'";
+            if (item == "Date") {
+              condition +=
+                " and Created gt datetime" +
+                "'" +
+                this.Condition[item][0] +
+                "T00:00:00Z" +
+                "'" +
+                " and Created lt datetime" +
+                "'" +
+                this.Condition[item][1] +
+                "T00:00:00Z" +
+                "'";
+            } else {
+              condition +=
+                " and " + item + " eq '" + this.Condition[item] + "'";
+            }
           }
         }
       }
@@ -412,12 +411,39 @@ export default {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.loginName = loginName.split("@")[0];
           this.userId = c.d.Id;
-          this.defaultCondition =
-            "?$filter=(AuthorId eq " +
-            this.userId +
-            " or substringof('" +
-            this.loginName +
-            "',ApproverHistory))";
+          var parm2 = {
+            action: "UserGroup",
+            type: "get",
+            userID: this.userId,
+            baseUrl: this.hostUrl
+          };
+          var opt = common.queryOpt(parm2);
+          $.when($.ajax(opt))
+            .done(req => {
+              var data = req.d.results;
+              console.log(data);
+              if (data.length > 0) {
+                for (var i = 0; i < data.length; i++) {
+                  if (
+                    data[i].Title == "GPSettlement" ||
+                    data[i].Title == "GPSignApprove"
+                  ) {
+                    this.defaultCondition = "";
+                      return;
+                  } else {
+                    this.defaultCondition =
+                      "?$filter=(AuthorId eq " +
+                      this.userId +
+                      " or substringof('" +
+                      this.loginName +
+                      "',ApproverHistory))";
+                  }
+                }
+              }
+            })
+            .catch(err => {
+              this.$message(common.message("error", "加载当前用户组出错!"));
+            });
         })
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));
