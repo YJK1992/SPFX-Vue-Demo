@@ -5,7 +5,7 @@
         <td colspan="8">
           <span style="font-size:30px;color:#409eff;">员工报销模板</span>
           <div style="float:right">
-            <!-- <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button> -->
+            <el-button :disabled="!IsDisable" type="primary" @click="printDeal">打印</el-button>
           </div>
         </td>
       </tr>
