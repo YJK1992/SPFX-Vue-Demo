@@ -86,7 +86,7 @@
       <table class="printTable">
         <tr class="printTableTh">
           <td align="center" colspan="6">
-            <h2>{{this.CompanyName}}</h2>
+            <h2>{{this.CompanyName}}（CNA2）</h2>
           </td>
         </tr>
         <tr>
@@ -95,36 +95,33 @@
         </tr>
         <tr>
           <td>付款对象：</td>
-          <td colspan="2">Yong Xu(徐勇)</td>
+          <td colspan="2"></td>
           <td>报销金额：</td>
           <td colspan="2">{{this.TotalMoney}}CNY</td>
         </tr>
         <tr>
-          <td colspan="3">员工信息</td>
+          <td colspan="2">员工信息</td>
           <td colspan="3">银行信息</td>
         </tr>
         <tr>
           <td>姓名：</td>
           <td>{{this.StaffReimbursement.Applicant}}</td>
-          <td>工作电话：</td>
-          <td></td>
-          <td>户名：</td>
-          <td>工资</td>
+
+          <td rowspan="2">户名：</td>
+          <td rowspan="2" colspan="2">工资</td>
         </tr>
         <tr>
           <td>员工编号：</td>
-          <td></td>
-          <td>手机：</td>
-          <td></td>
-          <td>账号：</td>
-          <td>{{this.StaffReimbursement.AccountNumber}}</td>
+          <td>{{EmployeeCode}}</td>
         </tr>
         <tr>
-          <td>工作地址：</td>
-          <td></td>
           <td>邮件地址：</td>
-          <td></td>
-          <td>银行名称：</td>
+          <td>{{Email}}</td>
+          <td rowspan="2">账号：</td>
+          <td rowspan="2" colspan="2">{{this.StaffReimbursement.AccountNumber}}</td>
+        </tr> 
+        <tr>
+          <td>手机：</td>
           <td></td>
         </tr>
       </table>
@@ -138,16 +135,10 @@
           <td>{{this.StaffReimbursement.Created}}</td>
           <td>成本中心：</td>
           <td>{{this.StaffReimbursement.CostCenter}}</td>
-          <td>备忘：</td>
-          <td></td>
         </tr>
         <tr>
           <td>完成审批日期：</td>
-          <td>{{this.StaffReimbursement.SettlingTime}}</td>
-          <td>增值税条目：</td>
-          <td>No(元)</td>
-          <td>文出授权：</td>
-          <td></td>
+          <td colspan="3">{{this.StaffReimbursement.SettlingTime}}</td>
         </tr>
       </table>
 
@@ -160,12 +151,13 @@
           <td>日期</td>
           <td>费用名称</td>
           <td>报销金额</td>
+          <td>币种</td>
           <td>兑换后金额</td>
+          <td>币种</td>
           <td>内部订单</td>
-          <td>备忘</td>
           <td>税码</td>
           <td>参考号</td>
-          <td>逐条列单</td>
+          <td>备忘</td>
         </tr>
         <tr v-for="(subItems,index) in  PrintSubItems">
           <template v-for="(subItem,cindex) in subItems">
@@ -263,7 +255,9 @@ export default {
       ApprovalHistory: "", //审批历史
       IsDisable: false,
       CompanyName: "", //公司名称
-      TotalMoney: 0 //报销金额
+      TotalMoney: 0, //报销金额
+      Email: "", //申请人邮箱
+      EmployeeCode: "" //申请人编码
     };
   },
   methods: {
@@ -284,7 +278,6 @@ export default {
     },
     getCompanyName(code) {
       var that = this;
-
       //获取合同列表
       var parm = {
         action: "ListItems",
@@ -356,6 +349,32 @@ export default {
       };
       var opt = common.queryOpt(parm);
       return common.service(opt);
+    },
+    getApplicantInfo(applicant) {
+      var that = this;
+      //获取合同列表
+      var parm = {
+        action: "ListItems",
+        type: "get",
+        list: this.userListName,
+        baseUrl: this.hostUrl,
+        condition: "?$filter=EmployeeName eq '" + applicant + "'&$top=1"
+      }; //Completed 已完成
+      console.log(parm.condition);
+      var option = common.queryOpt(parm);
+      $.when($.ajax(option))
+        .done(req => {
+          var data = req.d.results;
+          if (data.length > 0) {
+            that.Email = data[0].EmployeeID;
+            console.log(data[0]);
+            console.log(that.Email);
+            that.EmployeeCode = data[0].EmployeeCode;
+          }
+        })
+        .catch(err => {
+          this.$message(common.message("error", "获取申请人信息失败!"));
+        });
     }
   },
   mounted: function() {
@@ -386,19 +405,20 @@ export default {
           );
           this.StaffReimbursement.SettlingTime = data[0].SettlingTime;
           this.getCompanyName(this.StaffReimbursement.CompanyCode);
-          if(this.ApprovalHistory!=null && this.ApprovalHistory!=""){
-          var approvalHistory = JSON.parse(this.ApprovalHistory);
-          var keys = Object.keys(approvalHistory);
-          var result = [];
-          keys.forEach(key => {
-            result.push({
-              Approver: approvalHistory[key].split(",")[0],
-              ApproverLevel: key,
-              Status: "已批准",
-              ApproverDate: approvalHistory[key].split(",")[1]
+          this.getApplicantInfo(this.StaffReimbursement.Applicant);
+          if (this.ApprovalHistory != null && this.ApprovalHistory != "") {
+            var approvalHistory = JSON.parse(this.ApprovalHistory);
+            var keys = Object.keys(approvalHistory);
+            var result = [];
+            keys.forEach(key => {
+              result.push({
+                Approver: approvalHistory[key].split(",")[0],
+                ApproverLevel: key,
+                Status: "已批准",
+                ApproverDate: approvalHistory[key].split(",")[1]
+              });
             });
-          });
-          this.ApprovalHistory = result;
+            this.ApprovalHistory = result;
           }
 
           if (data[0].Attachments) {
@@ -464,13 +484,14 @@ export default {
                 TaxCode: element.TaxCode, //税码
                 ExpenseDate: element.ExpenseDate, //费用日期
                 ExpenseCategory: element.ExpenseCategory, //费用类别
-                Money:element.Total,
+                Money: element.Total,
+                Currency1: element.Currency,
                 ConvertMoney: element.ConvertMoney, //转换金额
-                OrderNo:data[0].OrderNo ,
-                Remark: element.Remark, //备注
+                Currency2: element.Currency,
+                OrderNo: data[0].Title,
                 TaxCode1: element.TaxCode, //税码
-                Number: element.Number, //发票号
-                tiaomu: "xxxx"
+                Number: element.Number, //参考号
+                Remark: element.Remark //备注
               });
             });
             this.TotalMoney = totalMoney;

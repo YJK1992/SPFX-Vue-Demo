@@ -1362,7 +1362,7 @@ export default {
         type: "get",
         action: "ListItems",
         list: this.userListName,
-        condition: "",
+        condition: "?$top=2000",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);

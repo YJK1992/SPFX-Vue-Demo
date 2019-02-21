@@ -26,6 +26,7 @@
         <td align="right">成本中心：</td>
         <td>
           <el-select
+            filterable
             v-model="purchaseRequestData.CostCenter"
             placeholder="请选择"
             size="medium"
@@ -156,6 +157,7 @@
         <td align="right">费用类别：</td>
         <td>
           <el-select
+            filterable
             :disabled="purchaseRequestData.ApplicationType=='固定资产'"
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
@@ -506,7 +508,7 @@ export default {
         type: "get",
         action: "ListItems",
         list: this.userListName,
-        condition: "",
+        condition: "?$top=2000",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);

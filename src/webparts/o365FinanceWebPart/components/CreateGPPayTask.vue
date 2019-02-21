@@ -68,6 +68,7 @@
         <td align="right">成本中心：</td>
         <td align="left">
           <el-select
+           filterable
             v-model="PublicPayment.CostCenter"
             placeholder="请选择"
             size="medium"
@@ -1150,7 +1151,7 @@ export default {
         type: "get",
         action: "ListItems",
         list: this.userListName,
-        condition: "",
+        condition: "?$top=2000",
         baseUrl: this.hostUrl
       };
       var opt = common.queryOpt(parm);
