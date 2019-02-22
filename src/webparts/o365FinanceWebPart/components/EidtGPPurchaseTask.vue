@@ -286,7 +286,6 @@
             @change="itemCalculate"
             v-model="item.Number"
             :min="1"
-            :max="10"
             label="描述文字"
           ></el-input-Number>
         </el-form-item>
@@ -625,7 +624,7 @@ export default {
         type: "get",
         list: this.expenseCategoryListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition:"?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -654,7 +653,7 @@ export default {
         type: "get",
         list: this.costAccountListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
