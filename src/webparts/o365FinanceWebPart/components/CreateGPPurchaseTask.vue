@@ -226,12 +226,7 @@
           <el-input v-model="item.SupplierParts" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth" prop="wl">
-          <el-input-Number
-            @change="itemCalculate"
-            v-model="item.Number"
-            :min="1"
-            label="描述文字"
-          ></el-input-Number>
+          <el-input-Number @change="itemCalculate" v-model="item.Number" :min="1" label="描述文字"></el-input-Number>
         </el-form-item>
         <el-form-item label="单价：" :label-width="formLabelWidth" prop="wl">
           <el-input @blur="itemCalculate" v-model="item.Price" autocomplete="off"></el-input>
@@ -357,7 +352,10 @@ export default {
             this.costCenterChange();
           } else {
             this.$message(
-              common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。")
+              common.message(
+                "error",
+                "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+              )
             );
           }
         })
@@ -726,22 +724,23 @@ export default {
             };
             console.log("kkkkkk");
             console.log(itemInfo);
-            if (total > 0 && total <= 5000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-            } else if (total > 5000 && total <= 20000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-            } else {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
-              //itemInfo.Approver4Id = data1.Approver4Id;
-            }
+
             if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
               itemInfo.SpecialApproverId = this.SpecApproId;
             }
             if (type == "submit") {
               itemInfo.Status = "Submitted";
+              if (total > 0 && total <= 5000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+              } else if (total > 5000 && total <= 20000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+              } else {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+                itemInfo.Approver3Id = data1.Approver3Id;
+                //itemInfo.Approver4Id = data1.Approver4Id;
+              }
             }
             var parm = {
               type: "post",
@@ -773,7 +772,12 @@ export default {
               });
           } else {
             this.loading = false;
-            this.$message(common.message("warning", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"));
+            this.$message(
+              common.message(
+                "warning",
+                "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+              )
+            );
           }
         })
         .catch(err => {
@@ -919,11 +923,17 @@ export default {
         //计算 净额 税款 金额
         this.item.Money =
           parseFloat(this.item.Number) * parseFloat(this.item.Price);
-          this.item.Amount =this.item.Money ;
+        this.item.Amount = this.item.Money;
       }
-      if (!isNaN(this.item.Taxation) && this.item.Taxation != "" && !isNaN(this.item.Price) && this.item.Price != "") {
-        this.item.Amount =
-          parseFloat(this.item.Money) + parseFloat(this.item.Taxation);
+      if (
+        !isNaN(this.item.Taxation) &&
+        this.item.Taxation != "" &&
+        !isNaN(this.item.Price) &&
+        this.item.Price != ""
+      ) {
+        this.item.Amount = (
+          parseFloat(this.item.Money) + parseFloat(this.item.Taxation)
+        ).toFixed(2);
       }
     },
     getCurrentUser() {

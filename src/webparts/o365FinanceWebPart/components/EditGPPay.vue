@@ -78,7 +78,7 @@
         <td align="right">成本中心：</td>
         <td align="left">
           <el-select
-          filterable
+            filterable
             :disabled="showApprover==true"
             v-model="PublicPayment.CostCenter"
             placeholder="请选择"
@@ -1703,21 +1703,22 @@ export default {
               TaxFileJsonString: JSON.stringify(this.TaxFileJson),
               ExpenseFileJsonString: JSON.stringify(this.ExpenseFileJson)
             };
-            if (total > 0 && total <= 5000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-            } else if (total > 5000 && total <= 20000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-            } else {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
-              //itemInfo.Approver4Id = data1.Approver4Id;
-            }
+
             if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
               itemInfo.SpecialApproverId = this.SpecApproId;
             }
             if (type == "submit") {
+              if (total > 0 && total <= 5000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+              } else if (total > 5000 && total <= 20000) {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+              } else {
+                itemInfo.Approver1Id = data1.Approver1Id;
+                itemInfo.Approver2Id = data1.Approver2Id;
+                itemInfo.Approver3Id = data1.Approver3Id;
+                //itemInfo.Approver4Id = data1.Approver4Id;
+              }
               if (this.currentStep == "Application" && this.taskId != 0) {
                 itemInfo.Status = "Changed";
               } else {
@@ -1752,7 +1753,12 @@ export default {
                 this.$message(common.message("error", "对公付款添加失败!"));
               });
           } else {
-            this.$message(common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"));
+            this.$message(
+              common.message(
+                "error",
+                "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+              )
+            );
           }
         })
         .catch(err => {

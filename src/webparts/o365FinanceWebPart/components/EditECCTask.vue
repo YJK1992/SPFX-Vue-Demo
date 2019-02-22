@@ -16,7 +16,7 @@
           <td>成本中心 ：</td>
           <td colspan="2">
             <el-select
-            filterable
+              filterable
               v-model="ECCTaskForm.costcenter"
               placeholder="请选择"
               size="medium"
@@ -407,7 +407,7 @@ export default {
       deleteAttName: "",
       deleteSubListId: [],
       startNoAttr: true,
-      loginName:''
+      loginName: ""
     };
   },
   methods: {
@@ -469,7 +469,11 @@ export default {
         list: this.approverList,
         baseUrl: this.hostUrl,
         condition:
-         "?$filter=CostCenter eq  '" + costCenter + "' and EmployeeId eq '"+this.loginName+"'"
+          "?$filter=CostCenter eq  '" +
+          costCenter +
+          "' and EmployeeId eq '" +
+          this.loginName +
+          "'"
       };
       var opt = common.queryOpt(parm);
       $.when($.ajax(opt))
@@ -477,7 +481,10 @@ export default {
           this.loading = false;
           if (req.d.results.length == 0) {
             this.$message(
-              common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。")
+              common.message(
+                "error",
+                "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+              )
             );
           }
         })
@@ -754,7 +761,11 @@ export default {
               list: this.approverList,
               baseUrl: this.hostUrl,
               condition:
-                 "?$filter=CostCenter eq  '" + costcenter + "' and EmployeeId eq '"+this.loginName+"'"
+                "?$filter=CostCenter eq  '" +
+                costcenter +
+                "' and EmployeeId eq '" +
+                this.loginName +
+                "'"
             };
             var option = common.queryOpt(parm); //获取审批节点请求
             $.when($.ajax(option))
@@ -775,21 +786,22 @@ export default {
                     Total: this.ECCTaskForm.total,
                     AttDescription: this.ECCTaskForm.AttDescription
                   };
-             if (total > 0 && total <= 5000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-            } else if (total > 5000 && total <= 20000) {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-            } else {
-              itemInfo.Approver1Id = data1.Approver1Id;
-              itemInfo.Approver2Id = data1.Approver2Id;
-              itemInfo.Approver3Id = data1.Approver3Id;
-              //itemInfo.Approver4Id = data1.Approver4Id;
-            }
+
                   if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
                     itemInfo.SpecialApproverId = this.SpecApproId;
                   }
                   if (type == "submit") {
+                    if (total > 0 && total <= 5000) {
+                      itemInfo.Approver1Id = data1.Approver1Id;
+                    } else if (total > 5000 && total <= 20000) {
+                      itemInfo.Approver1Id = data1.Approver1Id;
+                      itemInfo.Approver2Id = data1.Approver2Id;
+                    } else {
+                      itemInfo.Approver1Id = data1.Approver1Id;
+                      itemInfo.Approver2Id = data1.Approver2Id;
+                      itemInfo.Approver3Id = data1.Approver3Id;
+                      //itemInfo.Approver4Id = data1.Approver4Id;
+                    }
                     if (this.currentStep == "Application" && this.taskId != 0) {
                       itemInfo.Status = "Changed";
                     } else {
@@ -893,7 +905,10 @@ export default {
                 } else {
                   this.loading = false;
                   this.$message(
-                    common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。")
+                    common.message(
+                      "error",
+                      "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+                    )
                   );
                 }
               })
@@ -922,7 +937,7 @@ export default {
         .done(req => {
           var data = req.d.results;
           if (data.length > 0) {
-                this.EmployeeCode=data[0].EmployeeCode;
+            this.EmployeeCode = data[0].EmployeeCode;
             data.forEach(d => {
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
@@ -1293,7 +1308,7 @@ export default {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.OTCMember = loginName.split("@")[0];
           this.currentUserITCode = loginName.split("@")[0];
-          this.loginName=loginName.split("@")[0];
+          this.loginName = loginName.split("@")[0];
           this.currentUserTitle = c.d.Title;
           this.search(loginName);
         })
@@ -1457,7 +1472,7 @@ export default {
   },
   mounted: function() {
     this.loading = true;
-    this.getListType()
+    this.getListType();
     this.getCostCenter();
     this.getAppTypeAndProType();
     this.getCurrentUser();

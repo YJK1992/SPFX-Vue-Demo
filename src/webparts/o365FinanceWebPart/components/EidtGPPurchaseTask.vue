@@ -30,7 +30,7 @@
         <td align="right">成本中心：</td>
         <td>
           <el-select
-          filterable
+            filterable
             v-model="purchaseRequestData.CostCenter"
             placeholder="请选择"
             size="medium"
@@ -195,7 +195,7 @@
         <td align="right">费用类别：</td>
         <td>
           <el-select
-          filterable
+            filterable
             @change="purchaseRequestData.CostAccount=''"
             v-model="purchaseRequestData.ExpenseCategory"
             placeholder="请选择"
@@ -282,12 +282,7 @@
           <el-input v-model="item.SupplierParts" autocomplete="off"></el-input>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth" prop="wl">
-          <el-input-Number
-            @change="itemCalculate"
-            v-model="item.Number"
-            :min="1"
-            label="描述文字"
-          ></el-input-Number>
+          <el-input-Number @change="itemCalculate" v-model="item.Number" :min="1" label="描述文字"></el-input-Number>
         </el-form-item>
         <el-form-item label="单价：" :label-width="formLabelWidth" prop="wl">
           <el-input @blur="itemCalculate" v-model="item.Price" autocomplete="off"></el-input>
@@ -624,7 +619,7 @@ export default {
         type: "get",
         list: this.expenseCategoryListName,
         baseUrl: this.hostUrl,
-        condition:"?$top=2000"
+        condition: "?$top=2000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -749,7 +744,11 @@ export default {
     },
     createPurchaseRequestData(type) {
       //创建主表数据
-      var total = Number(this.purchaseRequestData.Money);
+      //var total = Number(this.purchaseRequestData.Money);
+      var total = 0;
+      this.subListData.forEach(element => {
+        total += Number(element.Amount);
+      });
       var costcenter = this.purchaseRequestData.CostCenter;
       var parm = {
         action: "ListItems",
@@ -791,21 +790,22 @@ export default {
             SpecialApproverTitle: this.purchaseRequestData.SpecialApprover
           };
           console.log(itemInfo);
-          if (total > 0 && total <= 5000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-          } else if (total > 5000 && total <= 20000) {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-          } else {
-            itemInfo.Approver1Id = data1.Approver1Id;
-            itemInfo.Approver2Id = data1.Approver2Id;
-            itemInfo.Approver3Id = data1.Approver3Id;
-            //itemInfo.Approver4Id = data1.Approver4Id;
-          }
+
           if (this.SpecApproId != 0 && this.checkIsSpecAppro) {
             itemInfo.SpecialApproverId = this.SpecApproId;
           }
           if (type == "submit") {
+            if (total > 0 && total <= 5000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+            } else if (total > 5000 && total <= 20000) {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+            } else {
+              itemInfo.Approver1Id = data1.Approver1Id;
+              itemInfo.Approver2Id = data1.Approver2Id;
+              itemInfo.Approver3Id = data1.Approver3Id;
+              //itemInfo.Approver4Id = data1.Approver4Id;
+            }
             if (this.currentStep == "Application" && this.taskId != 0) {
               itemInfo.Status = "Changed";
             } else {
@@ -842,7 +842,12 @@ export default {
               this.$message(common.message("error", "提交数据时出现了错误!"));
             });
         } else {
-          this.$message(common.message("error", "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"));
+          this.$message(
+            common.message(
+              "error",
+              "未找到对应成本中心的审批节点,请联管理员yong.xu@lenovonetapp.com及时维护。"
+            )
+          );
         }
       });
     },
@@ -1021,11 +1026,17 @@ export default {
         //计算 净额 税款 金额
         this.item.Money =
           parseFloat(this.item.Number) * parseFloat(this.item.Price);
-            this.item.Amount =this.item.Money ;
+        this.item.Amount = this.item.Money;
       }
-      if (!isNaN(this.item.Taxation) && this.item.Taxation != "" && !isNaN(this.item.Price) && this.item.Price != "") {
-        this.item.Amount =
-          parseFloat(this.item.Money) + parseFloat(this.item.Taxation);
+      if (
+        !isNaN(this.item.Taxation) &&
+        this.item.Taxation != "" &&
+        !isNaN(this.item.Price) &&
+        this.item.Price != ""
+      ) {
+        this.item.Amount = (
+          parseFloat(this.item.Money) + parseFloat(this.item.Taxation)
+        ).toFixed(2);
       }
     },
     getCurrentUser() {

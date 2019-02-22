@@ -89,13 +89,13 @@
             <h2>{{this.CompanyName}}（CNA2）</h2>
           </td>
         </tr>
-        <tr>
+        <!-- <tr>
           <td>费用报告编号：</td>
           <td colspan="5">{{this.StaffReimbursement.Title}}</td>
-        </tr>
+        </tr> -->
         <tr>
-          <td>付款对象：</td>
-          <td colspan="2"></td>
+           <td>费用报告编号：</td>
+          <td colspan="2">{{this.StaffReimbursement.Title}}</td>
           <td>报销金额：</td>
           <td colspan="2">{{this.TotalMoney}}CNY</td>
         </tr>
@@ -105,7 +105,7 @@
         </tr>
         <tr>
           <td>姓名：</td>
-          <td>{{this.StaffReimbursement.Applicant}}</td>
+          <td>{{Email.split("@")[0]}}（{{this.StaffReimbursement.Applicant}}）</td>
 
           <td rowspan="2">户名：</td>
           <td rowspan="2" colspan="2">工资</td>
@@ -136,10 +136,10 @@
           <td>成本中心：</td>
           <td>{{this.StaffReimbursement.CostCenter}}</td>
         </tr>
-        <tr>
+        <!-- <tr>
           <td>完成审批日期：</td>
           <td colspan="3">{{this.StaffReimbursement.SettlingTime}}</td>
-        </tr>
+        </tr> -->
       </table>
 
       <table class="printTable">
