@@ -211,8 +211,8 @@
       </tr>
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
-          <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>
+          <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+          <el-button @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
         </td>
       </tr>
     </table>
@@ -1079,7 +1079,7 @@ export default {
           this.$message(common.message("error", "加载合同列表时出错!"));
         });
     },
-    getApplicantNumber: function() {
+    getApplicantNumber: function(type) {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -1094,6 +1094,7 @@ export default {
           var data = req.d.results;
           this.baseApplicantNumber = data[0].Number;
           this.appliantNumberItemId = data[0].ID;
+          this.onSaveOrSubmmit(type)
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
@@ -1147,7 +1148,7 @@ export default {
   mounted: function() {
     //onload
     this.loading = true;
-    this.getApplicantNumber();
+    //this.getApplicantNumber();
     //this.purchaseRequestData.ApplicationNumber = common.generateUUID();
     //this.requestDigest = common.getRequestDigest();
     this.getCostCenter();

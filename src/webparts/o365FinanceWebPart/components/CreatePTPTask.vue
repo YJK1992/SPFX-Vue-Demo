@@ -147,8 +147,8 @@
     <table class="yuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Submit)">提交</el-button>
-          <el-button type="primary" @click="onSaveOrSubmmit(buttonType.Save)">保存</el-button>
+          <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+          <el-button type="primary" @click="getApplicantNumber(buttonType.Save)">保存</el-button>
         </td>
       </tr>
     </table>
@@ -1031,7 +1031,7 @@ export default {
         this.loading = false;
       }
     },
-    getApplicantNumber: function() {
+    getApplicantNumber: function(type) {
       var parm = {
         type: "get",
         action: "ListItems",
@@ -1047,6 +1047,7 @@ export default {
           console.log(data);
           this.PTPBaseApplicantNumber = data[0].Number;
           this.PTPAppliantNumberItemId = data[0].ID;
+          this.onSaveOrSubmmit(type)
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
@@ -1259,7 +1260,7 @@ export default {
     //获取税码
     this.getTaxCode();
     //获取流水号
-    this.getApplicantNumber();
+    //this.getApplicantNumber();
   }
 };
 </script>
