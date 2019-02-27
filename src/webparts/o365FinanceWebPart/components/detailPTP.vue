@@ -320,7 +320,7 @@ export default {
                 return prev;
               }
             }, 0);
-            sums[index] += " 元";
+            (Number(sums[index])).toFixed(2) += " 元";
           }
         } else {
           //sums[index] = "N/A";

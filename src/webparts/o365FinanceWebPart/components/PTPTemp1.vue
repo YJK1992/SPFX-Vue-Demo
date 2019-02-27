@@ -301,6 +301,7 @@ export default {
             console.log("this.CostAccount:" + this.CostAccount == "");
             if (subItems != null) {
               console.log("subItems" + subItems != null);
+              console.log(subItems);
               subItems.forEach(sub => {
                 if (this.CostAccount == "") {
                   this.TableData.push({
@@ -387,7 +388,7 @@ export default {
                 Currency: "",
                 Rate: "",
                 ConvertMoney: "",
-                OriginalTaxMoney: Number(sub.OriginalTaxMoney),
+                OriginalTaxMoney: "",
                 FinanceITCode: d.FinanceITCode,
                 Modified: d.Modified.substring(0, d.Modified.indexOf("T")),
                 Status: this.DisplayName[d.Status],

@@ -1616,7 +1616,7 @@ export default {
         itemAmount += parseFloat(this.TaxReceiptList[index].InvoiceValue);
       }
       var InvoiceValue = parseFloat(this.PublicPayment.InvoiceValue);
-      return itemAmount == InvoiceValue;
+      return itemAmount.toFixed(2) == InvoiceValue;
     },
     onSaveOrSubmmit(type) {
       if (!this.formVerification()) {
