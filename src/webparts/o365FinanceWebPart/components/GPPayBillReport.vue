@@ -249,17 +249,17 @@ export default {
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
-          if (item == "ApplicationDate") {
+          if (item == "SettlingTime") {
             condition +=
-              " and Created gt datetime" +
+              " and SettlingTime gt datetime" +
               "'" +
               this.Condition[item][0] +
-              "T00:00:00Z" +
+              "T08:00:00Z" +
               "'" +
-              " and Created lt datetime" +
+              " and SettlingTime lt datetime" +
               "'" +
               this.Condition[item][1] +
-              "T00:00:00Z" +
+              "T08:00:00Z" +
               "'";
           } else {
             condition += " and " + item + " eq '" + this.Condition[item] + "'";

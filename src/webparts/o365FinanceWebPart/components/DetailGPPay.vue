@@ -327,9 +327,13 @@
           </tr>
           <tr>
             <td
-              colspan="4"
+              colspan="2"
               style=" border: 1px solid #cfcfcf; padding: 5px;"
             >公司名称：{{this.CompanyName+'（'+this.PublicPayment.CompanyCode+'）'}}</td>
+                      <td
+              colspan="2"
+              style=" border: 1px solid #cfcfcf; padding: 5px;"
+            >费用类别：{{this.PublicPayment.ExpenseCategory}}（{{this.PublicPayment.CostAccount}}）</td>
           </tr>
           <tr>
             <td
