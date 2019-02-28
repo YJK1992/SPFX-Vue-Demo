@@ -283,7 +283,7 @@
           ></el-input>
         </el-form-item>
         <el-form-item label="转换金额：" :label-width="formLabelWidth">
-          <el-input :disabled="showFA==true" v-model="SubItem.ConvertMoney" placeholder="转换金额"></el-input>
+          <el-input disabled v-model="SubItem.ConvertMoney" placeholder="转换金额"></el-input>
         </el-form-item>
         <el-form-item label="转换后币种：" :label-width="formLabelWidth">
           <el-input :disabled="showFA==true" v-model="SubItem.ConvertCurrency" placeholder="转换后币种"></el-input>
@@ -526,7 +526,8 @@ export default {
                 return prev;
               }
             }, 0);
-            sums[index] += " 元";
+            //sums[index] += " 元";
+            sums[index]=Number(sums[index]).toFixed(2)+" 元"
           }
         } else {
           //sums[index] = "N/A";
@@ -810,7 +811,7 @@ export default {
     ChangeConvertMoney() {
       if (this.SubItem.Total != "" && this.SubItem.Rate != "") {
         this.SubItem.ConvertMoney =
-          Number(this.SubItem.Total) * Number(this.SubItem.Rate);
+          (Number(this.SubItem.Total) * Number(this.SubItem.Rate)).toFixed(2);
 
         //计算原币税额
         this.SubItem.OriginalTaxMoney =

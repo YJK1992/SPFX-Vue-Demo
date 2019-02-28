@@ -398,7 +398,7 @@ export default {
                 StartDate: "",
                 ArriveDate: "",
                 Destination: "",
-                Days: sub.Days,
+                Days: "",
                 CheckInDate: "",
                 LeaveDate: ""
               });

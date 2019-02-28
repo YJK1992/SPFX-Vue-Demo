@@ -313,14 +313,15 @@ export default {
         if (!values.every(value => isNaN(value))) {
           if (index == 8) {
             sums[index] = values.reduce((prev, curr) => {
-              const value = Number(curr);
+              const value = Number(curr).toFixed(2);
               if (!isNaN(value)) {
                 return prev + curr;
               } else {
                 return prev;
               }
             }, 0);
-            (Number(sums[index])).toFixed(2) += " 元";
+              //sums[index] += " 元";
+              sums[index]=Number(sums[index]).toFixed(2)+" 元"
           }
         } else {
           //sums[index] = "N/A";

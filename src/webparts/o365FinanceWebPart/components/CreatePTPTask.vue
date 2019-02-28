@@ -446,7 +446,8 @@ export default {
                 return prev;
               }
             }, 0);
-            sums[index] += " 元";
+            //sums[index] += " 元";
+            sums[index]=Number(sums[index]).toFixed(2)+" 元"
           }
         } else {
           //sums[index] = "N/A";
@@ -524,8 +525,8 @@ export default {
     //根据汇率和总金额 结算转换后的金额
     ChangeConvertMoney() {
       if (this.SubItem.Total != "" && this.SubItem.Rate != "") {
-        this.SubItem.ConvertMoney =
-          Number(this.SubItem.Total) * Number(this.SubItem.Rate);
+        this.SubItem.ConvertMoney =(
+          Number(this.SubItem.Total) * Number(this.SubItem.Rate)).toFixed(2);
 
         //计算原币税额
         this.SubItem.OriginalTaxMoney =
