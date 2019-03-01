@@ -240,17 +240,17 @@ export default {
       dialogFormVisible: false, //控制是否出现dialog
       requestDigest: "", //post请求需要此参数
       ECCTaskForm: {
-        applicant: "",
-        costcenter: "",
-        companycode: "",
-        applicantNumber: "",
-        applicantType: "",
-        productType: "",
-        consigneeDetail: "",
-        specialApprover: "",
-        total: 0,
-        userId: "",
-        AttDescription: ""
+        applicant: "", //申请人
+        costcenter: "", //成本中心
+        companycode: "", //公司代码
+        applicantNumber: "", //申请单号
+        applicantType: "", //申请类型
+        productType: "", //产品类型
+        consigneeDetail: "", //收件人及地址
+        specialApprover: "", //特殊审批人
+        total: 0, //项目行总金额
+        userId: "", //当前用户ID
+        AttDescription: "" //附件描述
       }, //ECC主表
       subListData: [], // ECC物料副表
       fileList: [], //附件列表数据
@@ -344,7 +344,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取公司代码失败"));
         });
-    },
+    }, //成本中心change事件
     applicantTypeChange: function() {
       this.productTypeOpts = [];
       this.ECCTaskForm.productType = "";
@@ -409,7 +409,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "校验成本中心出错!"));
         });
-    }, //成本中心change事件
+    },//校验成本中心是否在审批节点表中
     getCostCenter() {
       var parm = {
         type: "get",
@@ -1040,12 +1040,12 @@ export default {
           var data = req.d.results;
           this.baseApplicantNumber = data[0].Number;
           this.appliantNumberItemId = data[0].ID;
-          this.onSaveOrSubmmit(type)
+          this.onSaveOrSubmmit(type);
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
-    }, //从申请单号列表中获取流水号
+    }, //从申请单号列表中获取最新流水号
     formatAppNumber: function() {
       var formatAppNumber = "";
       var number = this.baseApplicantNumber;

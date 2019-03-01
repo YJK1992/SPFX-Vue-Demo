@@ -416,19 +416,19 @@
 import $ from "jquery";
 import common from "../js/common.js";
 import efn from "../js/json2excel.js";
-import sprestlib from "sprestlib/dist/sprestlib";
+//import sprestlib from "sprestlib/dist/sprestlib";
 export default {
   data() {
     return {
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
-      requestDigest: "",
+      requestDigest: "", //post请求需要此参数
       mainListName: "PublicPayment", //对公付款
       mainListType: "SP.Data.PublicPaymentListItem", //税票清单列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
-      GpPRListName: "PurchaseRequest",
-      applicantNumberListName: "ApplicantNumber",
-      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      GpPRListName: "PurchaseRequest", //GP申请列表名
+      applicantNumberListName: "ApplicantNumber", //申请单号管理列表
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem", //申请单号管理列表类型，用于post请求
       ContractListName: "ContractList", //合同列表pushtable
       approverList: "ApproveNode", //审批节点列表名
       userArr: [], //用户信息数据数组
@@ -445,7 +445,7 @@ export default {
       buttonType: {
         Submit: "submit",
         Save: "save"
-      },
+      },//按钮操作类型
       PublicPayment: {
         ReimbursementType: "", //报销类型
         SettlementType: "", //结算方式
@@ -482,21 +482,20 @@ export default {
         EmployeeCode: "", //人员编号
         BussinessScope: "", //业务范围
         PhoneNumber: ""
-      },
+      },//主表数据
       TaxReceiptList: [], //税票清单
-      TaxFileId: "",
-      ExpenseFileId: "",
-      TaxFlg: false,
-      TaxLibrary: "TaxLibrary",
-      ExpenseLibrary: "ExpenseLibrary",
-      ExpenseFileJson: {},
-      TaxFileJson: {},
-      FileGUID: "",
-      IsTaxExcelTemplate: false,
-      IsExpenseTemplate: false,
+      TaxFileId: "",//上传税票信息后，excel文档在文档库的id
+      ExpenseFileId: "",//上传分摊信息后，excel文档在文档库的id
+      TaxFlg: false,//控制是否在文件列表中显示税票文档，这个是element ui的控件
+      TaxLibrary: "TaxLibrary",//保存税票信息excel的文档库名称
+      ExpenseLibrary: "ExpenseLibrary",//保存分摊信息excel的文档库名称
+      ExpenseFileJson: {},//解析用户上传的分摊excel信息成json
+      TaxFileJson: {},//解析用户上传的税票excel信息成json
+      FileGUID: "",//给税票excel或者分摊excel分派一个guid
+      IsTaxExcelTemplate: false,//判断是否是税票excel模板
+      IsExpenseTemplate: false,//判断是否是分摊excel模板
       ExpenseAllocationList: [], //费用分摊列表
       ReimbursementType: [
-        //报销类型
         {
           value: "费用借款",
           label: "费用借款"
@@ -513,9 +512,8 @@ export default {
           value: "其他",
           label: "其他"
         }
-      ],
+      ],//报销类型
       SettlementType: [
-        //结算方式
         {
           value: "清账",
           label: "清账"
@@ -536,9 +534,8 @@ export default {
           value: "汇票",
           label: "汇票"
         }
-      ],
+      ],//结算方式
       Currency: [
-        //币种
         {
           value: "RMB",
           label: "RMB"
@@ -571,7 +568,7 @@ export default {
           value: "Other",
           label: "Other"
         }
-      ],
+      ],//币种
       dialogTableVisible: false, //税票清单列表
       dialogTableVisible2: false, //费用分摊列表
       editIndex: -1, //是否编辑
@@ -581,17 +578,17 @@ export default {
       costAccountOptions: [], //费用科目
       LoginName: "", //登录名
       message: "", //消息文本
-      loading: false,
-      GPDocumentLibrary: "GPDocument",
-      TaxExcelUrl: "",
-      ExpenseExcelUrl: "",
-      GPJBaseApplicantNumber: 0,
-      GPBBaseApplicantNumber: 0,
-      GPJBaseFormat: "GPJ",
-      GPBBaseFormat: "GPB",
-      GPJAppliantNumberItemId: 0,
-      GPBAppliantNumberItemId: 0,
-      EmployeeCode: ""
+      loading: false,//element ui加载组件，默认不出现加载遮罩
+      GPDocumentLibrary: "GPDocument",//获取税票和分摊excel模板文档库名
+      TaxExcelUrl: "",//税票excel模板文档url
+      ExpenseExcelUrl: "",//分摊excel模板文档url
+      GPJBaseApplicantNumber: 0,//初始化GPJ流水码
+      GPBBaseApplicantNumber: 0,//初始化GPB流水码
+      GPJBaseFormat: "GPJ",//是费用借款的单子专用前缀
+      GPBBaseFormat: "GPB",//不是费用借款的单子专用前缀
+      GPJAppliantNumberItemId: 0,//GPJ在申请单号列表中item的ID
+      GPBAppliantNumberItemId: 0,//GPB在申请单号列表中item的ID
+      EmployeeCode: ""//员工代码，在员工表中
     };
   },
   methods: {
@@ -626,7 +623,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "校验成本中心出错!"));
         });
-    },
+    },//校验成本中心是否在审批节点表中
     costCenterChange: function() {
       this.companyCodeArr = [];
       var parm = {
@@ -668,7 +665,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取公司代码失败"));
         });
-    },
+    },//成本中心change事件
     getApplicantNumber: function(type) {
       var parm = {
         type: "get",
@@ -691,12 +688,12 @@ export default {
               this.GPJAppliantNumberItemId = i.ID;
             }
           });
-          this.onSaveOrSubmmit(type)
+          this.onSaveOrSubmmit(type);
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
-    },
+    },//获取最新流水单号
     formatAppNumber: function(AppNumber) {
       var formatAppNumber = "";
       var number = AppNumber;
@@ -714,7 +711,7 @@ export default {
         formatAppNumber = number.toString();
       }
       return formatAppNumber;
-    },
+    },//格式化申请单号
     updateApplicantBaseNumber: function() {
       var GPJbaseNumber = this.GPJBaseApplicantNumber;
       var GPBbaseNumber = this.GPBBaseApplicantNumber;
@@ -747,7 +744,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "更新流水号失败"));
         });
-    },
+    },//更新申请单号列表的流水码
     loadExcelFileUrl: function() {
       var parm = {
         action: "ListItems",
@@ -788,13 +785,13 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取Excel模板失败"));
         });
-    },
+    },//获取excel文档模板在文档库的url
     downloadTaxExcel: function() {
       window.open(this.TaxExcelUrl);
-    },
+    },//下载税票excel模板
     downloadExpenseExcel: function() {
       window.open(this.ExpenseExcelUrl);
-    },
+    },//下载分摊excel模板
     beforeUploadValidate: function(file) {
       var fileInfo = file.raw;
       const extension = file.name.toLowerCase().endsWith(".xls");
@@ -832,7 +829,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "获取Digest失败"));
         });
-    },
+    },//上传分摊文档成功后的回调函数
     getfile: function(fileInfo, fileName, type) {
       var fileToArr = common.getFileBuffer(fileInfo);
       fileToArr
@@ -1105,14 +1102,14 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "获取文件失败!"));
         });
-    },
+    },//将excel内容转成json
     getFileItem: function(fileURI) {
       return $.ajax({
         url: fileURI,
         type: "GET",
         headers: { accept: "application/json;odata=verbose" }
       });
-    },
+    },//通过传来文件url，返回文件item对象
     addFileToFolder: function(arrayBuffer, fileName, listName) {
       var parm = {
         type: "post",
@@ -1124,7 +1121,7 @@ export default {
       };
       var opt = common.queryOpt(parm);
       return common.service(opt);
-    },
+    },//将用户上传的excel保存到对应的文档库中
     fileLimit: function(files, fileList) {
       this.$message(
         common.message(
@@ -1144,13 +1141,12 @@ export default {
         this.AccountPaid = ""; //已付款
         this.UnPaid = ""; //未付款
       }
-    },
+    },//是否有合同号change事件联动方法
     clearNumber() {
       if (this.PublicPayment.ReimbursementType != "费用借款") {
-        //改变时候如果不是费用借款的时候清空掉单据编号
         this.PublicPayment.LoanNumber = "";
       }
-    },
+    },//改变时候如果不是费用借款的时候清空掉单据编号
     getCostCenter() {
       var parm = {
         type: "get",
@@ -1186,7 +1182,7 @@ export default {
           console.log(this.costCenterArr);
         }
       });
-    },
+    },//获取成本中心并去重
     CalculateAmountInlowercase() {
       if (this.PublicPayment.InvoiceValue == "") {
         this.$message(common.message("error", "请填写发票金额!"));
@@ -1199,7 +1195,7 @@ export default {
         this.PublicPayment.AmountInlowercase = this.PublicPayment.InvoiceValue;
         this.convertMoney();
       }
-    },
+    },//校验发票金额，并转为繁体
     getExpenseCategory() {
       //获取费用类别
       var parm = {
@@ -1254,7 +1250,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
-    },
+    },//获取费用类别
     getCostAccount() {
       var that = this;
       var parm = {
@@ -1282,7 +1278,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载费用科目时候出错!"));
         });
-    },
+    },//获取费用类别
     search(userLoginName) {
       var trustees = this.PublicPayment.Trustees;
       if (trustees != "" || trustees != null) {
@@ -1322,7 +1318,7 @@ export default {
             );
           });
       }
-    },
+    },//通过传入用户名然后在员工表中进行校验
     formVerification() {
       //主表校验
       var isSuccess = false;
@@ -1414,7 +1410,7 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    },//主表数据校验
     itemVerification() {
       //附表校验
       var isSuccess = false;
@@ -1436,7 +1432,7 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    },//原税票子表校验逻辑
     item2Verification() {
       //校验费用分摊
       var isSuccess = false;
@@ -1450,7 +1446,7 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    },//原分摊子表校验逻辑
     IsMoneyConsistent() {
       var _in = 0.0;
       var _out = 0.0;
@@ -1462,9 +1458,8 @@ export default {
         }
       });
       return _in == _out;
-    },
+    },//判断金额是否一致
     convertMoney() {
-      //转换金额change事件
       if (
         this.PublicPayment.AmountInlowercase != "" &&
         !isNaN(this.PublicPayment.AmountInlowercase)
@@ -1476,9 +1471,8 @@ export default {
       } else {
         this.PublicPayment.CapitalizationAmount = "";
       }
-    },
+    },//转换金额change事件
     getAmountInWords(n) {
-      //转换金额逻辑
       var fraction = ["角", "分"];
       var digit = ["零", "壹", "贰", "叁", "肆", "伍", "陆", "柒", "捌", "玖"];
       var unit = [["元", "万", "亿"], ["", "拾", "佰", "仟"]];
@@ -1510,16 +1504,15 @@ export default {
           .replace(/(零.)+/g, "零")
           .replace(/^整$/, "零元整")
       );
-    },
+    },//转换金额为繁体逻辑
     calculateMoney() {
-      //计算金额
       var itemAmount = 0.0;
       for (let index = 0; index < this.TaxReceiptList.length; index++) {
         itemAmount += parseFloat(this.TaxReceiptList[index].InvoiceValue);
       }
       var InvoiceValue = parseFloat(this.PublicPayment.InvoiceValue);
       return itemAmount.toFixed(2) == InvoiceValue;
-    },
+    },//计算金额
     onSaveOrSubmmit(type) {
       if (!this.formVerification()) {
         //校验不通过;
@@ -1538,7 +1531,7 @@ export default {
             this.$message(common.message("error", "获取Digest失败"));
           });
       }
-    },
+    },//点击提交按钮
     createPublicPayment(type) {
       //创建主表数据
       var total = parseFloat(this.PublicPayment.InvoiceValue);
@@ -1671,10 +1664,10 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "创建数据失败"));
         });
-    },
+    },//创建主表数据
     indexMethod(index) {
       return index + 1;
-    },
+    },//以前用于子项的逻辑，现在没用了
     speApprChange: function() {
       this.loading = true;
       this.SpecApproId = 0;
@@ -1748,7 +1741,7 @@ export default {
       } else {
         this.loading = false;
       }
-    },
+    },//特殊审批人change事件
     getCurrentUser() {
       var parm = {
         action: "CurrentUser",
@@ -1766,7 +1759,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));
         });
-    },
+    },//获取当前用户信息
     getGPPRNumber() {
       var that = this;
       //获取申请单号
@@ -1800,9 +1793,8 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取单号编号失败!"));
         });
-    },
+    },//获取GP申请列表的数据，并将值展示在“单据编号”
     isHaveContract() {
-      //获取合同
       var that = this;
       that.ContractList = []; //还原
       this.ReceiptNumbers.forEach(item => {
@@ -1827,8 +1819,7 @@ export default {
           // that.PublicPayment.CodeOfFixedAssets = item.CodeOfFixedAssets;
         }
       });
-    },
-    //获取合同号
+    },//获取合同
     getContractNumber() {
       var that = this;
       var parm = {
@@ -1858,7 +1849,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载合同列表时出错!"));
         });
-    },
+    },//获取合同号
     changeMoney() {
       var that = this;
       that.ContractList = []; //还原
@@ -1893,7 +1884,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取申请单号失败!"));
         });
-    },
+    },//金额的change事件
     GetPublicPaymentHistory(mainItem) {
       console.log("GetPublicPaymentHistory");
       console.log(mainItem);
@@ -1942,7 +1933,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取申请单号失败!"));
         });
-    }
+    }//获取item的审批历史
   },
   mounted: function() {
     //onload

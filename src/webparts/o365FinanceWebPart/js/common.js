@@ -188,7 +188,7 @@ var common = {
     } else if (parm.type == "remove") {
       localStorage.removeItem(parm.key)
     }
-  },
+  },//处理缓存
   GetParameterValues: function (param) {
     var url = window.location.href.slice(window.location.href.indexOf('?') + 1).split('&');
     for (var i = 0; i < url.length; i++) {
@@ -197,7 +197,7 @@ var common = {
         return urlparam[1];
       }
     }
-  },
+  },//获取URL参数
   service: function (opt) {
     var deferred = $.Deferred();
     $.ajax(opt)
@@ -208,7 +208,7 @@ var common = {
         deferred.reject(result);
       });
     return deferred.promise();
-  },
+  },//封装好的promiss方法
   print: function (id) {
     var printAreaCount = 0
     var ele = $(id);
@@ -247,10 +247,10 @@ var common = {
     } else {
       console.log("Local iframe is now loaded.Error");
     }
-  },
+  },//打印入口方法
   removePrintArea: function (id) {
     $("iframe#" + id).remove();
-  },
+  },//关闭打印的方法
   getCurrentDate: function () {
     var date = new Date();
     var year = date.getFullYear();
@@ -258,7 +258,7 @@ var common = {
     var day = date.getDate();
     var currentTime = year + "-" + month + "-" + day;
     return currentTime;
-  },
+  },//获取当前时间
   getCurrentDate_NoLine: function () {
     var date = new Date();
     var year = date.getFullYear();
@@ -278,6 +278,6 @@ var common = {
     }
     var currentTime = year.toString() + formatMonth + formatDay;
     return currentTime;
-  },
+  },//获取当前时间并去掉了’-’
 }
 export default common

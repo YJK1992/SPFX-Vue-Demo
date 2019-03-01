@@ -263,8 +263,8 @@ export default {
       SubInfoListType: "SP.Data.PurchaseRequestSubInfoListItem", //采购申请供应商列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       contractListName: "ContractList", //合同列表
-      applicantNumberListName: "ApplicantNumber",
-      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      applicantNumberListName: "ApplicantNumber",//申请单号流水码列表
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem",//申请单号流水码列表类型
       userArr: [], //用户信息数据数组
       costCenterArr: [], //成本中心数组
       companyCodeArr: [], //公司代码数组
@@ -276,7 +276,7 @@ export default {
       buttonType: {
         Submit: "submit",
         Save: "save"
-      },
+      },//标记点击的是保存按钮还是提交按钮
       purchaseRequestData: {
         Title: "", //标题
         Consignor: "", //委托人/经办人
@@ -292,15 +292,15 @@ export default {
         CodeOfFixedAssets: "", //固定资产编码
         ApplicationNumber: "", //申请单号
         SpecialApprover: "" //特殊审批人
-      },
+      },//主表数据结构
       item: {
-        Supplier: "",
-        SupplierParts: "",
-        Number: "",
-        Price: "",
-        Money: "",
-        Taxation: "",
-        Amount: ""
+        Supplier: "",//供应商
+        SupplierParts: "",//供应商部件
+        Number: "",//数量
+        Price: "",//单价
+        Money: "",//净额
+        Taxation: "",//税款
+        Amount: ""//金额
       },
       ContractNumbers: [], //合同号
       ContractHistory: [], //合同历史信息
@@ -318,16 +318,16 @@ export default {
       ], //申请类型
       expenseCategoryOptions: [], //费用类别
       costAccountOptions: [], //费用科目
-      subListData: [],
+      subListData: [],//项目行数据数组
       dialogFormVisible: false, //dialog
       editIndex: -1, //是否编辑
       formLabelWidth: "150px", //dialog lable
-      message: "",
-      loading: true,
-      baseApplicantNumber: 0,
-      GPRBaseFormat: "GPR",
-      appliantNumberItemId: 0,
-      loginName: ""
+      message: "",//提示语全局变量
+      loading: true,//element ui的控件，控制遮罩显示
+      baseApplicantNumber: 0,//初始化流水码
+      GPRBaseFormat: "GPR",//GP申请专用前缀
+      appliantNumberItemId: 0,//GP申请流水码item的ID
+      loginName: ""//当前用户登入名
     };
   },
   methods: {
@@ -362,7 +362,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "校验成本中心出错!"));
         });
-    },
+    },//校验成本中心是否在审批节点表中
     costCenterChange: function() {
       this.companyCodeArr = [];
       var parm = {
@@ -406,7 +406,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取公司代码失败"));
         });
-    },
+    },//成本中心change事件
     clearContract() {
       if (!this.purchaseRequestData.IsContract) {
         this.purchaseRequestData.ContractNumber = ""; //合同号
@@ -415,11 +415,11 @@ export default {
         this.AccountPaid = ""; //已付款
         this.UnPaid = ""; //未付款
       }
-    },
+    },//是否有合同号change事件联动方法
     getContractHistory() {
       var that = this;
       that.ContractHistory = []; //还原
-      //获取合同列表
+      
       var parm = {
         action: "ListItems",
         type: "get",
@@ -442,7 +442,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取合同信息失败!"));
         });
-    },
+    },//获取合同列表
     GetPublicPaymentHistory(mainItem) {
       console.log("GetPublicPaymentHistory");
       console.log(mainItem);
@@ -491,7 +491,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取合同失败!"));
         });
-    },
+    },//获取GP申请审批历史
     clearCodeOrSelect() {
       if (this.purchaseRequestData.ApplicationType == "费用") {
         this.purchaseRequestData.CodeOfFixedAssets = "";
@@ -499,7 +499,7 @@ export default {
         this.purchaseRequestData.CostAccount = "";
         this.purchaseRequestData.ExpenseCategory = "";
       }
-    },
+    },//重新初始化数据
     getCostCenter() {
       var parm = {
         type: "get",
@@ -535,7 +535,7 @@ export default {
           console.log(this.costCenterArr);
         }
       });
-    },
+    },//从员工表中获取成本中心，并去重
     changeMoney() {
       this.ContractNumbers.forEach(item => {
         if (this.purchaseRequestData.ContractNumber == item.value) {
@@ -543,9 +543,8 @@ export default {
         }
       });
       this.getContractHistory();
-    },
+    },//金额的change事件
     getExpenseCategory() {
-      //获取费用类别
       var that = this;
       var parm = {
         action: "ListItems",
@@ -571,9 +570,8 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
-    },
+    },//获取费用类别
     getCostAccount() {
-      //获取费用科目
       var that = this;
       var parm = {
         action: "ListItems",
@@ -600,7 +598,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载费用科目时候出错!"));
         });
-    },
+    },//获取费用科目
     onAddItem() {
       if (!this.itemVerification()) {
         //校验不通过
@@ -627,15 +625,15 @@ export default {
         };
         this.dialogFormVisible = false;
       }
-    },
+    },//添加项目行
     del(index) {
       this.subListData.splice(index, 1);
-    },
+    },//删除某条项目行
     onEditItem(index) {
       this.item = this.subListData[index];
       this.editIndex = index;
       this.dialogFormVisible = true;
-    },
+    },//编辑模条项目行
     onCancel: function() {
       this.editIndex = -1;
       this.item = {
@@ -648,7 +646,7 @@ export default {
         Amount: ""
       };
       this.dialogFormVisible = false;
-    },
+    },//项目行dialog页面退出按钮回调函数
     onSaveOrSubmmit(type) {
       if (!this.formVerification()) {
         //校验不通过
@@ -671,9 +669,8 @@ export default {
             this.loading = false;
           });
       }
-    },
+    },//点击提交按钮
     createPurchaseRequestData(type) {
-      //创建主表数据
       var total = 0;
       this.subListData.forEach(element => {
         total += Number(element.Amount);
@@ -784,9 +781,8 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "创建主表数据失败"));
         });
-    },
+    },//创建主表数据
     createSubInfoItem(applicantNumber) {
-      //添加附表数据
       this.subListData.forEach(item => {
         console.log(item);
         var itemInfo = {
@@ -820,7 +816,7 @@ export default {
             this.$message(common.message("error", "供应商添加失败!"));
           });
       });
-    },
+    },//添加附表数据
     search(userLoginName) {
       var parm = {
         type: "get",
@@ -850,9 +846,8 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "检查当前用户出现错误!"));
         });
-    },
+    },//通过传入用户名然后在员工表中进行校验
     formVerification() {
-      //主表校验
       var isSuccess = false;
       if (this.purchaseRequestData.Title == "") {
         this.message = "请输入标题;";
@@ -895,9 +890,8 @@ export default {
       console.log("format!!!!");
       console.log(isSuccess);
       return isSuccess;
-    },
+    },//主表校验
     itemVerification() {
-      //附表校验
       var isSuccess = false;
       if (this.item.Supplier == "") {
         this.message = "请输入供应商;";
@@ -915,10 +909,8 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    },//附表校验
     itemCalculate() {
-      //计算附表金额
-      //计算附表金额
       if (!isNaN(this.item.Price) && this.item.Price != "") {
         //计算 净额 税款 金额
         this.item.Money =
@@ -935,7 +927,7 @@ export default {
           parseFloat(this.item.Money) + parseFloat(this.item.Taxation)
         ).toFixed(2);
       }
-    },
+    },//计算附表金额
     getCurrentUser() {
       var parm = {
         action: "CurrentUser",
@@ -953,7 +945,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));
         });
-    },
+    },//获取当前用户信息
     speApprChange() {
       this.loading = true;
       this.SpecApproId = 0;
@@ -1027,10 +1019,8 @@ export default {
       } else {
         this.loading = false;
       }
-    },
-    //获取合同号
+    },//特殊审批人change事件
     getContractNumber() {
-      //获取费用类别
       var that = this;
       var parm = {
         action: "ListItems",
@@ -1078,7 +1068,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载合同列表时出错!"));
         });
-    },
+    },//获取合同号
     getApplicantNumber: function(type) {
       var parm = {
         type: "get",
@@ -1099,7 +1089,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
-    },
+    },//获取最新流水单号
     formatAppNumber: function() {
       var formatAppNumber = "";
       var number = this.baseApplicantNumber;
@@ -1117,7 +1107,7 @@ export default {
         formatAppNumber = number.toString();
       }
       return formatAppNumber;
-    },
+    },//格式化申请单号
     updateApplicantBaseNumber: function() {
       var baseNumber = this.baseApplicantNumber;
       var itemInfo = {
@@ -1143,7 +1133,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "更新流水号失败"));
         });
-    }
+    }//更新申请单号列表的流水码
   },
   mounted: function() {
     //onload

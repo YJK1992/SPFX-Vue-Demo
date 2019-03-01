@@ -286,25 +286,24 @@ export default {
       mainListType: "SP.Data.StaffReimbursementListItem", //税票清单列表类型，用于post请求
       userListName: "EmployeeList", //员工详细信息列表名称
       taxCodeListName: "TaxCode", //税码
-      applicantNumberListName: "ApplicantNumber",
-      applicantNumberListType: "SP.Data.ApplicantNumberListItem",
+      applicantNumberListName: "ApplicantNumber", //申请单号流水码列表
+      applicantNumberListType: "SP.Data.ApplicantNumberListItem", //申请单号流水码列表类型
       approverList: "ApproveNode", //审批节点列表名
       SpecApproId: 0, //特殊审批人ID
       LoginName: "", //登录名
-      PTPBaseApplicantNumber: 0,
-      PTPBaseFormat: "EXP",
-      PTPAppliantNumberItemId: 0,
-      dialogFormVisible: false,
-      formLabelWidth: "150px",
-      StartArriveDate: "",
-      CheckInLeaveData: "",
+      PTPBaseApplicantNumber: 0, //初始化流水码
+      PTPBaseFormat: "EXP", //员工报销流程专用前缀
+      PTPAppliantNumberItemId: 0, //员工报销流水码item的ID
+      dialogFormVisible: false, //控制dialog显示与隐藏
+      formLabelWidth: "150px", //控制dialog显示框宽度
+      StartArriveDate: "", //开始时间
+      CheckInLeaveData: "", //离开时间
       expenseCategoryListName: "PTPExpenseCategory", //费用类别
       costAccountListName: "CostAccount", //费用科目
       buttonType: {
         Submit: "submit",
         Save: "save"
-      },
-      //主表数据
+      }, //标记点击的是保存按钮还是提交按钮
       StaffReimbursement: {
         Title: "", //申请单号
         Applicant: "", //申请人
@@ -316,9 +315,8 @@ export default {
         BussinessScope: "", //业务范围
         ProfitCenter: "", //利润中心
         EmployeeCode: "" //员工编号
-      },
-      //子表数据
-      SubItems: [],
+      }, //主表数据
+      SubItems: [], //初始化保存子表数据数组
       SubItem: {
         ExpenseCategory: "", //费用类别
         CostAccount: "", //费用科目
@@ -342,9 +340,8 @@ export default {
         Name: "", //酒店名称
         Number: "", //发票号
         Remark: "" //备注信息
-      },
+      }, //子表数据
       Currency: [
-        //币种
         {
           value: "RMB",
           label: "RMB"
@@ -377,21 +374,20 @@ export default {
           value: "Other",
           label: "Other"
         }
-      ],
+      ], //币种
       CostCenterArr: [], //成本中心数组
       CompanyCodeArr: [], //公司代码数组
       expenseCategoryOptions: [], //费用类别
       costAccountOptions: [], //费用科目
       taxCodeOptions: [], //税码
-      editIndex: -1,
+      editIndex: -1, //区分是编辑还是新增
       requestDigest: "", //POST Token
       fileList: [], //附件列表数据
       fileToArr: [], //附件转换成文件流，然后保存文件属性至数组里
       actionUrl: "https://lenovonetapp.sharepoint.cn/", //绑定上传附件按钮的action
-      IsTravelExpense: true,
-      IsHotelExpense: true,
-
-      message: ""
+      IsTravelExpense: true, //判断是否是旅费报销
+      IsHotelExpense: true, //判断是否是酒店报销
+      message: "" //提示框信息变量
     };
   },
   methods: {
@@ -426,7 +422,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "校验成本中心出错!"));
         });
-    },
+    }, //校验成本中心是否在审批节点表中
     getSummaries(param) {
       const { columns, data } = param;
       const sums = [];
@@ -447,7 +443,7 @@ export default {
               }
             }, 0);
             //sums[index] += " 元";
-            sums[index]=Number(sums[index]).toFixed(2)+" 元"
+            sums[index] = Number(sums[index]).toFixed(2) + " 元";
           }
         } else {
           //sums[index] = "N/A";
@@ -455,8 +451,7 @@ export default {
       });
 
       return sums;
-    },
-    //费用类别change事件
+    }, //计算项目行合计金额
     ChangeCostAccount() {
       this.costAccountOptions = []; //费用科目
 
@@ -471,7 +466,7 @@ export default {
           });
         }
       });
-    },
+    }, //费用类别change事件
     costCenterChange: function() {
       this.companyCodeArr = [];
       var parm = {
@@ -513,7 +508,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "获取公司代码失败"));
         });
-    },
+    }, //成本中心change事件
     ChangeTaxRate() {
       this.taxCodeOptions.forEach(item => {
         if (item.label == this.SubItem.TaxCode) {
@@ -521,12 +516,12 @@ export default {
         }
       });
       this.ChangeConvertMoney();
-    },
-    //根据汇率和总金额 结算转换后的金额
+    }, //税率change事件
     ChangeConvertMoney() {
       if (this.SubItem.Total != "" && this.SubItem.Rate != "") {
-        this.SubItem.ConvertMoney =(
-          Number(this.SubItem.Total) * Number(this.SubItem.Rate)).toFixed(2);
+        this.SubItem.ConvertMoney = (
+          Number(this.SubItem.Total) * Number(this.SubItem.Rate)
+        ).toFixed(2);
 
         //计算原币税额
         this.SubItem.OriginalTaxMoney =
@@ -537,8 +532,7 @@ export default {
           this.SubItem.OriginalTaxMoney
         ).toFixed(2);
       }
-    },
-    //改变数量和单位金额的时候变更总金额
+    }, //根据汇率和总金额 结算转换后的金额
     ChangeTotalMoney() {
       if (this.SubItem.Count != "" && this.SubItem.Price != "") {
         this.SubItem.Total = (
@@ -546,7 +540,7 @@ export default {
         ).toString();
         this.ChangeConvertMoney();
       }
-    },
+    }, //改变数量和单位金额的时候变更总金额
     uploadAttFileToItem: function(attUrl) {
       var parms = [];
       this.fileToArr.forEach(f => {
@@ -593,7 +587,7 @@ export default {
         .catch(onError => {
           this.$message(common.message("error", "获取附件失败!"));
         });
-    },
+    }, //将文件转化成arrayBuffer
     removeFile: function(file, fileList, index) {
       console.log(file, fileList, index);
       this.fileList = fileList;
@@ -659,7 +653,7 @@ export default {
     }, //附件上传前对文件格式和大小进行验证
     fileLimit: function(files, fileList) {
       this.$message(common.message("error", "最多只能上传一个文件!"));
-    },
+    }, //设置上传文件数量
     onEditItem(index) {
       this.SubItem = this.SubItems[index];
       if (this.SubItem.CheckInDate != "" && this.SubItem.LeaveDate != "") {
@@ -676,10 +670,10 @@ export default {
       }
       this.editIndex = index;
       this.dialogFormVisible = true;
-    },
+    }, //编辑项目行
     deleteRow(index, rows) {
       rows.splice(index, 1);
-    },
+    }, //删除项目行
     onCancel: function() {
       this.editIndex = -1;
       this.StartArriveDate = "";
@@ -711,10 +705,10 @@ export default {
       this.IsTravelExpense = true;
       this.IsHotelExpense = true;
       this.dialogFormVisible = false;
-    },
+    }, //添加子项页面退出方法
     handleClick(row) {
       console.log(row);
-    },
+    }, //测试的方法
     subVerification() {
       var isSuccess = false;
       if (this.SubItem.ExpenseDate == "") {
@@ -761,7 +755,7 @@ export default {
         isSuccess = true;
       }
       return isSuccess;
-    },
+    }, //子项数据校验
     onAddItem() {
       console.log(this.StartArriveDate);
       console.log(this.CheckInLeaveData);
@@ -817,7 +811,7 @@ export default {
         };
         this.dialogFormVisible = false;
       }
-    },
+    }, //添加项目行
     formatAppNumber: function(AppNumber) {
       var formatAppNumber = "";
       var number = AppNumber;
@@ -835,8 +829,7 @@ export default {
         formatAppNumber = number.toString();
       }
       return formatAppNumber;
-    },
-    //提交或保存
+    }, //格式化申请单号
     onSaveOrSubmmit(type) {
       if (false) {
         //校验不通过;
@@ -855,8 +848,7 @@ export default {
             this.$message(common.message("error", "获取Digest失败"));
           });
       }
-    },
-    //创建数据
+    }, //提交或保存
     CreateStaffReimbursement(type) {
       console.log(this.StaffReimbursement);
       var costcenter = this.StaffReimbursement.CostCenter;
@@ -962,7 +954,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "创建数据失败"));
         });
-    },
+    }, //创建数据
     speApprChange: function() {
       this.loading = true;
       this.SpecApproId = 0;
@@ -1031,7 +1023,7 @@ export default {
       } else {
         this.loading = false;
       }
-    },
+    }, //填写特殊审批人change事件
     getApplicantNumber: function(type) {
       var parm = {
         type: "get",
@@ -1048,12 +1040,12 @@ export default {
           console.log(data);
           this.PTPBaseApplicantNumber = data[0].Number;
           this.PTPAppliantNumberItemId = data[0].ID;
-          this.onSaveOrSubmmit(type)
+          this.onSaveOrSubmmit(type);
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
         });
-    }, //从申请单号列表中获取流水号
+    }, //从申请单号列表中获取最新流水号
     updateApplicantBaseNumber: function() {
       var PTPbaseNumber = this.PTPBaseApplicantNumber;
       var itemInfo = {
@@ -1079,8 +1071,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "更新流水号失败"));
         });
-    },
-    //获取当前用户
+    }, //更新申请单号表中的流水码
     getCurrentUser() {
       var parm = {
         action: "CurrentUser",
@@ -1098,8 +1089,7 @@ export default {
         .catch(err => {
           this.$message(common.message("error", "加载当前用户出错!"));
         });
-    },
-    //查询用户信息
+    }, //获取当前用户
     search(userLoginName) {
       var applicant = this.StaffReimbursement.Applicant;
       if (applicant != "" || applicant != null) {
@@ -1147,8 +1137,7 @@ export default {
             );
           });
       }
-    },
-    //获取成本中心
+    }, //查询用户信息
     getCostCenter() {
       var parm = {
         type: "get",
@@ -1184,8 +1173,7 @@ export default {
           console.log(this.costCenterArr);
         }
       });
-    },
-    //获取费用类别
+    }, //获取成本中心
     getExpenseCategory() {
       //获取费用类别
       var that = this;
@@ -1218,9 +1206,7 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载费用类别时候出错!"));
         });
-    },
-
-    //获取税码
+    }, //获取费用类别
     getTaxCode() {
       var that = this;
       var parm = {
@@ -1248,24 +1234,17 @@ export default {
           this.loading = false;
           this.$message(common.message("error", "加载税码失败!"));
         });
-    }
+    } //获取税码
   },
   mounted: function() {
-    //获取费用类别
-    this.getExpenseCategory();
-
-    //获取当前信息
-    this.getCurrentUser();
-    //获取成本中心
-    this.getCostCenter();
-    //获取税码
-    this.getTaxCode();
-    //获取流水号
-    //this.getApplicantNumber();
+    this.getExpenseCategory(); //获取费用类别
+    this.getCurrentUser(); //获取当前信息
+    this.getCostCenter(); //获取成本中心
+    this.getTaxCode(); //获取税码
+    //this.getApplicantNumber();//获取流水号
   }
 };
 </script>
-
 <style>
 .yuangong {
   min-height: 25px;
