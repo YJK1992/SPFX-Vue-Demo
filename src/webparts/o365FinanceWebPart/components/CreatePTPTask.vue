@@ -187,10 +187,20 @@
           ></el-date-picker>
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Count" placeholder="数量"></el-input>
+          <el-input
+            type="number"
+            @change="ChangeTotalMoney"
+            v-model="SubItem.Count"
+            placeholder="数量"
+          ></el-input>
         </el-form-item>
         <el-form-item label="单位金额：" :label-width="formLabelWidth">
-          <el-input @change="ChangeTotalMoney" v-model="SubItem.Price" placeholder="单位金额"></el-input>
+          <el-input
+            type="number"
+            @change="ChangeTotalMoney"
+            v-model="SubItem.Price"
+            placeholder="单位金额"
+          ></el-input>
         </el-form-item>
         <el-form-item label="总金额：" :label-width="formLabelWidth">
           <el-input @change="ChangeConvertMoney" v-model="SubItem.Total" placeholder="总金额" disabled></el-input>
@@ -206,7 +216,12 @@
           </el-select>
         </el-form-item>
         <el-form-item label="汇率：" :label-width="formLabelWidth">
-          <el-input @change="ChangeConvertMoney" v-model="SubItem.Rate" placeholder="汇率"></el-input>
+          <el-input
+            type="number"
+            @change="ChangeConvertMoney"
+            v-model="SubItem.Rate"
+            placeholder="汇率"
+          ></el-input>
         </el-form-item>
         <el-form-item label="转换金额：" :label-width="formLabelWidth">
           <el-input v-model="SubItem.ConvertMoney" placeholder="转换金额" disabled></el-input>
@@ -324,7 +339,7 @@ export default {
         Price: "", //单位金额
         Total: "", //总金额
         Currency: "", //币种
-        Rate: "", //汇率
+        Rate: "1", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "RMB", //转换后币种
         TaxCode: "", //税码
@@ -537,7 +552,7 @@ export default {
       if (this.SubItem.Count != "" && this.SubItem.Price != "") {
         this.SubItem.Total = (
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
-        ).toString();
+        ).toFixed(2).toString();
         this.ChangeConvertMoney();
       }
     }, //改变数量和单位金额的时候变更总金额
@@ -685,7 +700,7 @@ export default {
         Price: "", //单位金额
         Total: "", //总金额
         Currency: "", //币种
-        Rate: "", //汇率
+        Rate: "1", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "RMB", //转换后币种
         TaxCode: "", //税码
@@ -713,6 +728,14 @@ export default {
       var isSuccess = false;
       if (this.SubItem.ExpenseDate == "") {
         this.message = "请填写费用日期;";
+      } else if (this.SubItem.Count == "") {
+        this.message = "请填写数量";
+      } else if (this.SubItem.Price == "") {
+        this.message = "请填写单位金额";
+      } else if (this.SubItem.Rate == "") {
+        this.message = "请填写汇率;";
+      } else if (this.SubItem.TaxCode == "") {
+        this.message = "请选择税码;";
       } else if (!this.IsTravelExpense && this.IsHotelExpense) {
         //校验出差日期
         if (this.SubItem.StartDate == "") {
@@ -792,7 +815,7 @@ export default {
           Price: "", //单位金额
           Total: "", //总金额
           Currency: "", //币种
-          Rate: "", //汇率
+          Rate: "1", //汇率
           ConvertMoney: "", //转换金额
           ConvertCurrency: "RMB", //转换后币种
           TaxCode: "", //税码
@@ -901,7 +924,7 @@ export default {
             }
             if (type == "submit") {
               itemInfo.Status = "Submitted";
-              if (total > 0 && total <= 5000) {
+              if (total >= 0 && total <= 5000) {
                 itemInfo.Approver1Id = data1.Approver1Id;
               } else if (total > 5000 && total <= 20000) {
                 itemInfo.Approver1Id = data1.Approver1Id;
@@ -1025,6 +1048,11 @@ export default {
       }
     }, //填写特殊审批人change事件
     getApplicantNumber: function(type) {
+      //直接校验必须有子项
+      if (this.SubItems.length == 0) {
+        this.$message(common.message("error", "请录入项目行数据！"));
+        return;
+      }
       var parm = {
         type: "get",
         action: "ListItems",

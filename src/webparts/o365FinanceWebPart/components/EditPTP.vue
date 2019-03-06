@@ -237,6 +237,7 @@
         </el-form-item>
         <el-form-item label="数量：" :label-width="formLabelWidth">
           <el-input
+            type="number"
             :disabled="showFA==true"
             @change="ChangeTotalMoney"
             v-model="SubItem.Count"
@@ -245,6 +246,7 @@
         </el-form-item>
         <el-form-item label="单位金额：" :label-width="formLabelWidth">
           <el-input
+            type="number"
             :disabled="showFA==true"
             @change="ChangeTotalMoney"
             v-model="SubItem.Price"
@@ -276,6 +278,7 @@
         </el-form-item>
         <el-form-item label="汇率：" :label-width="formLabelWidth">
           <el-input
+            type="number"
             :disabled="showFA==true"
             @change="ChangeConvertMoney"
             v-model="SubItem.Rate"
@@ -425,7 +428,7 @@ export default {
         Price: "", //单位金额
         Total: "", //总金额
         Currency: "", //币种
-        Rate: "", //汇率
+        Rate: "1", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "", //转换后币种
         TaxCode: "", //税码
@@ -527,7 +530,7 @@ export default {
               }
             }, 0);
             //sums[index] += " 元";
-            sums[index]=Number(sums[index]).toFixed(2)+" 元"
+            sums[index] = Number(sums[index]).toFixed(2) + " 元";
           }
         } else {
           //sums[index] = "N/A";
@@ -540,6 +543,14 @@ export default {
       var isSuccess = false;
       if (this.SubItem.ExpenseDate == "") {
         this.message = "请填写费用日期;";
+      } else if (this.SubItem.Count == "") {
+        this.message = "请填写数量";
+      } else if (this.SubItem.Price == "") {
+        this.message = "请填写单位金额";
+      } else if (this.SubItem.Rate == "") {
+        this.message = "请填写汇率;";
+      } else if (this.SubItem.TaxCode == "") {
+        this.message = "请选择税码;";
       } else if (!this.IsTravelExpense && this.IsHotelExpense) {
         //校验出差日期
         if (this.SubItem.StartDate == "") {
@@ -810,8 +821,9 @@ export default {
     //根据汇率和总金额 结算转换后的金额
     ChangeConvertMoney() {
       if (this.SubItem.Total != "" && this.SubItem.Rate != "") {
-        this.SubItem.ConvertMoney =
-          (Number(this.SubItem.Total) * Number(this.SubItem.Rate)).toFixed(2);
+        this.SubItem.ConvertMoney = (
+          Number(this.SubItem.Total) * Number(this.SubItem.Rate)
+        ).toFixed(2);
 
         //计算原币税额
         this.SubItem.OriginalTaxMoney =
@@ -828,7 +840,7 @@ export default {
       if (this.SubItem.Count != "" && this.SubItem.Price != "") {
         this.SubItem.Total = (
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
-        ).toString();
+        ).toFixed(2).toString();
       }
       this.ChangeConvertMoney();
     },
@@ -976,7 +988,7 @@ export default {
         Price: "", //单位金额
         Total: "", //总金额
         Currency: "", //币种
-        Rate: "", //汇率
+        Rate: "1", //汇率
         ConvertMoney: "", //转换金额
         ConvertCurrency: "", //转换后币种
         TaxCode: "", //税码
@@ -1034,7 +1046,7 @@ export default {
           Price: "", //单位金额
           Total: "", //总金额
           Currency: "", //币种
-          Rate: "", //汇率
+          Rate: "1", //汇率
           ConvertMoney: "", //转换金额
           ConvertCurrency: "", //转换后币种
           TaxCode: "", //税码
@@ -1056,9 +1068,9 @@ export default {
     },
     //提交或保存
     onSaveOrSubmmit(type) {
-      if (false) {
+      if (this.SubItems.length == 0) {
         //校验不通过;
-        this.$message(common.message("error", this.message));
+        this.$message(common.message("error", "请录入项目行数据！"));
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
@@ -1116,7 +1128,7 @@ export default {
               itemInfo.SpecialApproverId = this.SpecApproId;
             }
             if (type == "submit") {
-              if (total > 0 && total <= 5000) {
+              if (total >= 0 && total <= 5000) {
                 itemInfo.Approver1Id = data1.Approver1Id;
               } else if (total > 5000 && total <= 20000) {
                 itemInfo.Approver1Id = data1.Approver1Id;
