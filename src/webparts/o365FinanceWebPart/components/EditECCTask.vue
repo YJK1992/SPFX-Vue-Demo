@@ -191,11 +191,13 @@
           <td colspan="10" align="right">
             <el-button
               type="primary"
+              id="btn_id"
               @click="saveOrSubmmit(buttonType.Submit)"
               v-show="showEditor"
             >提交</el-button>
             <el-button
               @click="saveOrSubmmit(buttonType.Save)"
+              id="btn_id"
               v-show="showEditor"
               type="primary"
               plain
@@ -743,6 +745,7 @@ export default {
       return haveFixedIsNull;
     },
     saveOrSubmmit: function(type) {
+      $("#btn_id").attr("disabled",true)
       var validate = this.mainFormVerification();
       if (validate) {
         this.loading = true;
@@ -922,6 +925,8 @@ export default {
             this.loading = false;
             this.$message(common.message("error", "获取Digest失败"));
           });
+      }else{
+        $("#btn_id").attr("disabled",false)
       }
     }, //提交并在对应的列表创建对应的数据
     search: function(userLoginName) {

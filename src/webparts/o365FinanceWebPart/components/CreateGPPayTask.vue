@@ -346,8 +346,8 @@
       </tr>
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
-          <el-button @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
+          <el-button id="btn_id" type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+          <el-button id="btn_id" @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
         </td>
       </tr>
     </table>
@@ -667,6 +667,7 @@ export default {
         });
     },//成本中心change事件
     getApplicantNumber: function(type) {
+      $("#btn_id").attr("disabled",true)
       var parm = {
         type: "get",
         action: "ListItems",
@@ -692,6 +693,7 @@ export default {
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
+          $("#btn_id").attr("disabled",false)
         });
     },//获取最新流水单号
     formatAppNumber: function(AppNumber) {
@@ -1518,6 +1520,7 @@ export default {
       if (!this.formVerification()) {
         //校验不通过;
         this.$message(common.message("error", this.message));
+        $("#btn_id").attr("disabled",false)
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);

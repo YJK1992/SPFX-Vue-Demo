@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <table class="caigou" style="table-layout：fixed">
       <tr>
         <td colspan="8">
@@ -211,8 +211,8 @@
       </tr>
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
-          <el-button @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
+          <el-button id="btn_id" type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+          <el-button id="btn_id" @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
         </td>
       </tr>
     </table>
@@ -255,6 +255,7 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
+      loading:true,
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "PurchaseRequest", //采购申请列表名
       payMainListName: "PublicPayment", //付款申请
@@ -655,6 +656,7 @@ export default {
         //   type: "error"
         // });
         this.$message(common.message("error", this.message));
+        $("#btn_id").attr("disabled",false)
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
@@ -1071,6 +1073,7 @@ export default {
         });
     },//获取合同号
     getApplicantNumber: function(type) {
+      $("#btn_id").attr("disabled",true)
       var parm = {
         type: "get",
         action: "ListItems",
@@ -1089,6 +1092,7 @@ export default {
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
+          $("#btn_id").attr("disabled",false)
         });
     },//获取最新流水单号
     formatAppNumber: function() {

@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <table class="caigouEdit" style="table-layout：fixed">
       <tr>
         <td colspan="8">
@@ -247,12 +247,14 @@
         <td colspan="8" align="right">
           <el-button
             type="primary"
+            id="btn_id"
             @click="onSaveOrSubmmit(buttonType.Submit)"
             v-show="showEditor"
           >提交</el-button>
           <el-button
             @click="onSaveOrSubmmit(buttonType.Save)"
             v-show="showEditor"
+            id="btn_id"
             type="primary"
             plain
           >保存</el-button>
@@ -720,12 +722,14 @@ export default {
       this.dialogFormVisible = false;
     },
     onSaveOrSubmmit(type) {
+      $("#btn_id").attr("disabled",true)
       if (!this.formVerification()) {
         //校验不通过
         // this.$message({
         //   message: this.message,
         //   type: "error"
         // });
+        $("#btn_id").attr("disabled",false)
         this.$message(common.message("error", this.message));
       } else {
         this.loading = true;

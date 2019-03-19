@@ -147,8 +147,8 @@
         </tr>
         <tr>
           <td colspan="10" align="right">
-            <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
-            <el-button @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
+            <el-button id="btn_id" type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+            <el-button id="btn_id" @click="getApplicantNumber(buttonType.Save)" type="primary" plain>保存</el-button>
           </td>
         </tr>
       </table>
@@ -562,6 +562,8 @@ export default {
             this.loading = false;
             this.$message(common.message("error", "获取Digest失败"));
           });
+      }else{
+        $("#btn_id").attr("disabled",false)
       }
     }, //提交并在对应的列表创建对应的数据
     search: function(userLoginName) {
@@ -1027,6 +1029,7 @@ export default {
       }
     }, //绑定特殊审批人输入框change事件
     getApplicantNumber: function(type) {
+      $("#btn_id").attr("disabled",true)
       var parm = {
         type: "get",
         action: "ListItems",
@@ -1045,6 +1048,7 @@ export default {
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
+          $("#btn_id").attr("disabled",false)
         });
     }, //从申请单号列表中获取最新流水号
     formatAppNumber: function() {

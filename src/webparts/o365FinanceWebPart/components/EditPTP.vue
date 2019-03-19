@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div v-loading="loading">
     <table class="edityuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8">
@@ -169,6 +169,7 @@
           <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>-->
           <el-button
             type="primary"
+            id="btn_id"
             @click="onSaveOrSubmmit(buttonType.Submit)"
             v-show="requestIsReject==true?true:showEditor"
           >提交</el-button>
@@ -176,6 +177,7 @@
             @click="onSaveOrSubmmit(buttonType.Save)"
             v-show="requestIsReject==true?true:showEditor"
             type="primary"
+            id="btn_id"
             plain
           >保存</el-button>
           <el-button
@@ -1070,11 +1072,14 @@ export default {
     },
     //提交或保存
     onSaveOrSubmmit(type) {
+      $("#btn_id").attr("disabled",true)
       if (this.SubItems.length == 0) {
         //校验不通过;
+        $("#btn_id").attr("disabled",false)
         this.$message(common.message("error", "请录入项目行数据！"));
       } else if (this.StaffReimbursement.AccountNumber == "") {
         //校验不通过;
+        $("#btn_id").attr("disabled",false)
         this.$message(common.message("error", "该用户没有维护银行账户"));
       } else {
         this.loading = true;
@@ -1615,6 +1620,7 @@ export default {
       this.loading = false;
       common.message(common.message("error", "当前链接错误"));
     }
+    this.loading = false;
   }
 };
 </script>

@@ -1,5 +1,5 @@
 <template>
-  <div id="yuangong">
+  <div id="yuangong" v-loading="loading">
     <table class="yuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8">
@@ -147,8 +147,8 @@
     <table class="yuangong" style="border-collapse: collapse;width:100%">
       <tr>
         <td colspan="8" align="right">
-          <el-button type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
-          <el-button type="primary" @click="getApplicantNumber(buttonType.Save)">保存</el-button>
+          <el-button id="btn_id" type="primary" @click="getApplicantNumber(buttonType.Submit)">提交</el-button>
+          <el-button id="btn_id" type="primary" @click="getApplicantNumber(buttonType.Save)">保存</el-button>
         </td>
       </tr>
     </table>
@@ -296,6 +296,7 @@ import common from "../js/common.js";
 export default {
   data() {
     return {
+      loading:true,
       hostUrl: this.GLOBAL.URL, //已在Web Part中注册了此变量
       mainListName: "StaffReimbursement", //对公付款
       mainListType: "SP.Data.StaffReimbursementListItem", //税票清单列表类型，用于post请求
@@ -857,6 +858,7 @@ export default {
       
       if (this.StaffReimbursement.AccountNumber=="") {
         //校验不通过;
+        $("#btn_id").attr("disabled",false)
         this.$message(common.message("error", "该用户没有维护银行账户"));
       } else {
         this.loading = true;
@@ -1049,9 +1051,11 @@ export default {
       }
     }, //填写特殊审批人change事件
     getApplicantNumber: function(type) {
+      $("#btn_id").attr("disabled",true)
       //直接校验必须有子项
       if (this.SubItems.length == 0 ) {
         this.$message(common.message("error", "请录入项目行数据！"));
+        $("#btn_id").attr("disabled",false)
         return;
       }
       var parm = {
@@ -1073,6 +1077,7 @@ export default {
         })
         .catch(err => {
           this.$message(common.message("error", "获取单号流水号失败!"));
+          $("#btn_id").attr("disabled",false)
         });
     }, //从申请单号列表中获取最新流水号
     updateApplicantBaseNumber: function() {
@@ -1271,6 +1276,7 @@ export default {
     this.getCurrentUser(); //获取当前信息
     this.getCostCenter(); //获取成本中心
     this.getTaxCode(); //获取税码
+    this.loading = false;
     //this.getApplicantNumber();//获取流水号
   }
 };

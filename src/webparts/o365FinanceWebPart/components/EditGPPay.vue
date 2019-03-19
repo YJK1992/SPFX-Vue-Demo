@@ -427,12 +427,14 @@
           <el-button @click="onSaveOrSubmmit(buttonType.Save)" type="primary" plain>保存</el-button>-->
           <el-button
             type="primary"
+            id="btn_id"
             @click="onSaveOrSubmmit(buttonType.Submit)"
             v-show="showEditor"
           >提交</el-button>
           <el-button
             @click="onSaveOrSubmmit(buttonType.Save)"
             v-show="showEditor"
+            id="btn_id"
             type="primary"
             plain
           >保存</el-button>
@@ -1619,8 +1621,10 @@ export default {
       return itemAmount.toFixed(2) == InvoiceValue;
     },
     onSaveOrSubmmit(type) {
+      $(this).attr("disabled",true)
       if (!this.formVerification()) {
         //校验不通过;
+        $(this).attr("disabled",false)
         this.$message({
           message: this.message,
           type: "error"
