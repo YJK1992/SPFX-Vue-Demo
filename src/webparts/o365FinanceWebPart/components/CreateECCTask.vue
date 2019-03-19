@@ -640,7 +640,7 @@ export default {
               this.materielOpt.push({
                 Materiel: d.MaterielCode,
                 MaterielDescription: d.MaterielDescription,
-                Price: d.Price
+                Price: d.Price.replace(/,/g,'')
               });
             });
             this.loading = false;
@@ -735,8 +735,8 @@ export default {
           Materiel: d.wl,
           MaterielDescription: d.ms,
           Amount: d.sl.toString(),
-          Price: d.dj.toString(),
-          Total: d.zje.toString(),
+          Price: d.dj.toString().replace(/,/g,''),
+          Total: d.zje.toString().replace(/,/g,''),
           RequestType: d.sqlx,
           CostItems: d.fytm
         };
@@ -805,20 +805,20 @@ export default {
       this.materielOpt.forEach(d => {
         if (d.Materiel == this.item.wl) {
           this.item.ms = d.MaterielDescription;
-          this.item.dj = d.Price;
+          this.item.dj = d.Price.replace(/,/g,'');
         }
       });
       var sl = this.item.sl;
-      this.item.zje = Number(sl) * Number(this.item.dj);
+      this.item.zje = Number(sl) * Number(this.item.dj.replace(/,/g,''));
     }, //物料编码change事件
     slChange: function() {
       var sl = this.item.sl;
-      this.item.zje = Number(sl) * Number(this.item.dj);
+      this.item.zje = Number(sl) * Number(this.item.dj.replace(/,/g,''));
     }, //物料数量change事件
     sqlxChange: function() {
       if (this.item.sqlx == "固定资产") {
         var sl = (this.item.sl = "1");
-        this.item.zje = Number(sl) * Number(this.item.dj);
+        this.item.zje = Number(sl) * Number(this.item.dj.replace(/,/g,''));
       }
     }, //申请类型change事件
     uploadAttFileToItem: function(attUrl) {
