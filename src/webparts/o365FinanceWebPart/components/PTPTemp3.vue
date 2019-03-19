@@ -177,7 +177,7 @@ export default {
                 this.TableData.push({
                   AccountNumber: nameContainer[nameItem][0].AccountNumber,
                   Applicant: nameContainer[nameItem][0].Applicant,
-                  Money: count,
+                  Money: count.toFixed(2),
                   CostNumber: nameContainer[nameItem][0].CostNumber,
                   LegalPerson: nameContainer[nameItem][0].LegalPerson,
                   Modified: nameContainer[nameItem][0].Modified.split("T")[0]

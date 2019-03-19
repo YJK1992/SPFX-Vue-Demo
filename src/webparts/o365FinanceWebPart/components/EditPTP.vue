@@ -840,7 +840,9 @@ export default {
       if (this.SubItem.Count != "" && this.SubItem.Price != "") {
         this.SubItem.Total = (
           Number(this.SubItem.Count) * Number(this.SubItem.Price)
-        ).toFixed(2).toString();
+        )
+          .toFixed(2)
+          .toString();
       }
       this.ChangeConvertMoney();
     },
@@ -1071,6 +1073,9 @@ export default {
       if (this.SubItems.length == 0) {
         //校验不通过;
         this.$message(common.message("error", "请录入项目行数据！"));
+      } else if (this.StaffReimbursement.AccountNumber == "") {
+        //校验不通过;
+        this.$message(common.message("error", "该用户没有维护银行账户"));
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
@@ -1317,7 +1322,7 @@ export default {
           this.currentUserITCode = loginName.split("@")[0];
           this.currentUserTitle = c.d.Title;
           this.LoginName = loginName;
-          this.StaffReimbursement.Applicant = c.d.Title;
+          //this.StaffReimbursement.Applicant = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {
@@ -1354,6 +1359,7 @@ export default {
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;
+                this.StaffReimbursement.Applicant=data[0].EmployeeName;
             } else {
               this.$message(
                 common.message(

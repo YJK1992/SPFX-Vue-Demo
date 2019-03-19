@@ -832,6 +832,7 @@ export default {
           if (data.length > 0) {
             this.purchaseRequestData.CostCenter = data[0].CostCenter;
             this.EmployeeCode = data[0].EmployeeCode;
+            this.purchaseRequestData.Consignor=data[0].EmployeeName;
             this.costCenterChange();
           } else {
             this.$message(
@@ -939,7 +940,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           (this.loginName = loginName.split("@")[0]),
-            (this.purchaseRequestData.Consignor = c.d.Title);
+            // (this.purchaseRequestData.Consignor = c.d.Title);
           this.search(loginName);
         })
         .catch(err => {

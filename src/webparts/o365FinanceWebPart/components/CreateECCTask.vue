@@ -580,6 +580,7 @@ export default {
             this.ECCTaskForm.costcenter = data[0].CostCenter;
             this.ECCTaskForm.companycode = data[0].CompanyCode;
             this.EmployeeCode = data[0].EmployeeCode;
+            this.ECCTaskForm.applicant=data[0].EmployeeName
           } else {
             this.$message(
               common.message(
@@ -944,7 +945,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.loginName = loginName.split("@")[0];
-          this.ECCTaskForm.applicant = c.d.Title;
+          //this.ECCTaskForm.applicant = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {

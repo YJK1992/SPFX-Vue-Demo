@@ -208,12 +208,12 @@ export default {
               " and Created gt datetime" +
               "'" +
               this.Condition[item][0] +
-              "T00:00:00Z" +
+              "T00:00:00" +
               "'" +
               " and Created lt datetime" +
               "'" +
               this.Condition[item][1] +
-              "T00:00:00Z" +
+              "T00:00:00" +
               "'";
           } else {
             condition += " and " + item + " eq '" + this.Condition[item] + "'";

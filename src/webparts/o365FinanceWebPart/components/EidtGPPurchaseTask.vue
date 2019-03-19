@@ -938,6 +938,7 @@ export default {
           var data = req.d.results;
           if (data.length > 0) {
             this.EmployeeCode = data[0].EmployeeCode;
+           this.purchaseRequestData.Consignor=data[0].EmployeeName;
             data.forEach(d => {
               this.companyCodeArr.push({
                 CompanyCode: d.CompanyCode
@@ -1050,7 +1051,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.loginName = loginName.split("@")[0];
-          this.purchaseRequestData.Consignor = c.d.Title;
+         // this.purchaseRequestData.Consignor = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {

@@ -1299,6 +1299,7 @@ export default {
               this.costCenterChange();
               this.PublicPayment.BussinessScope = data[0].BusinessScope;
               this.PublicPayment.EmployeeCode = data[0].EmployeeCode;
+               this.PublicPayment.Trustees=data[0].EmployeeName;
             } else {
               this.$message(
                 common.message(
@@ -1753,7 +1754,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.LoginName = loginName;
-          this.PublicPayment.Trustees = c.d.Title;
+          //this.PublicPayment.Trustees = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {

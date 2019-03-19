@@ -86,7 +86,7 @@
       <table class="printTable">
         <tr class="printTableTh">
           <td align="center" colspan="6">
-            <h2>{{this.CompanyName}}（CNA2）</h2>
+            <h2>{{this.CompanyName}}（{{this.StaffReimbursement.CompanyCode}}）</h2>
           </td>
         </tr>
         <!-- <tr>
@@ -456,7 +456,7 @@ export default {
           if (subItems != null) {
             var totalMoney = 0;
             subItems.forEach(element => {
-              totalMoney += element.ConvertMoney;
+              totalMoney += Number(element.ConvertMoney);
               this.SubItems.push({
                 ExpenseCategory: element.ExpenseCategory, //费用类别
                 CostAccount: element.CostAccount, //费用科目
@@ -495,7 +495,7 @@ export default {
                 Remark: element.Remark //备注
               });
             });
-            this.TotalMoney = totalMoney;
+            this.TotalMoney = totalMoney.toFixed(2);
           }
         } else {
           this.$message(

@@ -1444,7 +1444,7 @@ export default {
               //       CompanyCode: d.CompanyCode
               //     });
               //});
-
+              this.PublicPayment.Trustees=data[0].EmployeeName;
               this.EmployeeCode = data[0].EmployeeCode;
               console.log("load user success");
             } else {

@@ -854,9 +854,10 @@ export default {
       return formatAppNumber;
     }, //格式化申请单号
     onSaveOrSubmmit(type) {
-      if (false) {
+      
+      if (this.StaffReimbursement.AccountNumber=="") {
         //校验不通过;
-        this.$message(common.message("error", this.message));
+        this.$message(common.message("error", "该用户没有维护银行账户"));
       } else {
         this.loading = true;
         var getDigst = common.getRequestDigest(this.hostUrl);
@@ -1049,7 +1050,7 @@ export default {
     }, //填写特殊审批人change事件
     getApplicantNumber: function(type) {
       //直接校验必须有子项
-      if (this.SubItems.length == 0) {
+      if (this.SubItems.length == 0 ) {
         this.$message(common.message("error", "请录入项目行数据！"));
         return;
       }
@@ -1111,7 +1112,7 @@ export default {
         .done(c => {
           var loginName = c.d.LoginName.split("|membership|")[1];
           this.LoginName = loginName;
-          this.StaffReimbursement.Applicant = c.d.Title;
+          // this.StaffReimbursement.Applicant = c.d.Title;
           this.search(loginName);
         })
         .catch(err => {
@@ -1146,6 +1147,7 @@ export default {
               //默认员工账号
               this.StaffReimbursement.AccountNumber =
                 data[0].EmployeeBankAccount;
+                this.StaffReimbursement.Applicant=data[0].EmployeeName;
             } else {
               this.$message(
                 common.message(
