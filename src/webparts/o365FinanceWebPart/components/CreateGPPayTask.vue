@@ -1928,8 +1928,8 @@ export default {
             //合计
             that.AccountPaid = accountPaid;
             that.UnPaid =
-              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
-              accountPaid;
+              (parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              accountPaid).toFixed(2);
 
             that.PublicPayment.IsContract = true;
           }

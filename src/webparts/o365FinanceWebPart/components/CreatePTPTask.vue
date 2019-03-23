@@ -867,7 +867,8 @@ export default {
           .done(data => {
             this.requestDigest =
               data.d.GetContextWebInformation.FormDigestValue;
-            this.CreateStaffReimbursement(type);
+              this.updateApplicantBaseNumber(type);
+              //this.CreateStaffReimbursement(type);
           })
           .catch(error => {
             this.loading = false;
@@ -959,7 +960,7 @@ export default {
                   type: "success",
                   duration: 0
                 });
-                this.updateApplicantBaseNumber();
+                //this.updateApplicantBaseNumber();
                 this.loading = false;
                 this.$router.push("/home");
               })
@@ -1080,7 +1081,7 @@ export default {
           $("#btn_id").attr("disabled",false)
         });
     }, //从申请单号列表中获取最新流水号
-    updateApplicantBaseNumber: function() {
+    updateApplicantBaseNumber: function(type) {
       var PTPbaseNumber = this.PTPBaseApplicantNumber;
       var itemInfo = {
         __metadata: {
@@ -1101,6 +1102,7 @@ export default {
       $.when($.ajax(opt))
         .done(req => {
           console.log("更新流水号成功");
+          this.CreateStaffReimbursement(type);
         })
         .catch(err => {
           this.$message(common.message("error", "更新流水号失败"));

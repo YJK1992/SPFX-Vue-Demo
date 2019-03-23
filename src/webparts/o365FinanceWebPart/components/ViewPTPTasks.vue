@@ -12,7 +12,7 @@
         ></el-date-picker>
       </el-form-item>
       <el-form-item label="申请单号">
-        <el-input v-model="Condition.ApplicationNumber" placeholder="申请单号"></el-input>
+        <el-input v-model="Condition.Title" placeholder="申请单号"></el-input>
       </el-form-item>
       <el-form-item label="经办人ID">
         <el-input v-model="Condition.TrusteesEmail" placeholder="经办人"></el-input>
