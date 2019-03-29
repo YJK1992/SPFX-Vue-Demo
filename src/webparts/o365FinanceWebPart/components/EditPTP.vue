@@ -1601,7 +1601,8 @@ export default {
                   CheckInDate: element.CheckInDate, //入住日期
                   LeaveDate: element.LeaveDate, //离店日期
                   Name: element.Name, //酒店名称
-                  Number: element.Number //发票号
+                  Number: element.Number, //发票号
+                  Remark:element.Remark //备注
                 });
               });
             }

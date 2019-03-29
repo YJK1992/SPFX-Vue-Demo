@@ -359,7 +359,7 @@ export default {
         type: "get",
         list: this.userListName,
         baseUrl: this.hostUrl,
-        condition: "?$filter=EmployeeName eq '" + applicant + "'&$top=1"
+        condition: "?$filter=substringof('"+applicant+"',EmployeeID)&$top=1"
       }; //Completed 已完成
       console.log(parm.condition);
       var option = common.queryOpt(parm);
@@ -406,7 +406,7 @@ export default {
           );
           this.StaffReimbursement.SettlingTime = data[0].SettlingTime;
           this.getCompanyName(this.StaffReimbursement.CompanyCode);
-          this.getApplicantInfo(this.StaffReimbursement.Applicant);
+          this.getApplicantInfo(data[0].ApplicantEmail);
           if (this.ApprovalHistory != null && this.ApprovalHistory != "") {
             var approvalHistory = JSON.parse(this.ApprovalHistory);
             var keys = Object.keys(approvalHistory);
