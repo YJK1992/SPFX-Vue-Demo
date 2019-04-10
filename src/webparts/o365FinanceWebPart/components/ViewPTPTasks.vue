@@ -162,7 +162,7 @@ export default {
     },
     onViewItem(index) {
       console.log(index);
-      var item = this.gpItems[index];
+      var item = this.newArr[index];
       var ApplicantNumber = item.Title;
       var TaskId = item.TaskId;
       console.log(ApplicantNumber);

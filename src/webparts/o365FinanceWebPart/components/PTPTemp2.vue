@@ -159,7 +159,7 @@ export default {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "?$filter=Status eq 'Approved' ";
+      var condition = "?$top=2000&$filter=Status eq 'Approved' ";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {

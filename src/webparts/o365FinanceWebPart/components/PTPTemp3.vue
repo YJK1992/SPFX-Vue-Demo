@@ -7,7 +7,7 @@
       <el-form-item label="完成日期：">
         <el-date-picker
           value-format="yyyy-MM-dd"
-          v-model="Condition.Date"
+          v-model="Condition.ComplateDate"
           type="daterange"
           range-separator="至"
           start-placeholder="开始日期"
@@ -104,7 +104,7 @@ export default {
       this.TableData = [];
       console.log("筛选条件");
       console.log(this.Condition);
-      var condition = "?$filter=Status eq 'Approved' ";
+      var condition = "?$Top=2000&$filter=Status eq 'Approved' ";
 
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {

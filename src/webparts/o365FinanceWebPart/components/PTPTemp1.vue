@@ -512,7 +512,7 @@ export default {
                     return;
                   } else {
                     this.defaultCondition =
-                      "?$filter=(AuthorId eq " +
+                      "?$top=2000&$filter=(AuthorId eq " +
                       this.userId +
                       " or substringof('" +
                       this.loginName +
