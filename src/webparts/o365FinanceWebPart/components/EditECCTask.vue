@@ -686,9 +686,14 @@ export default {
         item: itemInfo,
         digest: this.requestDigest
       };
+      console.log("主表请求连接")
+      console.log(parm)
       var opt = common.queryOpt(parm);
+      console.log("返回更新主表请求连接")
+      console.log(opt)
       $.when($.ajax(opt))
         .done(req => {
+          console.log("更新主表成功")
           this.updateTaskStatus(taskOutcome);
         })
         .catch(err => {
