@@ -2,7 +2,7 @@
   "$schema": "https://dev.office.com/json-schemas/spfx-build/config.2.0.schema.json",
   "version": "2.0",
   "bundles": {
-    "o-365-finance-web-part-web-part-v4": {
+    "o-365-finance-web-part-web-part-v5": {
       "components": [
         {
           "entrypoint": "./lib/webparts/o365FinanceWebPart/O365FinanceWebPartWebPart.js",

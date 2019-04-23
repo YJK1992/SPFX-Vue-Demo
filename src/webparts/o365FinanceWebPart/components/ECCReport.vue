@@ -245,7 +245,8 @@ export default {
           }
         })
         .catch(err => {
-          this.$message(common.message("error", "获取主表数据失败"));
+          console.log("未能加载出符合筛选要求的数据")
+          //this.$message(common.message("error", "获取主表数据失败"));
           this.loading = false;
         });
     },
