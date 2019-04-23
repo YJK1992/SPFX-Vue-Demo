@@ -248,7 +248,7 @@ export default {
                 " and Created lt datetime" +
                 "'" +
                 this.Condition[item][1] +
-                "T00:00:00" +
+                "T23:59:59" +
                 "'";
             } else {
               condition +=
@@ -265,7 +265,7 @@ export default {
                 " and Created lt datetime" +
                 "'" +
                 this.Condition[item][1] +
-                "T00:00:00" +
+                "T23:59:59" +
                 "'";
             } else {
               condition +=

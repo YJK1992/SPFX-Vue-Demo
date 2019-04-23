@@ -152,7 +152,7 @@ export default {
               " and SettlingTime lt datetime" +
               "'" +
               this.Condition[item][1] +
-              "T00:00:00" +
+              "T23:59:59" +
               "'";
           } else {
             condition += " and " + item + " eq '" + this.Condition[item] + "'";
