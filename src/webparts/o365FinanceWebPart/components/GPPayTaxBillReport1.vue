@@ -184,12 +184,12 @@ export default {
           //存在条件
           if (item == "ApplicantDate") {
             condition +=
-              " and SettlingTime gt datetime" +
+              " and SettlingTime ge datetime" +
               "'" +
               this.Condition[item][0] +
               "T00:00:00" +
               "'" +
-              " and SettlingTime lt datetime" +
+              " and SettlingTime le datetime" +
               "'" +
               this.Condition[item][1] +
               "T23:59:59" +
