@@ -1772,7 +1772,7 @@ export default {
         type: "get",
         list: this.GpPRListName,
         baseUrl: this.hostUrl,
-        condition: "?$filter= Status eq 'Approved'"
+        condition: "?$filter= Status eq 'Approved'&$top=4000"
       }; //Completed 已完成
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
@@ -1831,7 +1831,7 @@ export default {
         type: "get",
         list: this.ContractListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=4000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
