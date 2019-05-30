@@ -182,7 +182,7 @@ export default {
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件
-          if (item == "ApplicantDate") {
+          if (item == "SettlingTime") {
             condition +=
               " and SettlingTime ge datetime" +
               "'" +

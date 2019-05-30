@@ -231,14 +231,14 @@ export default {
       for (var item in this.Condition) {
         if (this.Condition[item] != null && this.Condition[item] != "") {
           //存在条件
-          if (item == "ApplicationDate") {
+          if (item == "SettlingTime") {
             condition +=
-              " and Created gt datetime" +
+              " and SettlingTime gt datetime" +
               "'" +
               this.Condition[item][0] +
               "T00:00:00" +
               "'" +
-              " and Created lt datetime" +
+              " and SettlingTime lt datetime" +
               "'" +
               this.Condition[item][1] +
               "T23:59:59" +
