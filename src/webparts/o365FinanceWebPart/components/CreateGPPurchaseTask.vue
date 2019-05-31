@@ -1030,7 +1030,7 @@ export default {
         type: "get",
         list: this.contractListName,
         baseUrl: this.hostUrl,
-        condition: ""
+        condition: "?$top=4000"
       };
       var option = common.queryOpt(parm);
       $.when($.ajax(option))
