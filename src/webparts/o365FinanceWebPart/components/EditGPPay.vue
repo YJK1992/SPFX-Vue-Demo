@@ -1177,7 +1177,7 @@ export default {
             data.forEach(item => {
               accountPaid += parseFloat(item.InvoiceValue);
             });
-            var UnPaid = parseFloat(this.PublicPayment.Money) - accountPaid;
+            var UnPaid = parseFloat(this.PublicPayment.Money.replace(/,/g,"")) - accountPaid;
             console.log("校验发票金额是否超过合同金额1");
             console.log(Number(this.PublicPayment.InvoiceValue) > UnPaid);
             return (result = Number(this.PublicPayment.InvoiceValue) > UnPaid);
@@ -2234,7 +2234,7 @@ export default {
             //合计
             that.AccountPaid = accountPaid;
             that.UnPaid =
-              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money.replace(/,/g,"")) -
               accountPaid;
 
             that.PublicPayment.IsContract = true;

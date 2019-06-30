@@ -1538,7 +1538,7 @@ export default {
     },//点击提交按钮
     createPublicPayment(type) {
       //创建主表数据
-      var total = parseFloat(this.PublicPayment.InvoiceValue);
+      var total = parseFloat(this.PublicPayment.InvoiceValue.replace(/,/g,""));
       var costcenter = this.PublicPayment.CostCenter;
       var applicantNumber = "";
       var currentTime = common.getCurrentDate_NoLine();
@@ -1923,12 +1923,12 @@ export default {
                 AccountPaid: item.InvoiceValue
               });
               //累加
-              accountPaid += parseFloat(item.InvoiceValue);
+              accountPaid += parseFloat(item.InvoiceValue.replace(/,/g,""));
             });
             //合计
             that.AccountPaid = accountPaid;
             that.UnPaid =
-              (parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money) -
+              (parseFloat(mainItem[0].Money == "" ? 0 : mainItem[0].Money.replace(/,/g,"")) -
               accountPaid).toFixed(2);
 
             that.PublicPayment.IsContract = true;
